@@ -1,6 +1,9 @@
 from flask import Flask
 import telebot
 import os
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
@@ -15,5 +18,5 @@ def send_welcome(message):
     bot.reply_to(message, "Hello! Your bot is working!")
 
 if __name__ == '__main__':
-    bot.polling()
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, threaded=True)
+    bot.polling(none_stop=True)
