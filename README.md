@@ -1,9 +1,10 @@
-welcome to coconutsplit
+# Welcome to Coconutsplit
 
-built with pyTelegramBotAPI (https://pytba.readthedocs.io/en/latest/)
+Coconutsplit is a Telegram bot built with [pyTelegramBotAPI](https://pytba.readthedocs.io/en/latest/).
 
-directory
+## Directory Structure
 
+```plaintext
 /my-telegram-bot
 │
 ├── /bot                    # Bot logic
