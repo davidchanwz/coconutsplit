@@ -1,5 +1,7 @@
 welcome to coconutsplit
 
+built with pyTelegramBotAPI (https://pytba.readthedocs.io/en/latest/)
+
 directory
 
 /my-telegram-bot
