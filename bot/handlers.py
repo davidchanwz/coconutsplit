@@ -6,9 +6,17 @@ def register_handlers(bot):
     
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
-        bot.reply_to(message, "Hello! Your bot is working! Also Aayush smells!")
-        data = {'username': 'aayushstinks'}
-        supa.table('users').insert(data).execute()
+        user_id = message.from.user.id
+        bot.reply_to(message, "Hello! Your bot is working! Also Aayush smells! Type /join to join")
+        bot.register_next_step_handler(message, get_group_name)
+        group_data = {
+            'group_name': 'New Group',  # Replace with dynamic group name if needed
+            'created_by': user_id  # Replace with dynamic user ID if needed
+        }
 
-    
-    
+    @bot.message_handler(commands=['join'])
+    def join_group():
+        
+
+    def get_group_name(message):
+        
