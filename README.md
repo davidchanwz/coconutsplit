@@ -25,7 +25,6 @@ Coconutsplit is a Telegram bot built with [pyTelegramBotAPI](https://pytba.readt
 └── README.md                # Project documentation
 ```
 
-```markdown
 ## Database Schema
 
 The following database schema outlines the structure used in Supabase to store user and expense data for the CoconutSplit bot.
@@ -165,4 +164,3 @@ CREATE TABLE settlements (
 | `amount`       | DECIMAL   | Amount settled                      |
 | `group_id`     | BIGINT    | ID of the group (optional)           |
 | `created_at`   | TIMESTAMP | Time when the settlement was created |
-```
