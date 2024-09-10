@@ -21,6 +21,7 @@ Coconutsplit is a Telegram bot built with [pyTelegramBotAPI](https://pytba.readt
 ├── /venv                    # Virtual environment
 │   └── ...
 ├── requirements.txt         # Python dependencies
+├── client.py                # Setup Supabase client
 ├── Procfile                 # Logic for Heroku deployment
 └── README.md                # Project documentation
 ```
