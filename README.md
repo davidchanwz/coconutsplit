@@ -23,8 +23,7 @@ Coconutsplit is a Telegram bot built with [pyTelegramBotAPI](https://pytba.readt
 ├── requirements.txt         # Python dependencies
 ├── Procfile                 # Logic for Heroku deployment
 └── README.md                # Project documentation
-
-Here’s the text you can copy and paste into your `README.md` file for the database schema:
+```
 
 ```markdown
 ## Database Schema
