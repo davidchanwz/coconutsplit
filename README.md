@@ -7,7 +7,7 @@ Coconutsplit is a Telegram bot built with [pyTelegramBotAPI](https://pytba.readt
 ```plaintext
 /coconutsplit
 │
-├── /bot                    # Bot logic
+├── /bot                     # Bot logic
 │   ├── bot.py               # Main bot script
 │   ├── handlers.py          # Custom message handlers
 │
@@ -211,7 +211,7 @@ classDiagram
         - int user_id
         - string username
         - datetime created_at
-        - string currency = "USD"
+        - string currency = "SGD"
         + create_group(group_name: string): Group
         + add_expense(expense: Expense): void
         + view_balance(group: Group): float
