@@ -38,7 +38,7 @@ CREATE TABLE users (
     user_id BIGINT PRIMARY KEY,
     username TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
-    currency TEXT DEFAULT 'USD'
+    currency TEXT DEFAULT 'SGD'
 );
 ```
 
@@ -200,3 +200,58 @@ graph TD
 
     B --> AA[/User sends /help/]
     AA --> AB[Bot lists commands]
+```
+
+## UML Class Diagram
+
+```mermaid
+
+classDiagram
+    class User {
+        - int user_id
+        - string username
+        - datetime created_at
+        - string currency = "USD"
+        + create_group(group_name: string): Group
+        + add_expense(expense: Expense): void
+        + view_balance(group: Group): float
+        + settle_debt(settlement: Settlement): void
+    }
+    
+    class Group {
+        - int group_id
+        - string group_name
+        - User created_by
+        - datetime created_at
+        + add_member(user: User): void
+        + get_expenses(): List[Expense]
+        + get_balance(): float
+    }
+
+    class Expense {
+        - int expense_id
+        - Group group
+        - User paid_by
+        - float amount
+        - string description
+        - datetime created_at
+        - Dict[User, float] splits
+        + add_split(user: User, amount: float): void
+    }
+
+    class Settlement {
+        - int settlement_id
+        - User from_user
+        - User to_user
+        - float amount
+        - Group group
+        - datetime created_at
+        + settle(): void
+    }
+
+    User "1" --> "*" Group : creates, belongs to
+    Group "1" --> "*" Expense : has
+    Expense "1" --> "*" User : paid by
+    Group "1" --> "*" Settlement : has
+    Settlement "1" --> "*" User : involves
+```
