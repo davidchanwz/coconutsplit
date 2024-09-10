@@ -1,3 +1,5 @@
+# bot/bot.py
+
 import telebot
 import os
 from bot.handlers import register_handlers  # Import the handler registration function
