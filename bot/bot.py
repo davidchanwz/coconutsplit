@@ -2,7 +2,7 @@
 
 import telebot
 import os
-from bot.handlers import register_handlers  # Import the handler registration function
+from .handlers import register_handlers  # Import the handler registration function
 
 # Initialize the bot with the token from environment variables
 bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
