@@ -164,3 +164,39 @@ CREATE TABLE settlements (
 | `amount`       | DECIMAL   | Amount settled                      |
 | `group_id`     | BIGINT    | ID of the group (optional)           |
 | `created_at`   | TIMESTAMP | Time when the settlement was created |
+
+## User Flow Chart
+```mermaid
+graph TD
+    A[/Start/] --> B[Bot welcomes user and lists main commands]
+    
+    B --> C[/User sends /create_group/]
+    C --> D[Bot asks for group name]
+    D --> E[User inputs group name]
+    E --> F[Bot asks to add members]
+    F --> G[User inputs members]
+    G --> H[Bot confirms group creation]
+
+    B --> I[/User sends /add_expense/]
+    I --> J[Bot asks for group selection]
+    J --> K[User selects group]
+    K --> L[Bot asks for amount and description]
+    L --> M[User inputs amount and description]
+    M --> N[Bot asks who paid]
+    N --> O[User inputs payer]
+    O --> P[Bot asks how to split the expense]
+    P --> Q[User selects split option]
+    Q --> R[Bot confirms expense added]
+
+    B --> S[/User sends /view_balance/]
+    S --> T[Bot shows balances]
+
+    B --> U[/User sends /settle_debt/]
+    U --> V[Bot asks for group and user to settle with]
+    V --> W[User selects group and user]
+    W --> X[Bot asks for amount]
+    X --> Y[User inputs amount]
+    Y --> Z[Bot confirms debt settlement]
+
+    B --> AA[/User sends /help/]
+    AA --> AB[Bot lists all available commands]
