@@ -1,5 +1,5 @@
 # bot/handlers.py
-from supabase import supabase
+from supabase.client import supabase
 
 def register_handlers(bot):
     """Register all command handlers for the bot."""
