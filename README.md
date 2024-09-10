@@ -11,7 +11,7 @@ Coconutsplit is a Telegram bot built with [pyTelegramBotAPI](https://pytba.readt
 │   ├── bot.py               # Main bot script
 │   ├── handlers.py          # Custom message handlers
 │
-├── /web_app                 # Web app folder
+├── /web-app                 # Web app folder
 │   ├── index.html           # Web app HTML
 │   ├── style.css            # Styling
 │   ├── script.js            # Web app logic
