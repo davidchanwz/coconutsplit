@@ -18,7 +18,7 @@ class User:
             "user_id": self.user_id,  # The Telegram user ID (integer)
             "username": self.username,
             "currency": self.currency,
-            "created_at": self.created_at
+            "created_at": self.created_at.isoformat() # Seralise datetime
         }
         return supa.table('users').insert(user_data).execute()
 
