@@ -36,8 +36,8 @@ class User:
             return None
 
 class Group:
-    def __init__(self, group_id: int, group_name: str, created_by: User):
-        self.group_id = group_id
+    def __init__(self, group_name: str, created_by: User, group_id: str = None,):
+        self.group_id = group_id or str(uuid.uuid4())  # Generate UUID if not provided
         self.group_name = group_name
         self.created_by = created_by
         self.members = [created_by]
@@ -46,7 +46,7 @@ class Group:
     def save_to_db(self):
         """Save the group to the database."""
         group_data = {
-            "group_id": self.group_id,
+            "group_id": self.group_id,  # Store the UUID as a string
             "group_name": self.group_name,
             "created_by": self.created_by.user_id,
             "created_at": self.created_at.isoformat()  # Serialize datetime to ISO 8601 string
