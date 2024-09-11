@@ -3,20 +3,18 @@ from client import supa
 
 def register_handlers(bot):
     """Register all command handlers for the bot."""
-    
+ 
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
-        user_id = message.from.user.id
-        bot.reply_to(message, "Hello! Your bot is working! Also Aayush smells! Type /join to join")
-        bot.register_next_step_handler(message, get_group_name)
-        group_data = {
-            'group_name': 'New Group',  # Replace with dynamic group name if needed
-            'created_by': user_id  # Replace with dynamic user ID if needed
-        }
+        welcome_message = (
+            "Welcome to CoconutSplit! 🌴\n"
+            "Here are the available commands:\n"
+            "/create_group - Create a new group\n"
+            "/add_expense - Add a new expense\n"
+            "/view_balance - View your balance\n"
+            "/settle_debt - Settle debts\n"
+            "/help - Show this help message"
+        )
+        bot.reply_to(message, welcome_message)
 
-    @bot.message_handler(commands=['join'])
-    def join_group():
-        
-
-    def get_group_name(message):
         
