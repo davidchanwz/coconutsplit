@@ -2,6 +2,7 @@ from typing import List, Dict
 from datetime import datetime
 from client import supa
 import uuid
+import logging
 
 class User:
     def __init__(self, user_id: int, username: str, user_uuid: str = None, currency: str = "USD"):
@@ -42,6 +43,10 @@ class Group:
         self.created_by = created_by
         self.members = [created_by]
         self.created_at = datetime.now()
+
+        # Add logging to check UUID generation and its type
+        logging.info(f"Generated group_id: {self.group_id}")
+        logging.info(f"Type of group_id: {type(self.group_id)}")
 
     def save_to_db(self):
         """Save the group to the database."""
