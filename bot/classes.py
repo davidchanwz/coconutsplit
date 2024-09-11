@@ -56,7 +56,7 @@ class Group:
         group_data = {
             "group_id": self.group_id,  # Store the UUID as a string
             "group_name": self.group_name,
-            "created_by": self.created_by.user_id,
+            "created_by": self.created_by.uuid,
             "created_at": self.created_at.isoformat()  # Serialize datetime to ISO 8601 string
         }
         return supa.table('groups').insert(group_data).execute()
@@ -67,7 +67,7 @@ class Group:
             self.members.append(user)
             member_data = {
                 "group_id": self.group_id,
-                "user_id": user.user_id,
+                "uuid": user.uuid,
                 "joined_at": datetime.now().isoformat()
             }
             return supa.table('group_members').insert(member_data).execute()
