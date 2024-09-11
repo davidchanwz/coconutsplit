@@ -27,7 +27,7 @@ def register_handlers(bot):
         """Step 1: Ask the user for the group name."""
         msg = bot.reply_to(message, "Please enter the name of the group:")
         bot.register_next_step_handler(msg, process_group_name)
-        
+
     def process_group_name(message):
         """Step 2: Process the group name and create a Group with UUID."""
         group_name = message.text

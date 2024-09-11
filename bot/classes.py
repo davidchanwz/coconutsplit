@@ -25,11 +25,15 @@ class User:
     @staticmethod
     def fetch_from_db(user_id: int):
         """Fetch a user from the database by Telegram user_id and create a User instance."""
-        response = supa.table('users').select("*").eq("user_id", user_id).single().execute()
-        user_data = response.data
-        if user_data:
-            return User(user_id=user_data['user_id'], username=user_data['username'], uuid=user_data['uuid'], currency=user_data['currency'])
-        return None
+        try:
+            # Fetch user by user_id (Telegram ID)
+            response = supa.table('users').select("*").eq("user_id", user_id).single().execute()
+            user_data = response.data
+            if user_data:
+                return User(user_id=user_data['user_id'], username=user_data['username'], uuid=user_data['uuid'], currency=user_data['currency'])
+        except Exception as e:
+            print(f"User not found: {e}")
+            return None
 
 class Group:
     def __init__(self, group_id: int, group_name: str, created_by: User):
