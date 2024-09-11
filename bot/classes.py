@@ -67,7 +67,7 @@ class Group:
             self.members.append(user)
             member_data = {
                 "group_id": self.group_id,
-                "uuid": user.uuid,
+                "user_uuid": user.uuid,
                 "joined_at": datetime.now().isoformat()
             }
             return supa.table('group_members').insert(member_data).execute()
@@ -112,7 +112,7 @@ class Expense:
         self.splits[user] = amount
         split_data = {
             "expense_id": self.expense_id,
-            "user_id": user.user_id,
+            "user_uuid": user.uuid,
             "amount_owed": amount
         }
         return supa.table('expense_splits').insert(split_data).execute()
