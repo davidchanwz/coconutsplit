@@ -4,10 +4,10 @@ from client import supa
 import uuid
 
 class User:
-    def __init__(self, user_id: int, username: str, uuid: str = None, currency: str = "USD"):
+    def __init__(self, user_id: int, username: str, user_uuid: str = None, currency: str = "USD"):
         self.user_id = user_id  # This is the Telegram user ID (integer)
         self.username = username
-        self.uuid = uuid or str(uuid.uuid4())  # Generate UUID if not provided
+        self.uuid = user_uuid or str(uuid.uuid4())  # Generate a UUID if not provided
         self.currency = currency
         self.created_at = datetime.now()
 
@@ -30,7 +30,7 @@ class User:
             response = supa.table('users').select("*").eq("user_id", user_id).single().execute()
             user_data = response.data
             if user_data:
-                return User(user_id=user_data['user_id'], username=user_data['username'], uuid=user_data['uuid'], currency=user_data['currency'])
+                return User(user_id=user_data['user_id'], username=user_data['username'], user_uuid=user_data['uuid'], currency=user_data['currency'])
         except Exception as e:
             print(f"User not found: {e}")
             return None
