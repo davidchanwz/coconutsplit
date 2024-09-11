@@ -93,7 +93,7 @@ CREATE TABLE group_members (
 | Column      | Type      | Description                          |
 | ----------- | --------- | ------------------------------------ |
 | `group_id`  | UUID    | UUID of the group                      |
-| `user_id`   | UUID    | UUID of the user                       |
+| `user_uuid`   | UUID    | UUID of the user                       |
 | `joined_at` | TIMESTAMP | Time when the user joined the group  |
 
 ---
@@ -140,7 +140,7 @@ CREATE TABLE expense_splits (
 | Column        | Type      | Description                          |
 | ------------- | --------- | ------------------------------------ |
 | `expense_id`  | UUID    | UUID of the expense                    |
-| `user_id`     | UUID    | UUID of the user who owes              |
+| `user_uuid`     | UUID    | UUID of the user who owes              |
 | `amount_owed` | DECIMAL   | Amount owed by the user              |
 
 ---
