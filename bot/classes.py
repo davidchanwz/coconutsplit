@@ -8,7 +8,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 class User:
-    def __init__(self, user_id: int, username: str, user_uuid: str = None, currency: str = "USD"):
+    def __init__(self, user_id: int, username: str, user_uuid: str = None, currency: str = "SGD"):
         self.user_id = user_id  # This is the Telegram user ID (integer)
         self.username = username
         self.uuid = user_uuid or str(uuid.uuid4())  # Generate a UUID if not provided
