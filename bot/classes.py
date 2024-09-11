@@ -4,6 +4,9 @@ from client import supa
 import uuid
 import logging
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
 class User:
     def __init__(self, user_id: int, username: str, user_uuid: str = None, currency: str = "USD"):
         self.user_id = user_id  # This is the Telegram user ID (integer)
