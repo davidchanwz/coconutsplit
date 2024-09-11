@@ -27,13 +27,13 @@ def register_handlers(bot):
         """Step 1: Ask the user for the group name."""
         msg = bot.reply_to(message, "Please enter the name of the group:")
         bot.register_next_step_handler(msg, process_group_name)
-
+        
     def process_group_name(message):
         """Step 2: Process the group name and create a Group with UUID."""
         group_name = message.text
         group_id = str(uuid.uuid4())  # Generate a UUID for the group
 
-        # Create a User instance for the creator
+        # Fetch user from the database using Telegram user_id (int), create new if necessary
         user = User.fetch_from_db(message.from_user.id)
         if not user:
             user = User(user_id=message.from_user.id, username=message.from_user.username)

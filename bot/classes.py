@@ -2,17 +2,23 @@ from typing import List, Dict
 from datetime import datetime
 from client import supa
 
+import uuid
+from bot.client import supa
+from datetime import datetime
+
 class User:
-    def __init__(self, user_id: int, username: str, currency: str = "USD"):
-        self.user_id = user_id
+    def __init__(self, user_id: int, username: str, uuid: str = None, currency: str = "USD"):
+        self.user_id = user_id  # This is the Telegram user ID (integer)
         self.username = username
+        self.uuid = uuid or str(uuid.uuid4())  # Generate UUID if not provided
         self.currency = currency
         self.created_at = datetime.now()
 
     def save_to_db(self):
         """Save the user to the database."""
         user_data = {
-            "user_id": self.user_id,
+            "uuid": self.uuid,  # The UUID field in the database
+            "user_id": self.user_id,  # The Telegram user ID (integer)
             "username": self.username,
             "currency": self.currency,
             "created_at": self.created_at
@@ -21,11 +27,11 @@ class User:
 
     @staticmethod
     def fetch_from_db(user_id: int):
-        """Fetch a user from the database and create a User instance."""
+        """Fetch a user from the database by Telegram user_id and create a User instance."""
         response = supa.table('users').select("*").eq("user_id", user_id).single().execute()
         user_data = response.data
         if user_data:
-            return User(user_id=user_data['user_id'], username=user_data['username'], currency=user_data['currency'])
+            return User(user_id=user_data['user_id'], username=user_data['username'], uuid=user_data['uuid'], currency=user_data['currency'])
         return None
 
 class Group:
