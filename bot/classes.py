@@ -1,10 +1,7 @@
 from typing import List, Dict
 from datetime import datetime
 from client import supa
-
 import uuid
-from bot.client import supa
-from datetime import datetime
 
 class User:
     def __init__(self, user_id: int, username: str, uuid: str = None, currency: str = "USD"):
