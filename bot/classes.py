@@ -1,3 +1,5 @@
+# bot/classes.py
+
 from typing import List, Dict
 from datetime import datetime
 from client import supa
