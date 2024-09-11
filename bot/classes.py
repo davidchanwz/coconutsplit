@@ -49,7 +49,7 @@ class Group:
             "group_id": self.group_id,
             "group_name": self.group_name,
             "created_by": self.created_by.user_id,
-            "created_at": self.created_at
+            "created_at": self.created_at.isoformat()  # Serialize datetime to ISO 8601 string
         }
         return supa.table('groups').insert(group_data).execute()
 
@@ -60,7 +60,7 @@ class Group:
             member_data = {
                 "group_id": self.group_id,
                 "user_id": user.user_id,
-                "joined_at": datetime.now()
+                "joined_at": datetime.now().isoformat()
             }
             return supa.table('group_members').insert(member_data).execute()
 
@@ -95,7 +95,7 @@ class Expense:
             "paid_by": self.paid_by.user_id,
             "amount": self.amount,
             "description": self.description,
-            "created_at": self.created_at
+            "created_at": self.created_at.isoformat()
         }
         return supa.table('expenses').insert(expense_data).execute()
 
@@ -146,6 +146,6 @@ class Settlement:
             "to_user": self.to_user.user_id,
             "amount": self.amount,
             "group_id": self.group.group_id,
-            "created_at": self.created_at
+            "created_at": self.created_at.isoformat()
         }
         return supa.table('settlements').insert(settlement_data).execute()
