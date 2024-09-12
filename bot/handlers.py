@@ -4,6 +4,8 @@ from telebot import types
 from bot.classes import Group, User, Expense, Settlement
 import uuid
 
+# comment
+
 group_data = {}  # To temporarily store active group data during creation
 
 def register_handlers(bot):
