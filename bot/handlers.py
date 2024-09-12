@@ -75,9 +75,14 @@ def register_handlers(bot):
 
         # Add the user to the group in the database
         if group:
-            group.add_member(user)
-            bot.answer_callback_query(call.id, f"You have joined the group '{group.group_name}'!")
-            bot.send_message(call.message.chat.id, f"{user.username} has joined the group '{group.group_name}'!")
+            if not group.check_user_in_group(user): 
+                group.add_member(user)
+                bot.answer_callback_query(call.id, f"You have joined the group '{group.group_name}'!")
+                bot.send_message(call.message.chat.id, f"{user.username} has joined the group '{group.group_name}'!")
+            else:
+                bot.answer_callback_query(call.id, f"You are already in the group '{group.group_name}'!")
+                bot.send_message(call.message.chat.id, f"{user.username} is already in the group '{group.group_name}'!")
+
         else:
             bot.answer_callback_query(call.id, "Group not found.")
 
