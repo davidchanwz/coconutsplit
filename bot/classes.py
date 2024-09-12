@@ -42,7 +42,7 @@ class User:
             return None
         
     @staticmethod
-    def fetch_from_db_by_uuid(uid: str):
+    def fetch_from_db_by_uuid(uuid: str):
         """Fetch a user from the database by Telegram user_id and create a User instance."""
         try:
             # Fetch user by uuid (Telegram ID)

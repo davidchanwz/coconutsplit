@@ -12,9 +12,10 @@ bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
 commands = [
     types.BotCommand("start", "Start the bot"),
     types.BotCommand("help", "Get help"),
-    types.BotCommand("create_goup", "Create a new group"),
+    types.BotCommand("create_group", "Create a new group"),
     types.BotCommand("delete_group", "Delete the existing group"),
-    types.BotCommand("leave_group", "Leave the group you are in")
+    types.BotCommand("leave_group", "Leave the group you are in"),
+    types.BotCommand("view_users", "View all users in the group")
 
 # Add more commands as needed
 ]
