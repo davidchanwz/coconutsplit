@@ -62,7 +62,7 @@ def register_handlers(bot):
             user = User(user_id=call.from_user.id, username=call.from_user.username)
             user.save_to_db()  # Save the user to the database if not already present
 
-        group = Group.fetch_from_db(group_id)
+        group = Group.fetch_from_db_by_chat(group_id)
 
         # Add the user to the group in the database
         if group:

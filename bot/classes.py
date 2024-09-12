@@ -75,24 +75,6 @@ class Group:
                 "joined_at": datetime.now().isoformat()
             }
             return supa.table('group_members').insert(member_data).execute()
-
-    @staticmethod
-    def fetch_from_db(group_id: int):
-        """Fetch a group from the database and create a Group instance."""
-        response = supa.table('groups').select("*").eq("group_id", group_id).single().execute()
-        group_data = response.data
-        if group_data:
-            created_by_user = User.fetch_from_db(group_data['created_by'])
-            group_instance = Group(
-                group_id=group_data['group_id'], 
-                group_name=group_data['group_name'], 
-                created_by=created_by_user,
-                chat_id=group_data['chat_id'],
-)
-            return group_instance
-        return None
-        # Placeholder for getting the group's balance
-        return 0
     
     @staticmethod
     def fetch_from_db_by_chat(chat_id: int):
