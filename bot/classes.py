@@ -47,12 +47,18 @@ class Group:
         self.group_name = group_name
         self.created_by = created_by
         self.chat_id = chat_id
-        self.members = [created_by]
         self.created_at = datetime.now()
 
         # Add logging to check UUID generation and its type
         logging.info(f"Generated group_id: {self.group_id}")
         logging.info(f"Type of group_id: {type(self.group_id)}")
+
+    def check_user_in_group(self, user: User):
+        existing_user_in_group = supa.table('group_members').eq('user_uuid', user.uuid).eq('group_id', self.group_id).select()
+        if existing_user_in_group:
+            return True
+        else:
+            return False
 
     def save_to_db(self):
         """Save the group to the database."""
@@ -67,8 +73,7 @@ class Group:
 
     def add_member(self, user: User):
         """Add a user to the group and save to database."""
-        if user not in self.members:
-            self.members.append(user)
+        if not check_user_in_group(user):
             member_data = {
                 "group_id": self.group_id,
                 "user_uuid": user.uuid,
@@ -97,7 +102,7 @@ class Group:
         except Exception as e:
             print(f"No group found: {e}")
             return None
-    
+
     def delete_from_db(self):
         """Delete the group and related records (members, expenses, splits) from the database."""
         # Delete related data first (group members, expenses, etc.)
