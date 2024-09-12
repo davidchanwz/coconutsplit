@@ -78,19 +78,23 @@ class Group:
     
     @staticmethod
     def fetch_from_db_by_chat(chat_id: int):
-        """Fetch a group from the database based on chat_id and create a Group instance."""
-        response = supa.table('groups').select("*").eq("chat_id", chat_id).single().execute()
-        group_data = response.data
-        if group_data:
-            created_by_user = User.fetch_from_db(group_data['created_by'])
-            group_instance = Group(
-                group_name=group_data['group_name'],
-                created_by=created_by_user,
-                chat_id=group_data['chat_id'],
-                group_id=group_data['group_id']
-            )
-            return group_instance
-        return None
+        """Fetch a group from the database using the chat_id."""
+        try:
+            response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
+            group_data = response.data
+            if group_data:
+                created_by_user = User.fetch_from_db(group_data['created_by'])
+                group_instance = Group(
+                    group_id=group_data['group_id'],
+                    group_name=group_data['group_name'],
+                    created_by=created_by_user,
+                )
+                return group_instance
+            else:
+                return None
+        except Exception as e:
+            print(f"No group found: {e}")
+            return None
     
     def delete_from_db(self):
         """Delete the group and related records (members, expenses, splits) from the database."""
