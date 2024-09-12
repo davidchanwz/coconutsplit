@@ -8,6 +8,17 @@ group_data = {}  # To temporarily store active group data during creation
 
 def register_handlers(bot):
     """Register all command handlers for the bot."""
+
+    # Define a list of BotCommand objects
+    commands = [
+    types.BotCommand("start", "Start the bot"),
+    types.BotCommand("help", "Get help"),
+
+    # Add more commands as needed
+    ]
+
+    # Set these commands for the bot
+    bot.set_my_commands(commands)
     
     def is_valid_string(message):
         """Check if the message contains valid string input and not media or other content."""
@@ -21,16 +32,12 @@ def register_handlers(bot):
             # If it is valid text, return True
             return True
  
-    @bot.message_handler(commands=['start'])
+    @bot.message_handler(commands=['start', 'help'])
     def send_welcome(message):
         welcome_message = (
             "Welcome to CoconutSplit! 🌴\n"
             "Here are the available commands:\n"
             "/create_group - Create a new group\n"
-            "/add_expense - Add a new expense\n"
-            "/view_balance - View your balance\n"
-            "/settle_debt - Settle debts\n"
-            "/help - Show this help message"
         )
         bot.reply_to(message, welcome_message)
 
