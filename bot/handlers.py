@@ -117,8 +117,7 @@ def register_handlers(bot):
             if group.check_user_in_group(user):
                 # Remove the user from the group
                 group.remove_member(user)
-                bot.reply_to(message, f"You have left '{group.group_name}'.")
-                bot.send_message(chat_id, f"{user.username} has left '{group.group_name}'.")
+                bot.reply_to(chat_id, f"{user.username} has left {group.group_name}.")
             else:
                 bot.reply_to(message, f'You are not a member of {group.group_name}')
         else:
