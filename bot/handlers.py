@@ -55,7 +55,7 @@ def register_handlers(bot):
         group_id = str(uuid.uuid4())  # Generate a UUID for the group
 
         # Fetch user from the database using Telegram user_id (int), create new if necessary
-        user = User.fetch_from_db(message.from_user.id)
+        user = User.fetch_from_db_by_user_id(message.from_user.id)
         if not user:
             user = User(user_id=message.from_user.id, username=message.from_user.username)
             user.save_to_db()  # Save the user to the database if not already saved
@@ -73,11 +73,33 @@ def register_handlers(bot):
 
         bot.send_message(message.chat.id, f"Group '{group_name}' has been created! Click below to join the group.", reply_markup=join_button)
 
+    @bot.message_handler(commands=['view_users'])
+    def view_users(message):
+        """List all users in the group associated with the current chat."""
+        chat_id = message.chat.id
+        
+        # Fetch the group associated with the chat
+        group = Group.fetch_from_db_by_chat(chat_id)
+
+        if group:
+            # Fetch all members of the group from the database
+            members = group.fetch_all_members()
+
+            if members:
+                # Create a list of member usernames or display names
+                member_list = "\n".join([f"- {member.username}" for member in members])
+                bot.reply_to(message, f"Members in {group.group_name}:\n{member_list}")
+            else:
+                bot.reply_to(message, f"No members found in '{group.group_name}'.")
+        else:
+            bot.reply_to(message, "No group exists in this chat.")
+
+
     @bot.callback_query_handler(func=lambda call: call.data.startswith('join_'))
     def handle_join_group(call):
         """Handle users clicking the 'Join Group' button."""
         chat_id = call.message.chat.id  # Get the chat_id from the message
-        user = User.fetch_from_db(call.from_user.id)
+        user = User.fetch_from_db_by_user_id(call.from_user.id)
 
         if not user:
             user = User(user_id=call.from_user.id, username=call.from_user.username)
@@ -102,7 +124,7 @@ def register_handlers(bot):
     def handle_leave_group(message):
         """Allow a user to leave the group associated with the current chat."""
         chat_id = message.chat.id
-        user = User.fetch_from_db(message.from_user.id)
+        user = User.fetch_from_db_by_user_id(message.from_user.id)
 
         # Fetch the group associated with the chat
         group = Group.fetch_from_db_by_chat(chat_id)

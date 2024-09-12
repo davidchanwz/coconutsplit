@@ -29,11 +29,24 @@ class User:
         return supa.table('users').insert(user_data).execute()
 
     @staticmethod
-    def fetch_from_db(user_id: int):
+    def fetch_from_db_by_user_id(user_id: int):
         """Fetch a user from the database by Telegram user_id and create a User instance."""
         try:
             # Fetch user by user_id (Telegram ID)
             response = supa.table('users').select("*").eq("user_id", user_id).single().execute()
+            user_data = response.data
+            if user_data:
+                return User(user_id=user_data['user_id'], username=user_data['username'], user_uuid=user_data['uuid'], currency=user_data['currency'])
+        except Exception as e:
+            print(f"User not found: {e}")
+            return None
+        
+    @staticmethod
+    def fetch_from_db_by_uuid(uid: str):
+        """Fetch a user from the database by Telegram user_id and create a User instance."""
+        try:
+            # Fetch user by uuid (Telegram ID)
+            response = supa.table('users').select("*").eq("uuid", uuid).single().execute()
             user_data = response.data
             if user_data:
                 return User(user_id=user_data['user_id'], username=user_data['username'], user_uuid=user_data['uuid'], currency=user_data['currency'])
@@ -80,6 +93,28 @@ class Group:
                 "joined_at": datetime.now().isoformat()
             }
             return supa.table('group_members').insert(member_data).execute()
+
+    def fetch_all_members(self):
+        """Fetch all members of the group from the database."""
+        try:
+            # Query the 'group_members' table to get all user UUIDs for the group
+            response = supa.table('group_members').select('user_uuid').eq('group_id', self.group_id).execute()
+            
+            # Check if there are any members in the response
+            if response.data:
+                # Fetch user details for each user UUID
+                members = []
+                for member in response.data:
+                    user = User.fetch_from_db_by_uuid(member['user_uuid'])
+                    if user:
+                        members.append(user)
+                
+                return members
+            else:
+                return []
+        except Exception as e:
+            logging.error(f"Error fetching members for group {self.group_id}: {e}")
+            return []
     
     @staticmethod
     def fetch_from_db_by_chat(chat_id: int):
@@ -88,7 +123,7 @@ class Group:
             response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
             group_data = response.data
             if group_data:
-                created_by_user = User.fetch_from_db(group_data['created_by'])
+                created_by_user = User.fetch_from_db_by_user_id(group_data['created_by'])
                 group_instance = Group(
                     group_id=group_data['group_id'],
                     group_name=group_data['group_name'],
@@ -154,7 +189,7 @@ class Expense:
         expense_data = response.data
         if expense_data:
             group = Group.fetch_from_db(expense_data['group_id'])
-            paid_by_user = User.fetch_from_db(expense_data['paid_by'])
+            paid_by_user = User.fetch_from_db_by_user_id(expense_data['paid_by'])
             expense_instance = Expense(
                 expense_id=expense_data['expense_id'], 
                 group=group, 
