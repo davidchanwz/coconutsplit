@@ -1,6 +1,7 @@
 # bot/main.py
 
 import telebot
+from telebot import types
 import os
 from bot.handlers import register_handlers  # Import the handler registration function
 
@@ -9,8 +10,8 @@ bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
 
 # Define a list of BotCommand objects
 commands = [
-types.BotCommand("start", "Start the bot"),
-types.BotCommand("help", "Get help"),
+    types.BotCommand("start", "Start the bot"),
+    types.BotCommand("help", "Get help"),
 
 # Add more commands as needed
 ]
