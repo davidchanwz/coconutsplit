@@ -52,7 +52,7 @@ def register_handlers(bot):
     def process_group_name(message):
         """Step 2: Process the group name and create a Group with UUID."""
         if not is_valid_string(message):
-            bot.reply_to(message, "Invalid input. Please enter a valid group name.")
+            bot.reply_to(message, "Invalid input. Please send /create_group command again and enter a valid group name.")
             return
         group_name = message.text
         group_id = str(uuid.uuid4())  # Generate a UUID for the group
