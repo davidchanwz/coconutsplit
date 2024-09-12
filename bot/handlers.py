@@ -55,14 +55,14 @@ def register_handlers(bot):
     @bot.callback_query_handler(func=lambda call: call.data.startswith('join_'))
     def handle_join_group(call):
         """Handle users clicking the 'Join Group' button."""
-        group_id = call.data.split('_')[1]
+        chat_id = call.message.chat.id  # Get the chat_id from the message
         user = User.fetch_from_db(call.from_user.id)
 
         if not user:
             user = User(user_id=call.from_user.id, username=call.from_user.username)
             user.save_to_db()  # Save the user to the database if not already present
 
-        group = Group.fetch_from_db_by_chat(group_id)
+        group = Group.fetch_from_db_by_chat(chat_id)
 
         # Add the user to the group in the database
         if group:
