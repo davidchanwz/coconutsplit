@@ -42,10 +42,11 @@ class User:
             return None
 
 class Group:
-    def __init__(self, group_name: str, created_by: User, group_id: str = None,):
+    def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None):
         self.group_id = group_id or str(uuid.uuid4())  # Generate UUID if not provided
         self.group_name = group_name
         self.created_by = created_by
+        self.chat_id = chat_id
         self.members = [created_by]
         self.created_at = datetime.now()
 
@@ -59,6 +60,7 @@ class Group:
             "group_id": self.group_id,  # Store the UUID as a string
             "group_name": self.group_name,
             "created_by": self.created_by.uuid,
+            "chat_id": self.chat_id,  # Store the chat ID in the database
             "created_at": self.created_at.isoformat()  # Serialize datetime to ISO 8601 string
         }
         return supa.table('groups').insert(group_data).execute()
@@ -81,11 +83,32 @@ class Group:
         group_data = response.data
         if group_data:
             created_by_user = User.fetch_from_db(group_data['created_by'])
-            group_instance = Group(group_id=group_data['group_id'], group_name=group_data['group_name'], created_by=created_by_user)
+            group_instance = Group(
+                group_id=group_data['group_id'], 
+                group_name=group_data['group_name'], 
+                created_by=created_by_user,
+                chat_id=group_data['chat_id'],
+)
             return group_instance
         return None
         # Placeholder for getting the group's balance
         return 0
+    
+    @staticmethod
+    def fetch_from_db_by_chat(chat_id: int):
+        """Fetch a group from the database based on chat_id and create a Group instance."""
+        response = supa.table('groups').select("*").eq("chat_id", chat_id).single().execute()
+        group_data = response.data
+        if group_data:
+            created_by_user = User.fetch_from_db(group_data['created_by'])
+            group_instance = Group(
+                group_name=group_data['group_name'],
+                created_by=created_by_user,
+                chat_id=group_data['chat_id'],
+                group_id=group_data['group_id']
+            )
+            return group_instance
+        return None
 
 class Expense:
     def __init__(self, expense_id: int, group: Group, paid_by: User, amount: float, description: str):

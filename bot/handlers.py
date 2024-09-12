@@ -40,7 +40,7 @@ def register_handlers(bot):
             user.save_to_db()  # Save the user to the database if not already saved
 
         # Create the Group instance
-        group = Group(group_id=group_id, group_name=group_name, created_by=user)
+        group = Group(group_id=group_id, group_name=group_name, created_by=user, chat_id=message.chat.id)
         group.save_to_db()  # Save the group to the database
 
         # Store group in temporary data
