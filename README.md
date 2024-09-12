@@ -232,7 +232,8 @@ classDiagram
         - datetime created_at
         + save_to_db(): void
         + add_member(user: User): void
-        + fetch_from_db(group_id: string): Group
+        + fetch_from_db_by_chat(chat_id: int): Group
+        + delete_group(): void
     }
 
     class Expense {
