@@ -25,8 +25,17 @@ def register_handlers(bot):
     @bot.message_handler(commands=['create_group'])
     def ask_group_name(message):
         """Step 1: Ask the user for the group name."""
-        msg = bot.reply_to(message, "Please enter the name of the group:")
-        bot.register_next_step_handler(msg, process_group_name)
+        chat_id = message.chat.id
+        
+        # Check if a group already exists for this chat
+        existing_group = Group.fetch_from_db_by_chat(chat_id)
+        
+        if existing_group:
+            bot.reply_to(message, f"A group already exists in this chat: '{existing_group.group_name}'. Please delete the current group before creating a new one.")
+        else:
+            # Proceed with group creation if no group exists
+            msg = bot.reply_to(message, "Please enter the name of the group:")
+            bot.register_next_step_handler(msg, process_group_name)
 
     def process_group_name(message):
         """Step 2: Process the group name and create a Group with UUID."""
@@ -71,5 +80,20 @@ def register_handlers(bot):
             bot.send_message(call.message.chat.id, f"{user.username} has joined the group '{group.group_name}'!")
         else:
             bot.answer_callback_query(call.id, "Group not found.")
+
+    @bot.message_handler(commands=['delete_group'])
+    def delete_group(message):
+        """Delete the group associated with the current chat."""
+        chat_id = message.chat.id
+
+        # Fetch the group associated with the chat
+        group = Group.fetch_from_db_by_chat(chat_id)
+
+        if group:
+            # Delete the group from the database
+            group.delete_from_db()
+            bot.reply_to(message, f"The group '{group.group_name}' has been deleted.")
+        else:
+            bot.reply_to(message, "No group exists in this chat to delete.")
 
         

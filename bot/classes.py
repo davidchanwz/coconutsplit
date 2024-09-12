@@ -91,6 +91,13 @@ class Group:
             )
             return group_instance
         return None
+    
+    def delete_from_db(self):
+        """Delete the group and related records (members, expenses, splits) from the database."""
+        # Delete related data first (group members, expenses, etc.)
+        supa.table('group_members').delete().eq('group_id', self.group_id).execute()
+        supa.table('expenses').delete().eq('group_id', self.group_id).execute()
+        supa.table('groups').delete().eq('group_id', self.group_id).execute()
 
 class Expense:
     def __init__(self, expense_id: int, group: Group, paid_by: User, amount: float, description: str):

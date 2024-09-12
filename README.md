@@ -65,6 +65,7 @@ CREATE TABLE groups (
     group_name TEXT NOT NULL,
     created_by UUID REFERENCES users(uuid),
     created_at TIMESTAMP DEFAULT NOW()
+     COLUMN chat_id BIGINT UNIQUE;
 );
 ```
 
@@ -74,6 +75,7 @@ CREATE TABLE groups (
 | `group_name` | TEXT      | The name of the group                |
 | `created_by` | UUID      | UUID of the user who created the group |
 | `created_at` | TIMESTAMP | The time when the group was created  |
+| `chat_id` | BIGINT | Chat ID of the chat in which the group was created  |
 
 ---
 
