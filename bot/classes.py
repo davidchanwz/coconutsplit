@@ -73,7 +73,7 @@ class Group:
 
     def add_member(self, user: User):
         """Add a user to the group and save to database."""
-        if not check_user_in_group(user):
+        if not self.check_user_in_group(user):
             member_data = {
                 "group_id": self.group_id,
                 "user_uuid": user.uuid,
