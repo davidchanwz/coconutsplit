@@ -30,6 +30,10 @@ def register_handlers(bot):
             "Welcome to CoconutSplit! 🌴\n"
             "Here are the available commands:\n"
             "/create_group - Create a new group\n"
+            "/delete_group - Delete the existing group\n"
+            "/leave_group - Leave the group you are in\n"
+            "/view_users - View all users in the group\n"
+            "/help - View list of commands\n"
         )
         bot.reply_to(message, welcome_message)
 
