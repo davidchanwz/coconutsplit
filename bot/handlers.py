@@ -89,14 +89,44 @@ def register_handlers(bot):
         if group:
             if not group.check_user_in_group(user): 
                 group.add_member(user)
-                bot.answer_callback_query(call.id, f"You have joined the group '{group.group_name}'!")
-                bot.send_message(call.message.chat.id, f"{user.username} has joined the group '{group.group_name}'!")
+                bot.answer_callback_query(call.id, f"You have joined'{group.group_name}'!")
+                bot.send_message(call.message.chat.id, f"{user.username} has joined '{group.group_name}'!")
             else:
-                bot.answer_callback_query(call.id, f"You are already in the group '{group.group_name}'!")
-                bot.send_message(call.message.chat.id, f"{user.username} is already in the group '{group.group_name}'!")
+                bot.answer_callback_query(call.id, f"You are already in '{group.group_name}'!")
+                bot.send_message(call.message.chat.id, f"{user.username} is already in '{group.group_name}'!")
 
         else:
             bot.answer_callback_query(call.id, "Group not found.")
+
+    @bot.message_handler(commands=['leave_group'])
+    def handle_leave_group(message):
+        """Allow a user to leave the group associated with the current chat."""
+        chat_id = message.chat.id
+        user = User.fetch_from_db(message.from_user.id)
+
+        
+   
+        # Fetch the group associated with the chat
+        group = Group.fetch_from_db_by_chat(chat_id)
+        # Check if the user exists in the database
+        
+        if not user:
+            bot.reply_to(message, f'You are not a member of {group.group_name}')
+            return
+
+
+        if group:
+            # Check if the user is in the group
+            if group.check_user_in_group(user):
+                # Remove the user from the group
+                group.remove_member(user)
+                bot.reply_to(message, f"You have left '{group.group_name}'.")
+                bot.send_message(chat_id, f"{user.username} has left '{group.group_name}'.")
+            else:
+                bot.reply_to(message, f'You are not a member of {group.group_name}')
+        else:
+            bot.reply_to(message, "No group exists in this chat to leave.")
+
 
     @bot.message_handler(commands=['delete_group'])
     def delete_group(message):

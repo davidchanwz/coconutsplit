@@ -13,7 +13,8 @@ commands = [
     types.BotCommand("start", "Start the bot"),
     types.BotCommand("help", "Get help"),
     types.BotCommand("create_goup", "Create a new group"),
-    types.BotCommand("delete_group", "Delete group")
+    types.BotCommand("delete_group", "Delete the existing group"),
+    types.BotCommand("leave_group", "Leave the group you are in")
 
 # Add more commands as needed
 ]
