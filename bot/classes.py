@@ -54,7 +54,7 @@ class Group:
         logging.info(f"Type of group_id: {type(self.group_id)}")
 
     def check_user_in_group(self, user: User):
-        existing_user_in_group = supa.table('group_members').eq('user_uuid', user.uuid).eq('group_id', self.group_id).select()
+        existing_user_in_group = supa.table('group_members').select('*').eq('user_uuid', user.uuid).eq('group_id', self.group_id)
         if existing_user_in_group:
             return True
         else:
