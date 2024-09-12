@@ -8,6 +8,18 @@ group_data = {}  # To temporarily store active group data during creation
 
 def register_handlers(bot):
     """Register all command handlers for the bot."""
+    
+    def is_valid_string(message):
+        """Check if the message contains valid string input and not media or other content."""
+        if message.content_type != 'text':
+            # If the message content is not text, return False
+            return False
+        elif not message.text.strip():
+            # If the text is empty or only whitespace, return False
+            return False
+        else:
+            # If it is valid text, return True
+            return True
  
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
@@ -39,6 +51,9 @@ def register_handlers(bot):
 
     def process_group_name(message):
         """Step 2: Process the group name and create a Group with UUID."""
+        if not is_valid_string(message):
+            bot.reply_to(message, "Invalid input. Please enter a valid group name.")
+            return
         group_name = message.text
         group_id = str(uuid.uuid4())  # Generate a UUID for the group
 
