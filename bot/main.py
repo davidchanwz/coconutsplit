@@ -7,6 +7,17 @@ from bot.handlers import register_handlers  # Import the handler registration fu
 # Initialize the bot with the token from environment variables
 bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
 
+# Define a list of BotCommand objects
+commands = [
+types.BotCommand("start", "Start the bot"),
+types.BotCommand("help", "Get help"),
+
+# Add more commands as needed
+]
+
+# Set these commands for the bot
+bot.set_my_commands(commands)
+
 # Register the handlers from handlers.py
 register_handlers(bot)
 

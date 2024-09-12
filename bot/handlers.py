@@ -9,16 +9,6 @@ group_data = {}  # To temporarily store active group data during creation
 def register_handlers(bot):
     """Register all command handlers for the bot."""
 
-    # Define a list of BotCommand objects
-    commands = [
-    types.BotCommand("start", "Start the bot"),
-    types.BotCommand("help", "Get help"),
-
-    # Add more commands as needed
-    ]
-
-    # Set these commands for the bot
-    bot.set_my_commands(commands)
     
     def is_valid_string(message):
         """Check if the message contains valid string input and not media or other content."""
