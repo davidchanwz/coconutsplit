@@ -109,6 +109,11 @@ class Group:
         supa.table('group_members').delete().eq('group_id', self.group_id).execute()
         supa.table('expenses').delete().eq('group_id', self.group_id).execute()
         supa.table('groups').delete().eq('group_id', self.group_id).execute()
+    
+    def remove_member(self, user: User):
+        """Delete user from the group_members table in database."""
+        # Delete related data first (group members, expenses, etc.)
+        supa.table('group_members').delete().eq('user_uuid', user.uuid).execute()
 
 class Expense:
     def __init__(self, expense_id: int, group: Group, paid_by: User, amount: float, description: str):

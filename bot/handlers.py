@@ -104,8 +104,6 @@ def register_handlers(bot):
         chat_id = message.chat.id
         user = User.fetch_from_db(message.from_user.id)
 
-        
-   
         # Fetch the group associated with the chat
         group = Group.fetch_from_db_by_chat(chat_id)
         # Check if the user exists in the database
@@ -113,7 +111,6 @@ def register_handlers(bot):
         if not user:
             bot.reply_to(message, f'You are not a member of {group.group_name}')
             return
-
 
         if group:
             # Check if the user is in the group
