@@ -222,18 +222,23 @@ classDiagram
         - datetime created_at
         - string currency = "SGD"
         + save_to_db(): void
-        + fetch_from_db(user_id: int): User
+        + fetch_from_db_by_user_id(user_id: int): User
+        + fetch_from_db_by_uuid(uuid: string): User
     }
     
     class Group {
         - string group_id
         - string group_name
         - User created_by
+        - int chat_id
         - datetime created_at
         + save_to_db(): void
         + add_member(user: User): void
         + fetch_from_db_by_chat(chat_id: int): Group
-        + delete_group(): void
+        + delete_from_db(): void
+        + check_user_in_group(user: User): bool
+        + remove_member(user: User): void
+        + fetch_all_members(): List[User]
     }
 
     class Expense {
