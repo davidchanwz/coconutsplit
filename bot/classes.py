@@ -88,6 +88,8 @@ class Group:
                     group_id=group_data['group_id'],
                     group_name=group_data['group_name'],
                     created_by=created_by_user,
+                    chat_id=group_data['chat_id']  # Ensure you pass chat_id
+
                 )
                 return group_instance
             else:
