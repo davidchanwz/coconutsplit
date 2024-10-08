@@ -11,19 +11,16 @@ def register_handlers(bot):
     """Register all command handlers for the bot."""
 
     @bot.message_handler(commands=['random_word'])
-    def send_random_word(message):
+    def send_random_pictionary_word(message):
         try:
-            # Make a request to the Random Word API
+            # Use the Pictionary Word Generator API (GitHub)
             response = requests.get("https://pictionary-word-generator-api.onrender.com/words/animal/random")
 
-            # Check if the response is successful
             if response.status_code == 200:
-                # Parse the response to get the random word (response is a list of words)
-                random_word = response.json()[0]
-                bot.reply_to(message, f"Your random word is: {random_word}")
+                random_word = response.json().get("words", ["No word found"])[0]
+                bot.reply_to(message, f"Your random Pictionary word is: {random_word}")
             else:
-                bot.reply_to(message, "Sorry, I couldn't fetch a word at the moment. Please try again later.")
-
+                bot.reply_to(message, "Failed to fetch a random word. Try again later.")
         except Exception as e:
             bot.reply_to(message, f"An error occurred: {e}")
 
