@@ -10,6 +10,7 @@ bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
 
 # Define a list of BotCommand objects
 commands = [
+    types.BotCommand("random_word", "Generate random word"),
     types.BotCommand("start", "Start the bot"),
     types.BotCommand("help", "Get help"),
     types.BotCommand("create_group", "Create a new group"),

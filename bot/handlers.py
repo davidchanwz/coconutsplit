@@ -1,6 +1,7 @@
 # bot/handlers.py
 from client import supa
 from telebot import types
+import requests
 from bot.classes import Group, User, Expense, Settlement
 import uuid
 
@@ -8,6 +9,23 @@ group_data = {}  # To temporarily store active group data during creation
 
 def register_handlers(bot):
     """Register all command handlers for the bot."""
+
+    @bot.message_handler(commands=['random_word'])
+    def send_random_word(message):
+        try:
+            # Make a request to the Random Word API
+            response = requests.get("https://random-word-api.herokuapp.com/word?number=1")
+
+            # Check if the response is successful
+            if response.status_code == 200:
+                # Parse the response to get the random word (response is a list of words)
+                random_word = response.json()[0]
+                bot.reply_to(message, f"Your random word is: {random_word}")
+            else:
+                bot.reply_to(message, "Sorry, I couldn't fetch a word at the moment. Please try again later.")
+
+        except Exception as e:
+            bot.reply_to(message, f"An error occurred: {e}")
 
     
     def is_valid_string(message):
