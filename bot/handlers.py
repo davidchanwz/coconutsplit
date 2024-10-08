@@ -14,7 +14,7 @@ def register_handlers(bot):
     def send_random_pictionary_word(message):
         try:
             # Use the Pictionary Word Generator API (GitHub)
-            response = requests.get("https://pictionary-word-generator-api.onrender.com/words/animal/random")
+            response = requests.get("https://pictionary-word-generator-api.onrender.com/words/object/random")
 
             if response.status_code == 200:
                 random_word = response.json().get("words", ["No word found"])[0]
