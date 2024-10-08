@@ -5,6 +5,8 @@ import requests
 from bot.classes import Group, User, Expense, Settlement
 import uuid
 
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 group_data = {}  # To temporarily store active group data during creation
 
 def register_handlers(bot):
