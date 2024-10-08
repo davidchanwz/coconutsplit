@@ -11,18 +11,42 @@ def register_handlers(bot):
     """Register all command handlers for the bot."""
 
     @bot.message_handler(commands=['random_word'])
-    def send_random_pictionary_word(message):
-        try:
-            # Use the Pictionary Word Generator API (GitHub)
-            response = requests.get("https://pictionary-word-generator-api.onrender.com/words/object/random")
+    def send_random_word_command(message):
+        # Create an inline keyboard with different category buttons
+        markup = InlineKeyboardMarkup()
+        markup.add(InlineKeyboardButton("Animal", callback_data='category_animal'))
+        markup.add(InlineKeyboardButton("Place", callback_data='category_place'))
+        markup.add(InlineKeyboardButton("Object", callback_data='category_object'))
+        markup.add(InlineKeyboardButton("Verb", callback_data='category_verb'))
+        markup.add(InlineKeyboardButton("Person", callback_data='category_person'))
+        markup.add(InlineKeyboardButton("Hard", callback_data='category_hard'))
 
+        # Send a message with the inline keyboard
+        bot.send_message(message.chat.id, "Please choose a category for your random word:", reply_markup=markup)
+
+    # Handler for the inline button callback queries
+    @bot.callback_query_handler(func=lambda call: call.data.startswith('category_'))
+    def handle_category_selection(call):
+        # Extract the category from the callback data
+        category = call.data.split('_')[1]  # Gets 'animal', 'place', etc.
+        api_url = f"https://pictionary-word-generator-api.onrender.com/words/{category}/random"
+        
+        try:
+            # Make a request to the Pictionary API with the selected category
+            response = requests.get(api_url)
+
+            # Check if the request was successful
             if response.status_code == 200:
+                # Retrieve the random word from the response
                 random_word = response.json().get("words", ["No word found"])[0]
-                bot.reply_to(message, f"Your random Pictionary word is: {random_word}")
+                bot.send_message(call.message.chat.id, f"Your random word from the '{category}' category is: {random_word}")
             else:
-                bot.reply_to(message, "Failed to fetch a random word. Try again later.")
+                bot.send_message(call.message.chat.id, "Failed to fetch a random word. Please try again later.")
         except Exception as e:
-            bot.reply_to(message, f"An error occurred: {e}")
+            bot.send_message(call.message.chat.id, f"An error occurred: {e}")
+
+        # Answer the callback query to remove the "loading" state
+        bot.answer_callback_query(call.id, "Category selected!")
 
     
     def is_valid_string(message):
