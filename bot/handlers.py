@@ -14,7 +14,7 @@ def register_handlers(bot):
     def send_random_word(message):
         try:
             # Make a request to the Random Word API
-            response = requests.get("https://random-word-api.herokuapp.com/word?number=1")
+            response = requests.get("https://pictionary-word-generator-api.onrender.com/words/animal/random")
 
             # Check if the response is successful
             if response.status_code == 200:
