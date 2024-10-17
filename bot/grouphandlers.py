@@ -1,4 +1,4 @@
-# bot/handlers.py
+# bot/grouphandlers.py
 from client import supa
 from telebot import types
 import requests
@@ -9,7 +9,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 group_data = {}  # To temporarily store active group data during creation
 
-def register_handlers(bot):
+def register_group_handlers(bot):
     """Register all command handlers for the bot."""
 
     @bot.message_handler(commands=['random_word'])

@@ -132,10 +132,11 @@ Stores how expenses are split among group members.
 
 ```sql
 CREATE TABLE expense_splits (
-    expense_id UUID REFERENCES expenses(expense_id),
-    user_uuid UUID REFERENCES users(uuid),
+    group_id UUID REFERENCES groups(group_id),
+    user_id UUID REFERENCES users(uuid),   -- The user who owes money
+    opp_user_id UUID REFERENCES users(uuid), -- The user to whom money is owed
     amount_owed DECIMAL(10, 2),
-    PRIMARY KEY (expense_id, user_id)
+    PRIMARY KEY (group_id, user_id, opposing_user_id)
 );
 ```
 
@@ -143,6 +144,7 @@ CREATE TABLE expense_splits (
 | ------------- | --------- | ------------------------------------ |
 | `expense_id`  | UUID    | UUID of the expense                    |
 | `user_uuid`     | UUID    | UUID of the user who owes              |
+| `opp_user_uuid`     | UUID    | UUID of the user who is owed              |
 | `amount_owed` | DECIMAL   | Amount owed by the user              |
 
 ---

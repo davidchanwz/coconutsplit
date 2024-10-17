@@ -53,6 +53,35 @@ class User:
         except Exception as e:
             print(f"User not found: {e}")
             return None
+        
+    
+    @staticmethod
+    def fetch_from_db_by_username(username: str):
+        """
+        Fetch a user from the database by their Telegram handle (username).
+
+        Args:
+            username (str): The Telegram handle of the user.
+
+        Returns:
+            User: An instance of the User class if the user is found, None otherwise.
+        """
+        try:
+            response = supa.table('users').select("*").eq("username", username).single().execute()
+            user_data = response.data
+            if user_data:
+                return User(
+                    user_id=user_data['user_id'],
+                    username=user_data['username'],
+                    user_uuid=user_data['uuid'],
+                    currency=user_data['currency']
+                )
+            else:
+                print(f"User with handle @{username} not found.")
+                return None
+        except Exception as e:
+            print(f"Error fetching user by username @{username}: {e}")
+            return None
 
 class Group:
     def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None):
@@ -177,57 +206,58 @@ class Group:
         supa.table('expense_splits').delete().eq('user_id', user.uuid).execute()
         supa.table('expense_splits').delete().eq('opp_user_id', user.uuid).execute()
 
+
+# Expense Class
 class Expense:
-    def __init__(self, expense_id: int, group: Group, paid_by: User, amount: float, description: str):
-        self.expense_id = expense_id
+    def __init__(self, group: Group, paid_by: User, amount: float, description: str, expense_id: str = None):
+        self.expense_id = expense_id or str(uuid.uuid4())
         self.group = group
         self.paid_by = paid_by
         self.amount = amount
         self.description = description
         self.created_at = datetime.now()
-        self.splits: Dict[User, float] = {}
 
     def save_to_db(self):
         """Save the expense to the database."""
         expense_data = {
             "expense_id": self.expense_id,
             "group_id": self.group.group_id,
-            "paid_by": self.paid_by.user_id,
+            "paid_by": self.paid_by.uuid,
             "amount": self.amount,
             "description": self.description,
             "created_at": self.created_at.isoformat()
         }
         return supa.table('expenses').insert(expense_data).execute()
 
-    def add_split(self, user: User, amount: float):
-        """Add a split for the expense."""
-        self.splits[user] = amount
-        split_data = {
-            "expense_id": self.expense_id,
-            "user_uuid": user.uuid,
-            "amount_owed": amount
-        }
-        return supa.table('expense_splits').insert(split_data).execute()
+    def add_split(self, user: User, amount_owed: float):
+        """Add an expense split for a user."""
+        # Check if a split already exists
+        response = supa.table('expense_splits').select("*").eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).single().execute()
+        
+        if response.data:
+            # If it exists, update the amount owed
+            new_amount = response.data['amount_owed'] + amount_owed
+            supa.table('expense_splits').update({'amount_owed': new_amount}).eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).execute()
+        else:
+            # Otherwise, insert a new entry
+            split_data = {
+                "group_id": self.group.group_id,
+                "user_id": user.uuid,  # The user who owes
+                "opp_user_id": self.paid_by.uuid,  # The user who is owed
+                "amount_owed": amount_owed
+            }
+            supa.table('expense_splits').insert(split_data).execute()
 
     @staticmethod
-    def fetch_from_db(expense_id: int):
-        """Fetch an expense from the database and create an Expense instance."""
-        response = supa.table('expenses').select("*").eq("expense_id", expense_id).single().execute()
-        expense_data = response.data
-        if expense_data:
-            group = Group.fetch_from_db(expense_data['group_id'])
-            paid_by_user = User.fetch_from_db_by_user_id(expense_data['paid_by'])
-            expense_instance = Expense(
-                expense_id=expense_data['expense_id'], 
-                group=group, 
-                paid_by=paid_by_user, 
-                amount=expense_data['amount'], 
-                description=expense_data['description']
-            )
-            return expense_instance
-        return None
-        self.splits[user] = amount
-        print(f"Added split for {user.username}: {amount}")
+    def fetch_expenses_by_group(group: Group):
+        """Fetch all expenses for a group."""
+        response = supa.table('expenses').select("*").eq('group_id', group.group_id).execute()
+        expenses = []
+        if response.data:
+            for exp in response.data:
+                paid_by_user = User.fetch_from_db_by_uuid(exp['paid_by'])
+                expenses.append(Expense(group=group, paid_by=paid_by_user, amount=exp['amount'], description=exp['description'], expense_id=exp['expense_id']))
+        return expenses
 
 class Settlement:
     def __init__(self, settlement_id: int, from_user: User, to_user: User, amount: float, group: Group):
