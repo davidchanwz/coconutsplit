@@ -248,6 +248,25 @@ class Expense:
             }
             supa.table('expense_splits').insert(split_data).execute()
 
+    def add_split_reverse(self, user: User, amount_owed: float):
+        """Add an expense split for a user."""
+        # Check if a split already exists
+        response = supa.table('expense_splits').select("*").eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).single().execute()
+        
+        if response.data:
+            # If it exists, update the amount owed
+            new_amount = response.data['amount_owed'] + amount_owed
+            supa.table('expense_splits').update({'amount_owed': new_amount}).eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).execute()
+        else:
+            # Otherwise, insert a new entry
+            split_data = {
+                "group_id": self.group.group_id,
+                "user_id": self.paid_by.uuid,  # The user who owes
+                "opp_user_id": user.uuid,  # The user who is owed
+                "amount_owed": amount_owed
+            }
+            supa.table('expense_splits').insert(split_data).execute()
+
     @staticmethod
     def fetch_expenses_by_group(group: Group):
         """Fetch all expenses for a group."""
