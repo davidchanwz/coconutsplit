@@ -92,6 +92,32 @@ class Group:
                 "user_uuid": user.uuid,
                 "joined_at": datetime.now().isoformat()
             }
+
+            existing_members = self.fetch_all_members()
+            
+            for member in existing_members:
+                # Create two entries in the expense_splits table:
+                # 1. The new user owes the existing member 0
+                # 2. The existing member owes the new user 0
+
+                split_data_new_to_existing = {
+                    "group_id": self.group_id,
+                    "user_id": user.uuid,  # New member
+                    "opp_user_id": member.uuid,  # Existing member
+                    "amount_owed": 0
+                }
+
+                split_data_existing_to_new = {
+                    "group_id": self.group_id,
+                    "user_id": member.uuid,  # Existing member
+                    "opp_user_id": user.uuid,  # New member
+                    "amount_owed": 0
+                }
+
+                # Insert into expense_splits table
+                supa.table('expense_splits').insert(split_data_new_to_existing).execute()
+                supa.table('expense_splits').insert(split_data_existing_to_new).execute()
+
             return supa.table('group_members').insert(member_data).execute()
 
     def fetch_all_members(self):
