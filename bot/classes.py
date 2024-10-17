@@ -94,7 +94,6 @@ class Group:
             }
 
             existing_members = self.fetch_all_members()
-            
             for member in existing_members:
                 # Create two entries in the expense_splits table:
                 # 1. The new user owes the existing member 0
@@ -175,6 +174,8 @@ class Group:
         """Delete user from the group_members table in database."""
         # Delete related data first (group members, expenses, etc.)
         supa.table('group_members').delete().eq('user_uuid', user.uuid).execute()
+        supa.table('expense_splits').delete().eq('user_id', user.uuid).execute()
+        supa.table('expense_splits').delete().eq('opp_user_id', user.uuid).execute()
 
 class Expense:
     def __init__(self, expense_id: int, group: Group, paid_by: User, amount: float, description: str):
