@@ -119,7 +119,7 @@ def register_expense_handlers(bot):
         # Step 6: Update expense splits for users tagged without specific amounts (split the remaining amount)
         for tagged_user in tagged_without_amount:
             expense.add_split(user=tagged_user, amount_owed=split_amount_per_user)  # Tagged users without amount owe their split
-            expense.add_split_reverse(user=user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
+            expense.add_split_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
 
         print("Expense processing complete.")
             
