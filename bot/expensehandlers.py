@@ -98,6 +98,10 @@ def register_expense_handlers(bot):
                     tagged_without_amount.append(tagged_user)
                 else:
                     raise ValueError(f"User @{username} not found in the database.")
+                    
+        if total_tagged_amount > expense_amount:
+            raise ValueError(f"Total tagged amount ({total_tagged_amount}) exceeds the expense amount ({expense_amount}).")
+
 
         # Step 3: Calculate the remaining amount to be split among users with no specific amount
         remaining_amount = expense_amount - total_tagged_amount
