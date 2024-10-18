@@ -153,3 +153,107 @@ def register_expense_handlers(bot):
 
         # Send the formatted list of expenses
         bot.send_message(chat_id, "\n".join(expense_list))
+
+    @bot.message_handler(commands=['show_debts'])
+    def show_debts(message):
+        chat_id = message.chat.id
+        user_id = message.from_user.id
+
+        # Fetch the group by chat ID
+        group = Group.fetch_from_db_by_chat(chat_id)
+
+        if group is None:
+            bot.send_message(chat_id, "No group associated with this chat.")
+            return
+
+        # Fetch all expense splits for the group
+        splits = fetch_splits_by_group(group)
+
+        if not splits:
+            bot.send_message(chat_id, "There are no recorded debts in this group.")
+            return
+
+        # Step 1: Aggregate debts (netted amounts owed between users)
+        user_balances = calculate_user_balances(splits)
+
+        # Step 2: Simplify debts (minimize transactions)
+        simplified_debts = simplify_debts(user_balances)
+
+        # Step 3: Display the results
+        if simplified_debts:
+            display_debts(simplified_debts, chat_id)
+        else:
+            bot.send_message(chat_id, "All debts have been settled!")
+
+    def fetch_splits_by_group(group: Group):
+        """Fetch all splits from the expense_splits table for a given group."""
+        response = supa.table('expense_splits').select('*').eq('group_id', group.group_id).execute()
+        return response.data
+
+    def calculate_user_balances(splits):
+        """Calculate the net balances for each user based on expense splits."""
+        balances = {}
+
+        for split in splits:
+            user_id = split['user_id']
+            opp_user_id = split['opp_user_id']
+            amount_owed = split['amount_owed']
+
+            # Update balances for the user
+            if user_id not in balances:
+                balances[user_id] = 0
+            balances[user_id] -= amount_owed
+
+            # Update balances for the opposite user
+            if opp_user_id not in balances:
+                balances[opp_user_id] = 0
+            balances[opp_user_id] += amount_owed
+
+        return balances
+
+    def simplify_debts(balances):
+        """Simplify debts by finding who owes what to whom."""
+        creditors = []
+        debtors = []
+
+        # Split users into creditors (positive balance) and debtors (negative balance)
+        for user_id, balance in balances.items():
+            if balance > 0:
+                creditors.append((user_id, balance))  # Users who are owed money
+            elif balance < 0:
+                debtors.append((user_id, -balance))  # Users who owe money
+
+        simplified_debts = []
+        while creditors and debtors:
+            creditor_id, credit_amount = creditors.pop()
+            debtor_id, debt_amount = debtors.pop()
+
+            # Calculate the minimum of what the debtor owes and what the creditor is owed
+            amount = min(credit_amount, debt_amount)
+
+            # Record this transaction
+            simplified_debts.append((debtor_id, creditor_id, amount))
+
+            # Adjust the remaining balances
+            credit_amount -= amount
+            debt_amount -= amount
+
+            # If there's remaining debt, push the debtor back
+            if debt_amount > 0:
+                debtors.append((debtor_id, debt_amount))
+
+            # If there's remaining credit, push the creditor back
+            if credit_amount > 0:
+                creditors.append((creditor_id, credit_amount))
+
+        return simplified_debts
+
+    def display_debts(debts, chat_id):
+        """Format and display simplified debts in the group."""
+        debt_messages = []
+        for debtor_id, creditor_id, amount in debts:
+            debtor = User.fetch_from_db_by_uuid(debtor_id)
+            creditor = User.fetch_from_db_by_uuid(creditor_id)
+            debt_messages.append(f"{debtor.username} owes {creditor.username} {amount:.2f}")
+
+        bot.send_message(chat_id, "\n".join(debt_messages))
