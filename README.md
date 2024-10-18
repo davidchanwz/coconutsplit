@@ -267,10 +267,10 @@ classDiagram
         - float amount
         - string description
         - datetime created_at
-        - Dict[User, float] splits
         + save_to_db(): void
-        + add_split(user: User, amount: float): void
-        + fetch_from_db(expense_id: string): Expense
+        + add_split(user: User, amount_owed: float): void
+        + add_split_reverse(user: User, amount_owed: float): void
+        + fetch_expenses_by_group(group: Group): List~Expense~
     }
 
     class Settlement {
@@ -346,4 +346,30 @@ The `Group` class represents a group created within the CoconutSplit bot. Groups
 - **`remove_member(user: User)`**:
   Removes a specific `User` from the group by deleting the entry from the `group_members` table in the database.
 
+---
+### `Expense` Class
+
+The `Expense` class represents an expense created within a group in the CoconutSplit bot. Each expense records the total amount, who paid, and the splits among group members.
+
+#### Attributes:
+- `expense_id` (str): A unique UUID for the expense, generated if not provided.
+- `group` (Group): The group in which the expense was created.
+- `paid_by` (User): The user who paid the expense.
+- `amount` (float): The total amount of the expense.
+- `description` (str): A short description of the expense.
+- `created_at` (datetime): Timestamp when the expense was created.
+
+#### Methods:
+
+- **`save_to_db()`**:  
+  Saves the `Expense` object to the database, including the `expense_id`, `group_id`, `paid_by`, `amount`, and `description`.
+
+- **`add_split(user: User, amount_owed: float)`**:  
+  Adds an entry to the `expense_splits` table, representing how much a user owes for this specific expense. If a split already exists between the user and the payer for the given group, the method updates the existing record instead of creating a new one.
+
+- **`add_split_reverse(user: User, amount_owed: float)`**:  
+  Adds a reverse entry to the `expense_splits` table, recording how much the payer is owed by the user. Similar to `add_split()`, this method updates the existing record if necessary.
+
+- **`fetch_expenses_by_group(group: Group)`**:  
+  A static method that retrieves all expenses associated with a given group from the database and returns a list of `Expense` objects. This includes fetching details like who paid for the expense and the amount.
 ---

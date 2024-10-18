@@ -18,7 +18,9 @@ commands = [
     types.BotCommand("delete_group", "Delete the existing group"),
     types.BotCommand("leave_group", "Leave the group you are in"),
     types.BotCommand("view_users", "View all users in the group"),
-    types.BotCommand("add_expense", "Add an expense")
+    types.BotCommand("add_expense", "Add an expense"),
+    types.BotCommand("show_expenses", "Add an expense"),
+
 
 
 # Add more commands as needed

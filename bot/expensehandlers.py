@@ -98,7 +98,7 @@ def register_expense_handlers(bot):
                     tagged_without_amount.append(tagged_user)
                 else:
                     raise ValueError(f"User @{username} not found in the database.")
-                    
+
         if total_tagged_amount > expense_amount:
             raise ValueError(f"Total tagged amount ({total_tagged_amount}) exceeds the expense amount ({expense_amount}).")
 
@@ -126,4 +126,30 @@ def register_expense_handlers(bot):
             expense.add_split_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
 
         print("Expense processing complete.")
-            
+
+    @bot.message_handler(commands=['show_expenses'])
+    def show_expenses(message):
+        chat_id = message.chat.id
+        user_id = message.from_user.id
+
+        # Fetch the group by chat ID
+        group = Group.fetch_from_db_by_chat(chat_id)
+
+        if group is None:
+            bot.send_message(chat_id, "No group associated with this chat.")
+            return
+
+        # Fetch expenses for the group
+        expenses = Expense.fetch_expenses_by_group(group)
+
+        if not expenses:
+            bot.send_message(chat_id, "There are no expenses recorded in this group.")
+            return
+
+        # Format the list of expenses
+        expense_list = []
+        for expense in expenses:
+            expense_list.append(f"• {expense.description}: {expense.amount} (Paid by {expense.paid_by.username})")
+
+        # Send the formatted list of expenses
+        bot.send_message(chat_id, "\n".join(expense_list))
