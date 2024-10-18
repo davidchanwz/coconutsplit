@@ -194,20 +194,23 @@ def register_expense_handlers(bot):
         """Calculate the net balances for each user based on expense splits."""
         balances = {}
 
+        # Process each split, but only handle the "positive" direction (one-way) to avoid double counting
         for split in splits:
             user_id = split['user_id']
             opp_user_id = split['opp_user_id']
             amount_owed = split['amount_owed']
 
-            # Update balances for the user
-            if user_id not in balances:
-                balances[user_id] = 0
-            balances[user_id] -= amount_owed
+            # Only consider debts where amount_owed > 0 (ignore the reverse row where the amount is negative)
+            if amount_owed > 0:
+                # Update balances for the user who owes
+                if user_id not in balances:
+                    balances[user_id] = 0
+                balances[user_id] -= amount_owed  # This user owes money
 
-            # Update balances for the opposite user
-            if opp_user_id not in balances:
-                balances[opp_user_id] = 0
-            balances[opp_user_id] += amount_owed
+                # Update balances for the opposite user who is owed
+                if opp_user_id not in balances:
+                    balances[opp_user_id] = 0
+                balances[opp_user_id] += amount_owed  # The opposite user is owed money
 
         return balances
 
