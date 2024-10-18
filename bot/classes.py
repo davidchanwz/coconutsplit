@@ -177,7 +177,7 @@ class Group:
             response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
             group_data = response.data
             if group_data:
-                created_by_user = User.fetch_from_db_by_user_id(group_data['created_by'])
+                created_by_user = User.fetch_from_db_by_uuid(group_data['created_by'])
                 group_instance = Group(
                     group_id=group_data['group_id'],
                     group_name=group_data['group_name'],
