@@ -119,11 +119,14 @@ def register_expense_handlers(bot):
         for tagged_user, amount in tagged_with_amount.items():
             expense.add_debt(user=tagged_user, amount_owed=amount)  # The tagged user owes the payer
             expense.add_debt_reverse(user=tagged_user, amount_owed=-amount)  # The payer is owed the same amount from the tagged user
+            expense.add_split(user=tagged_user, amount=amount) # Add expense split to table
 
         # Step 6: Update expense splits for users tagged without specific amounts (split the remaining amount)
         for tagged_user in tagged_without_amount:
             expense.add_debt(user=tagged_user, amount_owed=split_amount_per_user)  # Tagged users without amount owe their split
             expense.add_debt_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
+            expense.add_split(user=tagged_user, amount=split_amount_per_user) # Add expense split to table
+
 
         print("Expense processing complete.")
 
@@ -149,8 +152,19 @@ def register_expense_handlers(bot):
         # Format the list of expenses
         expense_list = []
         for expense in expenses:
-            expense_list.append(f"• {expense.description}: {expense.amount} (Paid by {expense.paid_by.username})")
+            # Add main expense details
+            expense_details = f"• {expense.description}: {expense.amount} (Paid by {expense.paid_by})"
+            
+            # Fetch splits for this expense
+            splits = Expense.fetch_splits_by_expense(expense.expense_id)
+            
+            if splits:
+                split_details = "\n   🔸 Splits:"
+                for split in splits:
+                    split_details += f"\n     - {split['username']} owes {split['amount']}"
+                expense_details += split_details
 
+            expense_list.append(expense_details)
         # Send the formatted list of expenses
         bot.send_message(chat_id, "\n".join(expense_list))
 

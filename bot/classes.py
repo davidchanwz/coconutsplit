@@ -230,7 +230,7 @@ class Expense:
         return supa.table('expenses').insert(expense_data).execute()
 
     def add_debt(self, user: User, amount_owed: float):
-        """Add an expense split for a user."""
+        """Add debt for a user."""
         # Check if a split already exists
         response = supa.table('debts').select("*").eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).single().execute()
         
@@ -248,8 +248,17 @@ class Expense:
             }
             supa.table('debts').insert(split_data).execute()
 
+    def add_split(self, user: User, amount: float):
+        """Add an expense split for a user"""
+        split_data = {
+            "user_id": user.uuid,
+            "expense_id": self.expense_id,
+            "amount": amount
+        }
+        supa.table('expense_splits').insert(split_data).execute()
+
     def add_debt_reverse(self, user: User, amount_owed: float):
-        """Add an expense split for a user."""
+        """Add debt (reverse) for a user."""
         # Check if a split already exists
         response = supa.table('debts').select("*").eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).single().execute()
         
@@ -277,6 +286,25 @@ class Expense:
                 paid_by_user = User.fetch_from_db_by_uuid(exp['paid_by'])
                 expenses.append(Expense(group=group, paid_by=paid_by_user, amount=exp['amount'], description=exp['description'], expense_id=exp['expense_id']))
         return expenses
+    
+    def fetch_expense_splits(self):
+        """Fetch all splits for the expense"""
+        response = supa.table('expense_splits').select("user_id, amount").eq('expense_id', self.expense_id).execute()
+        splits = []
+
+        if response.data:
+            for split in response.data:
+                # Fetch user details using user_id (assuming User has a method for this)
+                user = User.fetch_from_db_by_uuid(split['user_id'])
+                split_data = {
+                    'user_id': split['user_id'],
+                    'username': user.username if user else 'Unknown User',
+                    'amount': float(split['amount'])  # Convert to float to ensure consistent data type
+                }
+                splits.append(split_data)
+        
+        return splits
+
 
 class Settlement:
     def __init__(self, settlement_id: int, from_user: User, to_user: User, amount: float, group: Group):
