@@ -5,9 +5,15 @@ from telebot import types
 import os
 from bot.grouphandlers import register_group_handlers  # Import the handler registration function
 from bot.expensehandlers import register_expense_handlers  # Import the handler registration function
+from bot.receipthandlers import register_receipt_handlers  # Import the handler registration function
+
+from collections import defaultdict
 
 # Initialize the bot with the token from environment variables
 bot = telebot.TeleBot(os.getenv('BOT_TOKEN'))
+
+current_receipts = defaultdict(dict)
+
 
 # Define a list of BotCommand objects
 commands = [
@@ -33,6 +39,7 @@ bot.set_my_commands(commands)
 # Register the handlers from handlers.py
 register_group_handlers(bot)
 register_expense_handlers(bot)
+register_receipt_handlers(bot)
 
 # Start polling to keep the bot running
 if __name__ == '__main__':
