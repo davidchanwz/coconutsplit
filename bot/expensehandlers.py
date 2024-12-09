@@ -100,7 +100,7 @@ def register_expense_handlers(bot):
                     tagged_without_amount.append(tagged_user)
                 else:
                     raise ValueError(f"User @{username} not found in the database.")
-                if not group.has_member(tagged_user):
+                if not group.check_user_in_group(tagged_user):
                     raise ValueError(f"User @{username} is not a member of this group.")
         
 
