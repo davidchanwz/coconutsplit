@@ -11,6 +11,7 @@ from client import supa
 from collections import defaultdict
 
 
+
 pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
 
 # Import the state management dictionary
