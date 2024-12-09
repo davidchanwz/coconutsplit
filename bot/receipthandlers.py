@@ -227,7 +227,7 @@ def register_receipt_handlers(bot):
         # Create a new Expense entry
         expense_description = "Receipt Import"
         total_amount = sum([item['amount'] for item in items])
-        expense = Expense(group=Group.fetch_from_db_by_id(group_id), paid_by=payer_user, amount=total_amount, description=expense_description)
+        expense = Expense(group=Group.fetch_from_db_by_chat(chat_id), paid_by=payer_user, amount=total_amount, description=expense_description)
         try:
             expense.save_to_db()
         except Exception as e:
