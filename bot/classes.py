@@ -124,7 +124,7 @@ class Group:
 
             existing_members = self.fetch_all_members()
             for member in existing_members:
-                # Create two entries in the expense_splits table:
+                # Create two entries in the debts table:
                 # 1. The new user owes the existing member 0
                 # 2. The existing member owes the new user 0
 
@@ -142,9 +142,9 @@ class Group:
                     "amount_owed": 0
                 }
 
-                # Insert into expense_splits table
-                supa.table('expense_splits').insert(split_data_new_to_existing).execute()
-                supa.table('expense_splits').insert(split_data_existing_to_new).execute()
+                # Insert into debts table
+                supa.table('debts').insert(split_data_new_to_existing).execute()
+                supa.table('debts').insert(split_data_existing_to_new).execute()
 
             return supa.table('group_members').insert(member_data).execute()
 
@@ -203,8 +203,8 @@ class Group:
         """Delete user from the group_members table in database."""
         # Delete related data first (group members, expenses, etc.)
         supa.table('group_members').delete().eq('user_uuid', user.uuid).execute()
-        supa.table('expense_splits').delete().eq('user_id', user.uuid).execute()
-        supa.table('expense_splits').delete().eq('opp_user_id', user.uuid).execute()
+        supa.table('debts').delete().eq('user_id', user.uuid).execute()
+        supa.table('debts').delete().eq('opp_user_id', user.uuid).execute()
 
 
 # Expense Class
@@ -229,15 +229,15 @@ class Expense:
         }
         return supa.table('expenses').insert(expense_data).execute()
 
-    def add_split(self, user: User, amount_owed: float):
+    def add_debt(self, user: User, amount_owed: float):
         """Add an expense split for a user."""
         # Check if a split already exists
-        response = supa.table('expense_splits').select("*").eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).single().execute()
+        response = supa.table('debts').select("*").eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).single().execute()
         
         if response.data:
             # If it exists, update the amount owed
             new_amount = response.data['amount_owed'] + amount_owed
-            supa.table('expense_splits').update({'amount_owed': new_amount}).eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).execute()
+            supa.table('debts').update({'amount_owed': new_amount}).eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).execute()
         else:
             # Otherwise, insert a new entry
             split_data = {
@@ -246,17 +246,17 @@ class Expense:
                 "opp_user_id": self.paid_by.uuid,  # The user who is owed
                 "amount_owed": amount_owed
             }
-            supa.table('expense_splits').insert(split_data).execute()
+            supa.table('debts').insert(split_data).execute()
 
-    def add_split_reverse(self, user: User, amount_owed: float):
+    def add_debt_reverse(self, user: User, amount_owed: float):
         """Add an expense split for a user."""
         # Check if a split already exists
-        response = supa.table('expense_splits').select("*").eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).single().execute()
+        response = supa.table('debts').select("*").eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).single().execute()
         
         if response.data:
             # If it exists, update the amount owed
             new_amount = response.data['amount_owed'] + amount_owed
-            supa.table('expense_splits').update({'amount_owed': new_amount}).eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).execute()
+            supa.table('debts').update({'amount_owed': new_amount}).eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).execute()
         else:
             # Otherwise, insert a new entry
             split_data = {
@@ -265,7 +265,7 @@ class Expense:
                 "opp_user_id": user.uuid,  # The user who is owed
                 "amount_owed": amount_owed
             }
-            supa.table('expense_splits').insert(split_data).execute()
+            supa.table('debts').insert(split_data).execute()
 
     @staticmethod
     def fetch_expenses_by_group(group: Group):

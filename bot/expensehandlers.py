@@ -53,7 +53,7 @@ def register_expense_handlers(bot):
 
     def process_add_expense(group: Group, user: User, input_text: str):
         """
-        Processes the /add_expense command input and updates the expense_splits table accordingly.
+        Processes the /add_expense command input and updates the debts table accordingly.
 
         Args:
             group (Group): The group where the expense is being added.
@@ -117,13 +117,13 @@ def register_expense_handlers(bot):
 
         # Step 5: Update expense splits for users tagged with specific amounts
         for tagged_user, amount in tagged_with_amount.items():
-            expense.add_split(user=tagged_user, amount_owed=amount)  # The tagged user owes the payer
-            expense.add_split_reverse(user=tagged_user, amount_owed=-amount)  # The payer is owed the same amount from the tagged user
+            expense.add_debt(user=tagged_user, amount_owed=amount)  # The tagged user owes the payer
+            expense.add_debt_reverse(user=tagged_user, amount_owed=-amount)  # The payer is owed the same amount from the tagged user
 
         # Step 6: Update expense splits for users tagged without specific amounts (split the remaining amount)
         for tagged_user in tagged_without_amount:
-            expense.add_split(user=tagged_user, amount_owed=split_amount_per_user)  # Tagged users without amount owe their split
-            expense.add_split_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
+            expense.add_debt(user=tagged_user, amount_owed=split_amount_per_user)  # Tagged users without amount owe their split
+            expense.add_debt_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
 
         print("Expense processing complete.")
 
@@ -167,14 +167,14 @@ def register_expense_handlers(bot):
             return
 
         # Fetch all expense splits for the group
-        splits = fetch_splits_by_group(group)
+        debts = fetch_debts_by_group(group)
 
-        if not splits:
+        if not debts:
             bot.send_message(chat_id, "There are no recorded debts in this group.")
             return
 
         # Step 1: Aggregate debts (netted amounts owed between users)
-        user_balances = calculate_user_balances(splits)
+        user_balances = calculate_user_balances(debts)
 
         # Step 2: Simplify debts (minimize transactions)
         simplified_debts = simplify_debts(user_balances)
@@ -185,9 +185,9 @@ def register_expense_handlers(bot):
         else:
             bot.send_message(chat_id, "All debts have been settled!")
 
-    def fetch_splits_by_group(group: Group):
-        """Fetch all splits from the expense_splits table for a given group."""
-        response = supa.table('expense_splits').select('*').eq('group_id', group.group_id).execute()
+    def fetch_debts_by_group(group: Group):
+        """Fetch all splits from the debts table for a given group."""
+        response = supa.table('debts').select('*').eq('group_id', group.group_id).execute()
         return response.data
 
     def calculate_user_balances(splits):

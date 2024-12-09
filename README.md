@@ -131,7 +131,7 @@ CREATE TABLE expenses (
 Stores how expenses are split among group members.
 
 ```sql
-CREATE TABLE expense_splits (
+CREATE TABLE debts (
     group_id UUID REFERENCES groups(group_id),
     user_id UUID REFERENCES users(uuid),   -- The user who owes money
     opp_user_id UUID REFERENCES users(uuid), -- The user to whom money is owed
@@ -268,8 +268,8 @@ classDiagram
         - string description
         - datetime created_at
         + save_to_db(): void
-        + add_split(user: User, amount_owed: float): void
-        + add_split_reverse(user: User, amount_owed: float): void
+        + add_debt(user: User, amount_owed: float): void
+        + add_debt_reverse(user: User, amount_owed: float): void
         + fetch_expenses_by_group(group: Group): List~Expense~
     }
 
@@ -364,11 +364,11 @@ The `Expense` class represents an expense created within a group in the CoconutS
 - **`save_to_db()`**:  
   Saves the `Expense` object to the database, including the `expense_id`, `group_id`, `paid_by`, `amount`, and `description`.
 
-- **`add_split(user: User, amount_owed: float)`**:  
-  Adds an entry to the `expense_splits` table, representing how much a user owes for this specific expense. If a split already exists between the user and the payer for the given group, the method updates the existing record instead of creating a new one.
+- **`add_debt(user: User, amount_owed: float)`**:  
+  Adds an entry to the `debts` table, representing how much a user owes for this specific expense. If a split already exists between the user and the payer for the given group, the method updates the existing record instead of creating a new one.
 
-- **`add_split_reverse(user: User, amount_owed: float)`**:  
-  Adds a reverse entry to the `expense_splits` table, recording how much the payer is owed by the user. Similar to `add_split()`, this method updates the existing record if necessary.
+- **`add_debt_reverse(user: User, amount_owed: float)`**:  
+  Adds a reverse entry to the `debts` table, recording how much the payer is owed by the user. Similar to `add_debt()`, this method updates the existing record if necessary.
 
 - **`fetch_expenses_by_group(group: Group)`**:  
   A static method that retrieves all expenses associated with a given group from the database and returns a list of `Expense` objects. This includes fetching details like who paid for the expense and the amount.
