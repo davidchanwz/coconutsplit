@@ -8,12 +8,13 @@ import logging
 from telebot import types
 from bot.classes import User, Group, Expense
 from client import supa  
+from collections import defaultdict
 
 
 pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
 
 # Import the state management dictionary
-from bot.main import current_receipts
+current_receipts = defaultdict(dict)
 
 pending_receipt_uploads = {}
 
