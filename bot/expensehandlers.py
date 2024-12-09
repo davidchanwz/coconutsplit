@@ -89,6 +89,8 @@ def register_expense_handlers(bot):
                     total_tagged_amount += amount
                 else:
                     raise ValueError(f"User @{username} not found in the database.")
+                if not group.has_member(tagged_user):
+                    raise ValueError(f"User @{username} is not a member of this group.")
 
             elif match_without_amount:
                 # User without a specific amount (to split remaining amount)
@@ -98,6 +100,9 @@ def register_expense_handlers(bot):
                     tagged_without_amount.append(tagged_user)
                 else:
                     raise ValueError(f"User @{username} not found in the database.")
+                if not group.has_member(tagged_user):
+                    raise ValueError(f"User @{username} is not a member of this group.")
+        
 
         if total_tagged_amount > expense_amount:
             raise ValueError(f"Total tagged amount ({total_tagged_amount}) exceeds the expense amount ({expense_amount}).")
