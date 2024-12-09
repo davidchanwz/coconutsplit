@@ -182,6 +182,7 @@ def register_receipt_handlers(bot):
         
         # Fetch group and current items
         group_id = current_receipts[chat_id]['group_id']
+        group = Group.fetch_from_db_by_chat(chat_id)
         items = current_receipts[chat_id]['items']
         paid_by_telegram_id = current_receipts[chat_id]['paid_by']
         
@@ -212,7 +213,7 @@ def register_receipt_handlers(bot):
                 continue
             
             # Check if the tagged user is part of the group
-            if not Group.check_user_in_group(group_id, tagged_user.uuid):
+            if not group.check_user_in_group(tagged_user.uuid):
                 bot.send_message(chat_id, f"User @{username} is not a member of this group.")
                 continue
             
