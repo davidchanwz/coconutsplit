@@ -15,14 +15,33 @@ pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
 # Import the state management dictionary
 from bot.main import current_receipts
 
+pending_receipt_uploads = {}
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
 def register_receipt_handlers(bot):
+
+
+    @bot.message_handler(commands=['upload_receipt'])
+    def start_receipt_upload(message):
+        """Start the receipt upload process."""
+        chat_id = message.chat.id
+        msg = bot.send_message(chat_id, "Please reply to this message with an image of the receipt.")
+        # Store the message ID so we can verify if the reply is for this specific message
+        pending_receipt_uploads[chat_id] = msg.message_id
 
     @bot.message_handler(content_types=['photo'])
     def handle_receipt_photo(message):
         chat_id = message.chat.id
         user_id = message.from_user.id
+
+        reply_to_message_id = message.reply_to_message.message_id if message.reply_to_message else None
+
+        # Check if this image is a reply to the bot's request
+        if chat_id not in pending_receipt_uploads or reply_to_message_id != pending_receipt_uploads[chat_id]:
+            bot.send_message(chat_id, "If you'd like to upload a receipt, please use /upload_receipt and reply to the bot's message.")
+            return
         
         # Ensure the user is part of a group
         group = Group.fetch_from_db_by_chat(chat_id)
@@ -76,6 +95,10 @@ def register_receipt_handlers(bot):
         formatted_items = "\n".join([f"{i+1}. {item['item']} - ${item['amount']}" for i, item in enumerate(items)])
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
         markup.add('Proceed to Tag', 'Cancel')
+
+        # Remove chat from pending uploads
+        pending_receipt_uploads.pop(chat_id, None)
+        
         bot.send_message(chat_id, f"Here are the items I found:\n{formatted_items}\n\nWhat would you like to do next?", reply_markup=markup)
 
     def process_receipt_ocr(image_path):
