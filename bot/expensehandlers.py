@@ -159,7 +159,7 @@ def register_expense_handlers(bot):
             splits = expense.fetch_expense_splits()
             
             if splits:
-                split_details = "\n   🔸 Splits:"
+                split_details = ""
                 for split in splits:
                     split_details += f"\n     - {split['username']} owes {split['amount']}"
                 expense_details += split_details
