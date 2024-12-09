@@ -156,7 +156,7 @@ def register_expense_handlers(bot):
             expense_details = f"• {expense.description}: {expense.amount} (Paid by {expense.paid_by})"
             
             # Fetch splits for this expense
-            splits = Expense.fetch_splits_by_expense(expense.expense_id)
+            splits = expense.fetch_expense_splits()
             
             if splits:
                 split_details = "\n   🔸 Splits:"
