@@ -10,10 +10,7 @@ from bot.classes import User, Group, Expense
 from client import supa  
 from collections import defaultdict
 
-
-
-pytesseract.pytesseract.tesseract_cmd = '/opt/homebrew/bin/tesseract'
-
+pytesseract.pytesseract.tesseract_cmd = '/app/.heroku/vendor/bin/tesseract'
 # Import the state management dictionary
 current_receipts = defaultdict(dict)
 
