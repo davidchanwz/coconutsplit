@@ -153,7 +153,7 @@ def register_expense_handlers(bot):
         expense_list = []
         for expense in expenses:
             # Add main expense details
-            expense_details = f"• {expense.description}: {expense.amount} (Paid by {expense.paid_by})"
+            expense_details = f"• {expense.description}: {expense.amount} (Paid by {expense.paid_by.username})"
             
             # Fetch splits for this expense
             splits = expense.fetch_expense_splits()
