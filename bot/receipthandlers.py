@@ -6,7 +6,7 @@ import uuid
 import os
 import logging
 from telebot import types
-from classes import User, Group, Expense
+from bot.classes import User, Group, Expense
 from client import supa  
 
 
@@ -98,7 +98,7 @@ def register_receipt_handlers(bot):
 
         # Remove chat from pending uploads
         pending_receipt_uploads.pop(chat_id, None)
-        
+
         bot.send_message(chat_id, f"Here are the items I found:\n{formatted_items}\n\nWhat would you like to do next?", reply_markup=markup)
 
     def process_receipt_ocr(image_path):
