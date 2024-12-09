@@ -213,7 +213,7 @@ def register_receipt_handlers(bot):
                 continue
             
             # Check if the tagged user is part of the group
-            if not group.check_user_in_group(tagged_user.uuid):
+            if not group.check_user_in_group(tagged_user):
                 bot.send_message(chat_id, f"User @{username} is not a member of this group.")
                 continue
             
