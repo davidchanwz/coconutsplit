@@ -209,13 +209,13 @@ class Group:
 
 # Expense Class
 class Expense:
-    def __init__(self, group: Group, paid_by: User, amount: float, description: str, expense_id: str = None):
+    def __init__(self, group: Group, paid_by: User, amount: float, description: str, created_at: datetime = None, expense_id: str = None):
         self.expense_id = expense_id or str(uuid.uuid4())
         self.group = group
         self.paid_by = paid_by
         self.amount = amount
         self.description = description
-        self.created_at = datetime.now()
+        self.created_at = created_at or datetime.now()
 
     def save_to_db(self):
         """Save the expense to the database."""
