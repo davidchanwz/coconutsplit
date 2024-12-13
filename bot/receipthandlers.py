@@ -126,24 +126,85 @@ def register_receipt_handlers(bot):
         
         Returns:
             list: A list of dictionaries containing 'item' and 'amount'.
+        
+        Raises:
+            Exception: If no valid items are found.
         """
         items = []
-        # Example pattern: "Chicken Rice          5.50"
-        pattern = r'([A-Za-z\s]+?)\s+(\d+\.\d{2})'
-        matches = re.findall(pattern, text)
-        if not matches:
-            raise Exception("No valid items found in the receipt.")
-        for match in matches:
-            item_name, item_price = match
-            try:
-                amount = float(item_price)
-                if amount <= 0:
-                    continue  # Skip invalid amounts
-                items.append({'item': item_name.strip(), 'amount': amount})
-            except ValueError:
-                continue  # Skip invalid price formats
+        
+        # Define patterns to exclude non-item lines
+        exclude_patterns = [
+            r'(?i)\bsubtotal\b',
+            r'(?i)\btax\b',
+            r'(?i)\btotal\b',
+            r'(?i)\bchange\b',
+            r'(?i)\brefund\b',
+            r'(?i)\bdiscount\b',
+            r'(?i)\bthank you\b',
+            r'(?i)\bpurchase date\b',
+            r'(?i)\bdate\b',
+            r'(?i)\bbalance due\b'
+        ]
+        
+        # Split text into lines for line-by-line processing
+        lines = text.split('\n')
+        
+        # Define multiple regex patterns to handle different receipt formats
+        patterns = [
+            # Pattern 1: "Item Name    123.45" or "Item Name 123.45"
+            r'^([^\d]+?)\s+(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)$',
+            # Pattern 2: "Item Name ..... 123.45"
+            r'^([^\d]+?)\.*\s+(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)$',
+            # Pattern 3: "Item Name - 123.45"
+            r'^([^\d]+?)\s*-\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)$',
+            # Pattern 4: "Item Name x2 123.45" (handling quantities)
+            r'^([^\d]+?)\s*x\d+\s+(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)$',
+            # Pattern 5: "Item Name 2 @ 61.72 each = 123.44"
+            r'^([^\d]+?)\s+\d+\s*@\s*\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?\s*(?:each)?\s*=\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)$'
+        ]
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue  # Skip empty lines
+            
+            # Check if the line matches any exclude patterns
+            if any(re.search(excl_pat, line) for excl_pat in exclude_patterns):
+                logging.debug(f"Excluded line: {line}")
+                continue  # Skip non-item lines
+            
+            matched = False
+            for pattern in patterns:
+                match = re.match(pattern, line)
+                if match:
+                    item_name, item_price = match.groups()
+                    
+                    # Clean item name: remove trailing dots, hyphens, and extra spaces
+                    item_name = re.sub(r'[.\-]+$', '', item_name).strip()
+                    
+                    # Normalize price by replacing comma with dot
+                    item_price = item_price.replace(',', '.')
+                    
+                    try:
+                        amount = float(item_price)
+                        if amount <= 0:
+                            logging.debug(f"Skipped invalid amount in line: {line}")
+                            break  # Skip invalid amounts
+                        items.append({'item': item_name, 'amount': amount})
+                        matched = True
+                        logging.debug(f"Matched line: {line} -> Item: {item_name}, Amount: {amount}")
+                        break  # Stop checking other patterns once matched
+                    except ValueError:
+                        logging.debug(f"Invalid amount format in line: {line}")
+                        continue  # Try next pattern
+            
+            if not matched:
+                logging.debug(f"No pattern matched for line: {line}")
+                continue  # Skip lines that don't match any pattern
+        
         if not items:
             raise Exception("No valid items with positive amounts were found.")
+        
         return items
 
     @bot.message_handler(func=lambda message: message.text == 'Proceed to Tag')
