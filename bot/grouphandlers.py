@@ -66,13 +66,32 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['start', 'help'])
     def send_welcome(message):
         welcome_message = (
-            "Welcome to CoconutSplit! 🌴\n"
-            "Here are the available commands:\n"
-            "/create_group - Create a new group\n"
-            "/delete_group - Delete the existing group\n"
-            "/leave_group - Leave the group you are in\n"
-            "/view_users - View all users in the group\n"
-            "/help - View list of commands\n"
+        "🌴 *Welcome to CoconutSplit!* 🌴\n\n"
+        "CoconutSplit helps you easily split expenses with your friends and track debts within a group. Here are all the commands you can use:\n\n"
+        
+        "📚 *General Commands:*\n"
+        "/start - Start the bot\n"
+        "/help - View the list of all available commands\n\n"
+
+        "👥 *Group Management Commands:*\n"
+        "/create_group - Create a new group\n"
+        "/delete_group - Delete the existing group\n"
+        "/leave_group - Leave the group you are in\n"
+        "/view_users - View all users in the group\n\n"
+
+        "💸 *Expense Management Commands:*\n"
+        "/add_expense - Add an expense\n"
+        "/show_expenses - View all expenses in the group\n"
+        "/upload_receipt - Upload a receipt to automatically extract and tag expenses\n\n"
+
+        "🤝 *Debt Management Commands:*\n"
+        "/show_debts - View all debts and see who owes whom\n\n"
+
+        "🎲 *Fun Commands:*\n"
+        "/random_word - Generate a random word (just for fun!)\n\n"
+
+        "If you have any questions or get stuck, use /help to view this message again!\n"
+        "Happy splitting! 😊"
         )
         bot.reply_to(message, welcome_message)
 
