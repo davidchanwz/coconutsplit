@@ -148,6 +148,12 @@ def register_receipt_handlers(bot):
             r'(?i)\bpax\b',
             r'(?i)\breprint\b',
             r'(?i)\bserver\b',
+            r'(?i)\bservice charge\b',
+            r'(?i)\bfees\b',
+            r'(?i)\bgst\b',
+
+
+
 
 
 
