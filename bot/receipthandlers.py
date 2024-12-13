@@ -143,7 +143,15 @@ def register_receipt_handlers(bot):
             r'(?i)\bthank you\b',
             r'(?i)\bpurchase date\b',
             r'(?i)\bdate\b',
-            r'(?i)\bbalance due\b'
+            r'(?i)\bbalance due\b',
+            r'(?i)\bguests\b',
+            r'(?i)\bpax\b',
+            r'(?i)\breprint\b',
+            r'(?i)\bserver\b',
+
+
+
+
         ]
         
         # Split text into lines for line-by-line processing
