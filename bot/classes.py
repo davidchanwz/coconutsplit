@@ -284,7 +284,15 @@ class Expense:
         if response.data:
             for exp in response.data:
                 paid_by_user = User.fetch_from_db_by_uuid(exp['paid_by'])
-                expenses.append(Expense(group=group, paid_by=paid_by_user, amount=exp['amount'], description=exp['description'], expense_id=exp['expense_id']))
+                expenses.append(Expense(
+                    group=group, 
+                    paid_by=paid_by_user, 
+                    amount=exp['amount'], 
+                    description=exp['description'], 
+                    expense_id=exp['expense_id'],
+                    created_at=datetime.fromisoformat(exp['created_at']) if exp['created_at'] else None
+                    )),
+        
         return expenses
     
     def fetch_expense_splits(self):

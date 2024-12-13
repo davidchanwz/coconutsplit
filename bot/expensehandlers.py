@@ -4,7 +4,8 @@ from telebot import types
 import requests
 from bot.classes import Group, User, Expense, Settlement
 import uuid
-
+from collections import defaultdict
+from datetime import datetime
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import re
@@ -147,31 +148,43 @@ def register_expense_handlers(bot):
             bot.send_message(chat_id, "No group associated with this chat.")
             return
 
-        # Fetch expenses for the group
+        # Fetch expenses for the group (sorted by created_at automatically)
         expenses = Expense.fetch_expenses_by_group(group)
 
         if not expenses:
             bot.send_message(chat_id, "There are no expenses recorded in this group.")
             return
 
-        # Format the list of expenses
-        expense_list = []
+        # Group expenses by date
+        expenses_by_date = defaultdict(list)
         for expense in expenses:
-            # Add main expense details
-            expense_details = f"• {expense.description}: {expense.amount} (Paid by {expense.paid_by.username})"
-            
-            # Fetch splits for this expense
-            splits = expense.fetch_expense_splits()
-            
-            if splits:
-                split_details = ""
-                for split in splits:
-                    split_details += f"\n     - {split['username']} owes {split['amount']}"
-                expense_details += split_details
+            date_str = expense.created_at.strftime('%Y-%m-%d')  # Group by 'YYYY-MM-DD'
+            expenses_by_date[date_str].append(expense)
 
-            expense_list.append(expense_details)
+        # Sort the dates (earliest first)
+        sorted_dates = sorted(expenses_by_date.keys())
+
+        # Format the expenses for each date
+        formatted_output = []
+        for date in sorted_dates:
+            formatted_output.append(f"📅 *{date}*")  # Display the date as a section header
+            for expense in expenses_by_date[date]:
+                # Add main expense details
+                expense_details = f"  • {expense.description}: {expense.amount} (Paid by {expense.paid_by.username})"
+                
+                # Fetch splits for this expense
+                splits = expense.fetch_expense_splits()
+                
+                if splits:
+                    split_details = ""
+                    for split in splits:
+                        split_details += f"\n      - {split['username']} owes {split['amount']}"
+                    expense_details += split_details
+
+                formatted_output.append(expense_details)
+        
         # Send the formatted list of expenses
-        bot.send_message(chat_id, "\n".join(expense_list))
+        bot.send_message(chat_id, "\n".join(formatted_output), parse_mode='Markdown')
 
     @bot.message_handler(commands=['show_debts'])
     def show_debts(message):
