@@ -92,7 +92,7 @@ def register_receipt_handlers_nlp(bot):
 
         # Send the extracted text to the NLP-based API
         try:
-            api_url = "https://coconut-api-22ky.onrender.com/parse-receipt"
+            api_url = "https://localhost:8000/parse-receipt"
             headers = {
                 "Content-Type": "application/json",
                 "x-api-key": "your-default-secure-api-key"  # Replace with your actual API key
