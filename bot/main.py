@@ -6,6 +6,7 @@ import os
 from bot.grouphandlers import register_group_handlers  # Import the handler registration function
 from bot.expensehandlers import register_expense_handlers  # Import the handler registration function
 from bot.receipthandlers import register_receipt_handlers  # Import the handler registration function
+from bot.receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
 
 
 # Initialize the bot with the token from environment variables
@@ -26,6 +27,7 @@ commands = [
     types.BotCommand("show_expenses", "Add an expense"),
     types.BotCommand("show_debts", "View all debts"),
     types.BotCommand("upload_receipt", "Upload receipt for parsing"),
+    types.BotCommand("upload_receipt_nlp", "Upload receipt for parsing using nlp"),
 
 
 
@@ -40,6 +42,8 @@ bot.set_my_commands(commands)
 register_group_handlers(bot)
 register_expense_handlers(bot)
 register_receipt_handlers(bot)
+register_receipt_handlers_nlp(bot)
+
 
 # Start polling to keep the bot running
 if __name__ == '__main__':
