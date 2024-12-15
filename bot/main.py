@@ -26,8 +26,8 @@ commands = [
     types.BotCommand("add_expense", "Add an expense"),
     types.BotCommand("show_expenses", "Add an expense"),
     types.BotCommand("show_debts", "View all debts"),
-    # types.BotCommand("upload_receipt", "Upload receipt for parsing"),
-    types.BotCommand("upload_receipt_nlp", "Upload receipt for parsing using nlp"),
+    types.BotCommand("upload_receipt", "Upload receipt for parsing"),
+    # types.BotCommand("upload_receipt_nlp", "Upload receipt for parsing using nlp"),
 
 
 
@@ -41,8 +41,8 @@ bot.set_my_commands(commands)
 # Register the handlers from handlers.py
 register_group_handlers(bot)
 register_expense_handlers(bot)
-# register_receipt_handlers(bot)
-register_receipt_handlers_nlp(bot)
+register_receipt_handlers(bot)
+# register_receipt_handlers_nlp(bot)
 
 
 # Start polling to keep the bot running
