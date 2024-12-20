@@ -8,6 +8,7 @@ from telebot import types
 from bot.classes import User, Group, Expense
 from client import supa  # Assuming you have a supabase client
 from collections import defaultdict
+import re
 
 # State management dictionaries for NLP-based receipt processing
 current_receipts_nlp = defaultdict(dict)
