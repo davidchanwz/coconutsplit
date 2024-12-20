@@ -1,19 +1,13 @@
 # bot/receipthandlersnlp.py
 
 import requests
-import pytesseract
-from PIL import Image
-import re
 import uuid
 import os
 import logging
 from telebot import types
 from bot.classes import User, Group, Expense
-from client import supa  
+from client import supa  # Assuming you have a supabase client
 from collections import defaultdict
-
-# Configure Tesseract OCR
-pytesseract.pytesseract.tesseract_cmd = '/app/.apt/usr/bin/tesseract'
 
 # State management dictionaries for NLP-based receipt processing
 current_receipts_nlp = defaultdict(dict)
@@ -21,6 +15,10 @@ pending_receipt_uploads_nlp = {}
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s')
+
+# Load environment variables for security
+API_URL = os.getenv("NLP_API_URL", "https://c8wgwo8w0c8swww08oo088kg.deploy.jensenhshoots.com/parse-receipt/")
+API_KEY = os.getenv("NLP_API_KEY", "your-default-secure-api-key")  # Replace with your actual API key
 
 def register_receipt_handlers_nlp(bot):
     """
@@ -30,7 +28,7 @@ def register_receipt_handlers_nlp(bot):
     @bot.message_handler(commands=['upload_receipt_nlp'])
     def start_receipt_upload_nlp(message):
         """
-        Starts the receipt upload process using the NLP-based parser.
+        Starts the receipt upload process using the new API.
         """
         chat_id = message.chat.id
         msg = bot.send_message(chat_id, "Please reply to this message with an image of the receipt.")
@@ -72,42 +70,30 @@ def register_receipt_handlers_nlp(bot):
         try:
             with open(receipt_filename, 'wb') as f:
                 f.write(downloaded_file)
+            logging.info(f"Image saved as {receipt_filename} for chat {chat_id}.")
         except Exception as e:
             bot.send_message(chat_id, f"Failed to save the image: {str(e)}")
             logging.error(f"Failed to save image for chat {chat_id}: {str(e)}")
             return
 
-        # Process OCR to extract text
+        # Send the image to the new NLP-based API
         try:
-            image = Image.open(receipt_filename)
-            text = pytesseract.image_to_string(image)
-            if not text.strip():
-                raise Exception("No text detected in the image.")
-            logging.info(f"OCR extracted text for chat {chat_id}: {text}")
-        except Exception as e:
-            bot.send_message(chat_id, f"Failed to extract text from the image: {str(e)}")
-            logging.error(f"OCR extraction failed for chat {chat_id}: {str(e)}")
-            os.remove(receipt_filename)
-            return
-
-        # Send the extracted text to the NLP-based API
-        try:
-            api_url = "https://coconut-api-22ky.onrender.com/parse-receipt"
             headers = {
-                "Content-Type": "application/json",
-                "x-api-key": "your-default-secure-api-key"  # Replace with your actual API key
+                "x-api-key": API_KEY
             }
-            payload = {
-                "text": text
+            files = {
+                "file": open(receipt_filename, 'rb')
             }
-            response = requests.post(api_url, json=payload, headers=headers)
+            logging.info(f"Sending image {receipt_filename} to NLP API at {API_URL}...")
+            response = requests.post(API_URL, headers=headers, files=files)
             if response.status_code != 200:
                 raise Exception(f"API returned status code {response.status_code}: {response.text}")
             response_data = response.json()
-            items = response_data.get('items', [])
-            if not items:
+            receipt_data = response_data.get('receipt_data', {})
+            line_items = receipt_data.get('line_items', [])
+            if not line_items:
                 raise Exception("No items found in the receipt.")
-            logging.info(f"API parsed items for chat {chat_id}: {items}")
+            logging.info(f"API parsed receipt data for chat {chat_id}: {receipt_data}")
         except Exception as e:
             bot.send_message(chat_id, f"Failed to process receipt via NLP API: {str(e)}")
             logging.error(f"NLP API processing failed for chat {chat_id}: {str(e)}")
@@ -117,16 +103,55 @@ def register_receipt_handlers_nlp(bot):
         # Cleanup the temporary image file
         try:
             os.remove(receipt_filename)
+            logging.info(f"Temporary file {receipt_filename} deleted.")
         except Exception as e:
             logging.warning(f"Failed to delete temporary file {receipt_filename}: {str(e)}")
 
+        # Post-process receipt data
+        try:
+            # Handle duplicate subtotal
+            subtotal_raw = receipt_data.get('subtotal', '')
+            subtotal_match = re.search(r'(\d+\.\d+)', subtotal_raw)
+            subtotal = subtotal_match.group(1) if subtotal_match else '0.00'
+            tax = receipt_data.get('tax', '0.00')
+            total = receipt_data.get('total', '')
+            if not total.strip():
+                # Calculate total as subtotal + tax
+                total_amount = float(subtotal) + float(tax)
+                total = f"{total_amount:.2f}"
+            else:
+                # Optionally, extract the first value if duplicated
+                total_match = re.search(r'(\d+\.\d+)', total)
+                total = total_match.group(1) if total_match else total
+
+            # Update receipt_data with cleaned subtotal and total
+            receipt_data['subtotal'] = subtotal
+            receipt_data['total'] = total
+
+            # Update line items to match expected format
+            # Assuming 'item_value' corresponds to 'amount'
+            items = []
+            for item in line_items:
+                items.append({
+                    "item_name": item.get('item_name', '').strip(),
+                    "amount": float(item.get('item_value', '0.00')),
+                    "item_quantity": int(item.get('item_quantity', '1'))
+                })
+            receipt_data['items'] = items  # Add a simplified 'items' list
+
+            logging.info(f"Post-processed receipt data for chat {chat_id}: {receipt_data}")
+        except Exception as e:
+            bot.send_message(chat_id, f"Failed to process receipt data: {str(e)}")
+            logging.error(f"Post-processing failed for chat {chat_id}: {str(e)}")
+            return
+
         # Store the parsed items in the current_receipts_nlp state
-        current_receipts_nlp[chat_id]['items'] = items
+        current_receipts_nlp[chat_id]['items'] = receipt_data['items']
         current_receipts_nlp[chat_id]['group_id'] = group.group_id
         current_receipts_nlp[chat_id]['paid_by'] = user_id  # Telegram user_id
 
         # Format the items for user confirmation
-        formatted_items = "\n".join([f"{i+1}. {item['item']} - ${item['amount']}" for i, item in enumerate(items)])
+        formatted_items = "\n".join([f"{i+1}. {item['item_name']} - ${item['amount']}" for i, item in enumerate(receipt_data['items'])])
         markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
         markup.add('Proceed to Tag', 'Cancel')
 
@@ -240,10 +265,10 @@ def register_receipt_handlers_nlp(bot):
                 expense.add_split(user=tagged_user, amount=item['amount'])
                 expense.add_debt(user=tagged_user, amount_owed=item['amount'])
                 expense.add_debt_reverse(user=tagged_user, amount_owed=item['amount'])
-                bot.send_message(chat_id, f"Tagged @{tagged_user.username} to '{item['item']}' (${item['amount']})")
+                bot.send_message(chat_id, f"Tagged @{tagged_user.username} to '{item['item_name']}' (${item['amount']})")
             except Exception as e:
-                bot.send_message(chat_id, f"Failed to tag @{tagged_user.username} to '{item['item']}': {str(e)}")
-                logging.error(f"Failed to tag @{tagged_user.username} to '{item['item']}' for chat {chat_id}: {str(e)}")
+                bot.send_message(chat_id, f"Failed to tag @{tagged_user.username} to '{item['item_name']}': {str(e)}")
+                logging.error(f"Failed to tag @{tagged_user.username} to '{item['item_name']}' for chat {chat_id}: {str(e)}")
 
         # Clear the current receipt processing state
         del current_receipts_nlp[chat_id]
