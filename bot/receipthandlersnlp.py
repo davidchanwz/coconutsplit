@@ -31,10 +31,15 @@ def register_receipt_handlers_nlp(bot):
         """
         Starts the receipt upload process using the new API.
         """
-        chat_id = message.chat.id
-        msg = bot.send_message(chat_id, "Please reply to this message with an image of the receipt.")
-        # Store the message ID to verify the reply
-        pending_receipt_uploads_nlp[chat_id] = msg.message_id
+        try:
+            chat_id = message.chat.id
+            msg = bot.send_message(chat_id, "Please reply to this message with an image of the receipt.")
+            # Store the message ID to verify the reply
+            pending_receipt_uploads_nlp[chat_id] = msg.message_id
+            logging.info("Starting receipt upload process")
+        except:
+            logging.error("Failed to start receipt upload process")
+
 
     @bot.message_handler(content_types=['photo'])
     def handle_receipt_photo_nlp(message):
