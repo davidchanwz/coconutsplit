@@ -27,7 +27,7 @@ commands = [
     types.BotCommand("show_expenses", "Add an expense"),
     types.BotCommand("show_debts", "View all debts"),
     # types.BotCommand("upload_receipt", "Upload receipt for parsing"),
-    types.BotCommand("upload_receipt_nlp", "Upload receipt for parsing using nlp"),
+    types.BotCommand("upload_receipt", "Upload receipt for parsing using nlp"),
 
 
 
