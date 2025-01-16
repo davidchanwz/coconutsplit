@@ -26,7 +26,7 @@ def register_receipt_handlers_nlp(bot):
     Registers the NLP-based receipt handlers with the bot.
     """
     
-    @bot.message_handler(commands=['upload_receipt_nlp'])
+    @bot.message_handler(commands=['upload_receipt'])
     def start_receipt_upload_nlp(message):
         """
         Starts the receipt upload process using the new API.
