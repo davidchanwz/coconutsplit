@@ -28,6 +28,8 @@ commands = [
     types.BotCommand("show_debts", "View all debts"),
     # types.BotCommand("upload_receipt", "Upload receipt for parsing"),
     types.BotCommand("upload_receipt", "Upload receipt for parsing using nlp"),
+    types.BotCommand("settle_debt", "Settle a debt"),
+    types.BotCommand("show_settlements", "Show all settlements in the group"),
 
 
 

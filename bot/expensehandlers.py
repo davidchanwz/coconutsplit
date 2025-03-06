@@ -198,7 +198,7 @@ def register_expense_handlers(bot):
             bot.send_message(chat_id, "No group associated with this chat.")
             return
 
-        # Fetch all expense splits for the group
+        # Fetch all debts for the group
         debts = group.fetch_debts_by_group()
 
         if not debts:
@@ -217,15 +217,15 @@ def register_expense_handlers(bot):
         else:
             bot.send_message(chat_id, "All debts have been settled!")
 
-    def calculate_user_balances(splits):
+    def calculate_user_balances(debts):
         """Calculate the net balances for each user based on expense splits."""
         balances = {}
 
         # Process each split, but only handle the "positive" direction (one-way) to avoid double counting
-        for split in splits:
-            user_id = split['user_id']
-            opp_user_id = split['opp_user_id']
-            amount_owed = split['amount_owed']
+        for debt in debts:
+            user_id = debt['user_id']
+            opp_user_id = debt['opp_user_id']
+            amount_owed = debt['amount_owed']
 
             # Only consider debts where amount_owed > 0 (ignore the reverse row where the amount is negative)
             if amount_owed > 0:
@@ -287,3 +287,93 @@ def register_expense_handlers(bot):
             debt_messages.append(f"{debtor.username} owes {creditor.username} {amount:.2f}")
 
         bot.send_message(chat_id, "\n".join(debt_messages))
+
+    @bot.message_handler(commands=['settle_debt'])
+    def settle_debt(message):
+        chat_id = message.chat.id
+        user_id = message.from_user.id
+
+        # Fetch the group by chat ID
+        group = Group.fetch_from_db_by_chat(chat_id)
+
+        if group is None:
+            bot.send_message(chat_id, "No group associated with this chat.")
+            return
+
+        # Parse the message to extract the usernames
+        matches = re.findall(r'@(\w+)', message.text.strip())
+        if len(matches) < 2:
+            bot.send_message(chat_id, "Invalid format. Use /settle_debt @username1 @username2 ...")
+            return
+
+        # Fetch the users to whom the debts are being settled
+        creditors = []
+        for username in matches:
+            creditor = User.fetch_from_db_by_username(username)
+            if creditor is None:
+                bot.send_message(chat_id, f"User @{username} not found.")
+                return
+            creditors.append(creditor)
+
+        # Fetch all expense splits for the group
+        debts = group.fetch_debts_by_group()
+
+        if not debts:
+            bot.send_message(chat_id, "There are no recorded debts in this group.")
+            return
+
+        # Step 1: Aggregate debts (netted amounts owed between users)
+        user_balances = calculate_user_balances(debts)
+
+        # Step 2: Simplify debts (minimize transactions)
+        simplified_debts = simplify_debts(user_balances)
+
+        # Step 3: Settle the debts
+        for creditor in creditors:
+            settle_debt_transaction(simplified_debts, group, chat_id, user_id, creditor.id)
+
+    def settle_debt_transaction(simplified_debts, group : Group, chat_id, payer_id, creditor_id):
+        """Settle the debt transaction between users."""
+        for debtor_id, creditor_id, debt_amount, in simplified_debts:
+            if debtor_id == payer_id and creditor_id == creditor_id:
+                if debt_amount > 0:
+                    # Update the debt amount to 0
+                    group.update_debt(payer_id, creditor_id, debt_amount)
+                    # Create a new settlement record
+                    settlement = Settlement(from_user=payer_id, to_user=creditor_id, amount=debt_amount, group_id=group.id)
+                    settlement.save_to_db()
+                    debtor = User.fetch_from_db_by_uuid(debtor_id)
+                    creditor = User.fetch_from_db_by_uuid(creditor_id)
+                    bot.send_message(chat_id, f"Debt of {debt_amount} from @{debtor.username} to @{creditor.username} settled.")
+                    return
+
+        bot.send_message(chat_id, "No matching debt found for the specified user.")
+
+    @bot.message_handler(commands=['show_settlements'])
+    def show_settlements(message):
+        chat_id = message.chat.id
+        user_id = message.from_user.id
+
+        # Fetch the group by chat ID
+        group = Group.fetch_from_db_by_chat(chat_id)
+
+        if group is None:
+            bot.send_message(chat_id, "No group associated with this chat.")
+            return
+
+        # Fetch all settlements for the group
+        settlements = Settlement.fetch_settlements_by_group(group)
+
+        if not settlements:
+            bot.send_message(chat_id, "There are no settlements recorded in this group.")
+            return
+
+        # Format the settlements
+        formatted_output = []
+        for settlement in settlements:
+            from_user = User.fetch_from_db_by_uuid(settlement.from_user)
+            to_user = User.fetch_from_db_by_uuid(settlement.to_user)
+            formatted_output.append(f"{from_user.username} paid {to_user.username} {settlement.amount:.2f} on {settlement.created_at.strftime('%Y-%m-%d')}")
+
+        # Send the formatted list of settlements
+        bot.send_message(chat_id, "\n".join(formatted_output), parse_mode='Markdown')

@@ -211,6 +211,23 @@ class Group:
         supa.table('debts').delete().eq('user_id', user.uuid).execute()
         supa.table('debts').delete().eq('opp_user_id', user.uuid).execute()
 
+    def update_debt(self, user_id: str, opp_user_id: str, amount_owed: float):
+        """Update the debt amount between two users in the group."""
+        
+        # Call the RPC function
+        response = supa.rpc("increment_amount_owed", {
+            "group_id_param": self.group_id,
+            "user_id_param": user_id,
+            "opp_user_id_param": opp_user_id,
+            "increment_value": amount_owed  # Change this to the amount to add
+        }).execute()
+
+        # Check response
+        if "error" in response:
+            print("Error incrementing amount owed:", response["error"])
+        else:
+            print("Amount successfully incremented.")
+        
 
 # Expense Class
 class Expense:
@@ -339,3 +356,22 @@ class Settlement:
             "created_at": self.created_at.isoformat()
         }
         return supa.table('settlements').insert(settlement_data).execute()
+
+    @staticmethod
+    def fetch_settlements_by_group(group: Group):
+        """Fetch all settlements for a group."""
+        response = supa.table('settlements').select("*").eq('group_id', group.group_id).execute()
+        settlements = []
+        if response.data:
+            for settlement in response.data:
+                from_user = User.fetch_from_db_by_uuid(settlement['from_user'])
+                to_user = User.fetch_from_db_by_uuid(settlement['to_user'])
+                settlements.append(Settlement(
+                    settlement_id=settlement['settlement_id'],
+                    from_user=from_user,
+                    to_user=to_user,
+                    amount=settlement['amount'],
+                    group=group,
+                    created_at=datetime.fromisoformat(settlement['created_at']) if settlement['created_at'] else None
+                ))
+        return settlements
