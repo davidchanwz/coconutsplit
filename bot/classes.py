@@ -169,6 +169,11 @@ class Group:
         except Exception as e:
             logging.error(f"Error fetching members for group {self.group_id}: {e}")
             return []
+        
+    def fetch_debts_by_group(self):
+        """Fetch all splits from the debts table for a given group."""
+        response = supa.table('debts').select('*').eq('group_id', self.group_id).execute()
+        return response.data
     
     @staticmethod
     def fetch_from_db_by_chat(chat_id: int):

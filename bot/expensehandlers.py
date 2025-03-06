@@ -199,7 +199,7 @@ def register_expense_handlers(bot):
             return
 
         # Fetch all expense splits for the group
-        debts = fetch_debts_by_group(group)
+        debts = group.fetch_debts_by_group()
 
         if not debts:
             bot.send_message(chat_id, "There are no recorded debts in this group.")
@@ -216,11 +216,6 @@ def register_expense_handlers(bot):
             display_debts(simplified_debts, chat_id)
         else:
             bot.send_message(chat_id, "All debts have been settled!")
-
-    def fetch_debts_by_group(group: Group):
-        """Fetch all splits from the debts table for a given group."""
-        response = supa.table('debts').select('*').eq('group_id', group.group_id).execute()
-        return response.data
 
     def calculate_user_balances(splits):
         """Calculate the net balances for each user based on expense splits."""
