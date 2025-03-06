@@ -189,7 +189,6 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['show_debts'])
     def show_debts(message):
         chat_id = message.chat.id
-        user_id = message.from_user.id
 
         # Fetch the group by chat ID
         group = Group.fetch_from_db_by_chat(chat_id)
@@ -292,6 +291,7 @@ def register_expense_handlers(bot):
     def settle_debt_start(message):
         chat_id = message.chat.id
         user_id = message.from_user.id
+        user = User.fetch_from_db_by_user_id(user_id)
 
         # Fetch the group by chat ID
         group = Group.fetch_from_db_by_chat(chat_id)
@@ -304,9 +304,9 @@ def register_expense_handlers(bot):
         msg = bot.send_message(chat_id, "Please enter the usernames to settle debts with in the format:\n\n@username1 @username2 ...")
         
         # Set up a handler to wait for the user's reply
-        bot.register_next_step_handler(msg, process_settle_debt_reply, group, user_id)
+        bot.register_next_step_handler(msg, process_settle_debt_reply, group, user)
 
-    def process_settle_debt_reply(message, group, user_id):
+    def process_settle_debt_reply(message, group, user):
         chat_id = message.chat.id
         input_text = message.text  # Get the input text from the user's reply
 
@@ -340,7 +340,7 @@ def register_expense_handlers(bot):
 
         # Step 3: Settle the debts
         for creditor in creditors:
-            settle_debt_transaction(simplified_debts, group, chat_id, user_id, creditor.uuid)
+            settle_debt_transaction(simplified_debts, group, chat_id, user.uuid, creditor.uuid)
 
     def settle_debt_transaction(simplified_debts, group, chat_id, payer_id, payee_id):
         """Settle the debt transaction between users."""
