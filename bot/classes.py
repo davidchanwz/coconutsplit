@@ -349,8 +349,8 @@ class Settlement:
         """Save the settlement to the database."""
         settlement_data = {
             "settlement_id": self.settlement_id,
-            "from_user": self.from_user.user_id,
-            "to_user": self.to_user.user_id,
+            "from_user": self.from_user.uuid,
+            "to_user": self.to_user.uuid,
             "amount": self.amount,
             "group_id": self.group.group_id,
             "created_at": self.created_at.isoformat()
