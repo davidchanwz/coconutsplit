@@ -340,12 +340,12 @@ def register_expense_handlers(bot):
 
         # Step 3: Settle the debts
         for creditor in creditors:
-            settle_debt_transaction(simplified_debts, group, chat_id, user_id, creditor.id)
+            settle_debt_transaction(simplified_debts, group, chat_id, user_id, creditor.uuid)
 
-    def settle_debt_transaction(simplified_debts, group, chat_id, payer_id, creditor_id):
+    def settle_debt_transaction(simplified_debts, group, chat_id, payer_id, payee_id):
         """Settle the debt transaction between users."""
         for debtor_id, creditor_id, debt_amount in simplified_debts:
-            if debtor_id == payer_id and creditor_id == creditor_id:
+            if debtor_id == payer_id and creditor_id == payee_id:
                 if debt_amount > 0:
                     # Update the debt amount to 0
                     group.update_debt(payer_id, creditor_id, debt_amount)
