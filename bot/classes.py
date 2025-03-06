@@ -337,7 +337,8 @@ class Expense:
 
 
 class Settlement:
-    def __init__(self, from_user: User, to_user: User, amount: float, group: Group, settlement_id: uuid = None):
+    def __init__(self, from_user: User, to_user: User, amount: float, group: Group, 
+                 settlement_id: uuid = None, created_at: datetime = None):
         self.settlement_id = settlement_id or str(uuid.uuid4())
         self.from_user = from_user
         self.to_user = to_user
