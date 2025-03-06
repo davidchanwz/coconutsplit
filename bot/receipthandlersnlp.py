@@ -21,6 +21,37 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(mess
 API_URL = os.getenv("NLP_API_URL", "https://c8wgwo8w0c8swww08oo088kg.deploy.jensenhshoots.com/parse-receipt/")
 API_KEY = os.getenv("NLP_API_KEY", "your-default-secure-api-key")  # Replace with your actual API key
 
+def clean_number(value):
+    """
+    Clean a number string by removing currency symbols and standardizing decimal separators.
+    Examples:
+    '$14.98' -> '14.98'
+    '14,98' -> '14.98'
+    '1.234,56' -> '1234.56'
+    """
+    if isinstance(value, (int, float)):
+        return value
+    
+    if not isinstance(value, str):
+        return 0.0
+
+    # Remove currency symbols and whitespace
+    value = re.sub(r'[$€£¥]|\s', '', value)
+    
+    # Handle European number format (1.234,56 -> 1234.56)
+    if ',' in value and '.' in value:
+        value = value.replace('.', '')  # Remove thousand separators
+        value = value.replace(',', '.')  # Replace decimal comma with dot
+    # Handle simple comma as decimal separator
+    elif ',' in value and '.' not in value:
+        value = value.replace(',', '.')
+    
+    # Extract the first number found
+    match = re.search(r'(\d+\.?\d*)', value)
+    if match:
+        return float(match.group(1))
+    return 0.0
+
 def register_receipt_handlers_nlp(bot):
     """
     Registers the NLP-based receipt handlers with the bot.
@@ -117,33 +148,30 @@ def register_receipt_handlers_nlp(bot):
         try:
             # Handle duplicate subtotal
             subtotal_raw = receipt_data.get('subtotal', '')
-            subtotal_match = re.search(r'(\d+\.\d+)', subtotal_raw)
-            subtotal = subtotal_match.group(1) if subtotal_match else '0.00'
-            tax = receipt_data.get('tax', '0.00')
-            total = receipt_data.get('total', '')
-            if not total.strip():
+            subtotal = clean_number(subtotal_raw)
+            tax = clean_number(receipt_data.get('tax', '0.00'))
+            
+            total_raw = receipt_data.get('total', '')
+            if not total_raw.strip():
                 # Calculate total as subtotal + tax
-                total_amount = float(subtotal) + float(tax)
-                total = f"{total_amount:.2f}"
+                total = subtotal + tax
             else:
-                # Optionally, extract the first value if duplicated
-                total_match = re.search(r'(\d+\.\d+)', total)
-                total = total_match.group(1) if total_match else total
+                total = clean_number(total_raw)
 
-            # Update receipt_data with cleaned subtotal and total
+            # Update receipt_data with cleaned values
             receipt_data['subtotal'] = subtotal
             receipt_data['total'] = total
 
             # Update line items to match expected format
-            # Assuming 'item_value' corresponds to 'amount'
             items = []
             for item in line_items:
+                item_value = clean_number(item.get('item_value', '0.00'))
                 items.append({
                     "item_name": item.get('item_name', '').strip(),
-                    "amount": float(item.get('item_value', '0.00')),
+                    "amount": item_value,
                     "item_quantity": int(item.get('item_quantity', '1'))
                 })
-            receipt_data['items'] = items  # Add a simplified 'items' list
+            receipt_data['items'] = items
 
             logging.info(f"Post-processed receipt data for chat {chat_id}: {receipt_data}")
         except Exception as e:
