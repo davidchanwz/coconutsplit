@@ -344,16 +344,15 @@ def register_expense_handlers(bot):
 
     def settle_debt_transaction(simplified_debts, group, chat_id, payer_id, payee_id):
         """Settle the debt transaction between users."""
+        debtor = User.fetch_from_db_by_uuid(debtor_id)
+        creditor = User.fetch_from_db_by_uuid(creditor_id)
         for debtor_id, creditor_id, debt_amount in simplified_debts:
-            print(debtor_id, creditor_id, debt_amount, payer_id, payee_id)
             if debtor_id == payer_id and creditor_id == payee_id:
                 if debt_amount > 0:
                     # Update the debt amount to 0
                     group.update_debt(payer_id, creditor_id, debt_amount)
                     group.update_debt(creditor_id, payer_id, -debt_amount)
                     # Create a new settlement record
-                    debtor = User.fetch_from_db_by_uuid(debtor_id)
-                    creditor = User.fetch_from_db_by_uuid(creditor_id)
                     settlement = Settlement(from_user=debtor, to_user=creditor, amount=debt_amount, group=group)
                     settlement.save_to_db()
                     bot.send_message(chat_id, f"Debt of {debt_amount} from @{debtor.username} to @{creditor.username} settled.")
