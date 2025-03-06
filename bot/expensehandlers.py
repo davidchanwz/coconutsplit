@@ -344,8 +344,8 @@ def register_expense_handlers(bot):
 
     def settle_debt_transaction(simplified_debts, group, chat_id, payer_id, payee_id):
         """Settle the debt transaction between users."""
-        debtor = User.fetch_from_db_by_uuid(debtor_id)
-        creditor = User.fetch_from_db_by_uuid(creditor_id)
+        debtor = User.fetch_from_db_by_uuid(payer_id)
+        creditor = User.fetch_from_db_by_uuid(payee_id)
         for debtor_id, creditor_id, debt_amount in simplified_debts:
             if debtor_id == payer_id and creditor_id == payee_id:
                 if debt_amount > 0:
