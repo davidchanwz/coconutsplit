@@ -359,7 +359,7 @@ def register_expense_handlers(bot):
                     bot.send_message(chat_id, f"Debt of {debt_amount} from @{debtor.username} to @{creditor.username} settled.")
                     return
 
-        bot.send_message(chat_id, "No matching debt found for the specified user.")
+        bot.send_message(chat_id, "No debt found from @{debtor.username} to @{creditor.username}!")
 
     @bot.message_handler(commands=['show_settlements'])
     def show_settlements(message):
