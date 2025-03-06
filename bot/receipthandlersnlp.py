@@ -165,14 +165,35 @@ def register_receipt_handlers_nlp(bot):
             # Update line items to match expected format
             items = []
             for item in line_items:
-                item_value = clean_number(item.get('item_value', '0.00'))
+                # Skip items with missing or invalid values
+                item_value = item.get('item_value', '')
+                if not item_value or not item.get('item_name', '').strip():
+                    continue
+
+                # Clean the item value and validate it's a positive number
+                cleaned_value = clean_number(item_value)
+                if cleaned_value <= 0:
+                    continue
+
+                # Get quantity with proper default and validation
+                try:
+                    quantity = int(item.get('item_quantity', '1') or '1')
+                    if quantity <= 0:
+                        quantity = 1
+                except (ValueError, TypeError):
+                    quantity = 1
+
                 items.append({
                     "item_name": item.get('item_name', '').strip(),
-                    "amount": item_value,
-                    "item_quantity": int(item.get('item_quantity', '1'))
+                    "amount": cleaned_value,
+                    "item_quantity": quantity
                 })
-            receipt_data['items'] = items
 
+            # Verify we have at least one valid item
+            if not items:
+                raise Exception("No valid items found in the receipt.")
+                
+            receipt_data['items'] = items
             logging.info(f"Post-processed receipt data for chat {chat_id}: {receipt_data}")
         except Exception as e:
             bot.send_message(chat_id, f"Failed to process receipt data: {str(e)}")
