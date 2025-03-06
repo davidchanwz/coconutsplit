@@ -382,8 +382,8 @@ def register_expense_handlers(bot):
         # Format the settlements
         formatted_output = []
         for settlement in settlements:
-            from_user = User.fetch_from_db_by_uuid(settlement.from_user)
-            to_user = User.fetch_from_db_by_uuid(settlement.to_user)
+            from_user = settlement.from_user
+            to_user = settlement.to_user
             formatted_output.append(f"{from_user.username} paid {to_user.username} {settlement.amount:.2f} on {settlement.created_at.strftime('%Y-%m-%d')}")
 
         # Send the formatted list of settlements
