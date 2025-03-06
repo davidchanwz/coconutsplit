@@ -219,7 +219,7 @@ class Group:
             "group_id_param": self.group_id,
             "user_id_param": user_id,
             "opp_user_id_param": opp_user_id,
-            "increment_value": amount_owed  # Change this to the amount to add
+            "increment_value": -amount_owed  # Change this to the amount to add
         }).execute()
 
         # Check response

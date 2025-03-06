@@ -289,7 +289,7 @@ def register_expense_handlers(bot):
         bot.send_message(chat_id, "\n".join(debt_messages))
 
     @bot.message_handler(commands=['settle_debt'])
-    def settle_debt(message):
+    def settle_debt_start(message):
         chat_id = message.chat.id
         user_id = message.from_user.id
 
@@ -300,10 +300,20 @@ def register_expense_handlers(bot):
             bot.send_message(chat_id, "No group associated with this chat.")
             return
 
+        # Ask for the usernames to settle debts with
+        msg = bot.send_message(chat_id, "Please enter the usernames to settle debts with in the format:\n\n@username1 @username2 ...")
+        
+        # Set up a handler to wait for the user's reply
+        bot.register_next_step_handler(msg, process_settle_debt_reply, group, user_id)
+
+    def process_settle_debt_reply(message, group, user_id):
+        chat_id = message.chat.id
+        input_text = message.text  # Get the input text from the user's reply
+
         # Parse the message to extract the usernames
-        matches = re.findall(r'@(\w+)', message.text.strip())
-        if len(matches) < 2:
-            bot.send_message(chat_id, "Invalid format. Use /settle_debt @username1 @username2 ...")
+        matches = re.findall(r'@(\w+)', input_text.strip())
+        if len(matches) < 1:
+            bot.send_message(chat_id, "Invalid format. Use @username1 @username2 ...")
             return
 
         # Fetch the users to whom the debts are being settled
@@ -332,9 +342,9 @@ def register_expense_handlers(bot):
         for creditor in creditors:
             settle_debt_transaction(simplified_debts, group, chat_id, user_id, creditor.id)
 
-    def settle_debt_transaction(simplified_debts, group : Group, chat_id, payer_id, creditor_id):
+    def settle_debt_transaction(simplified_debts, group, chat_id, payer_id, creditor_id):
         """Settle the debt transaction between users."""
-        for debtor_id, creditor_id, debt_amount, in simplified_debts:
+        for debtor_id, creditor_id, debt_amount in simplified_debts:
             if debtor_id == payer_id and creditor_id == creditor_id:
                 if debt_amount > 0:
                     # Update the debt amount to 0
