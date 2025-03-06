@@ -350,6 +350,7 @@ def register_expense_handlers(bot):
                 if debt_amount > 0:
                     # Update the debt amount to 0
                     group.update_debt(payer_id, creditor_id, debt_amount)
+                    group.update_debt(creditor_id, payer_id, -debt_amount)
                     # Create a new settlement record
                     debtor = User.fetch_from_db_by_uuid(debtor_id)
                     creditor = User.fetch_from_db_by_uuid(creditor_id)
