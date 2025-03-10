@@ -233,7 +233,7 @@ class Group:
             print("Amount successfully incremented.")
     
     @staticmethod
-    def fetch_group_members_dicts(group):
+    def fetch_group_members_dict(group):
         """Fetch all members of the group using a single database call."""
         try:
             # Call the RPC function to get all members in one query
