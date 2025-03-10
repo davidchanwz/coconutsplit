@@ -151,27 +151,28 @@ class Group:
             return supa.table('group_members').insert(member_data).execute()
 
     def fetch_all_members(self):
-        """Fetch all members of the group from the database."""
+        """Fetch all members of the group using a single database call."""
         try:
-            # Query the 'group_members' table to get all user UUIDs for the group
-            response = supa.table('group_members').select('user_uuid').eq('group_id', self.group_id).execute()
+            # Call the RPC function to get all members in one query
+            response = supa.rpc('get_group_members', {'group_id_param': self.group_id}).execute()
             
-            # Check if there are any members in the response
             if response.data:
-                # Fetch user details for each user UUID
-                members = []
-                for member in response.data:
-                    user = User.fetch_from_db_by_uuid(member['user_uuid'])
-                    if user:
-                        members.append(user)
-                
+                # Create User objects from the response data
+                members = [
+                    User(
+                        user_id=member['user_id'],
+                        username=member['username'],
+                        user_uuid=member['uuid'],
+                        currency=member['currency']
+                    ) for member in response.data
+                ]
                 return members
-            else:
-                return []
+            return []
+            
         except Exception as e:
             logging.error(f"Error fetching members for group {self.group_id}: {e}")
             return []
-        
+
     def fetch_debts_by_group(self):
         """Fetch all splits from the debts table for a given group."""
         response = supa.table('debts').select('*').eq('group_id', self.group_id).execute()
