@@ -185,13 +185,12 @@ class Group:
             response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
             group_data = response.data
             if group_data:
-                created_by_user = User.fetch_from_db_by_uuid(group_data['created_by'])
+                created_by_user = User(user_id=0, username="deleted_user", user_uuid=group_data['created_by'])
                 group_instance = Group(
                     group_id=group_data['group_id'],
                     group_name=group_data['group_name'],
                     created_by=created_by_user,
-                    chat_id=group_data['chat_id']  # Ensure you pass chat_id
-
+                    chat_id=group_data['chat_id']
                 )
                 return group_instance
             else:
