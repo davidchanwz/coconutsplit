@@ -437,10 +437,11 @@ class Settlement:
         """Fetch all settlements for a group."""
         response = supa.table('settlements').select("*").eq('group_id', group.group_id).execute()
         settlements = []
+        group_members_dict = Group.fetch_group_members_dict(group)
         if response.data:
             for settlement in response.data:
-                from_user = User.fetch_from_db_by_uuid(settlement['from_user'])
-                to_user = User.fetch_from_db_by_uuid(settlement['to_user'])
+                from_user = group_members_dict[settlement['from_user']]
+                to_user = group_members_dict[settlement['to_user']]
                 settlements.append(Settlement(
                     settlement_id=settlement['settlement_id'],
                     from_user=from_user,
