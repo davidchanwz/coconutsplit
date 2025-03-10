@@ -307,9 +307,15 @@ class Expense:
         """Fetch all expenses for a group."""
         response = supa.table('expenses').select("*").eq('group_id', group.group_id).execute()
         expenses = []
+        user_id_dict = {}
         if response.data:
             for exp in response.data:
-                paid_by_user = User.fetch_from_db_by_uuid(exp['paid_by'])
+
+                if not user_id_dict.get(exp['paid_by']):
+                    user_id_dict[exp['paid_by']] = User.fetch_from_db_by_uuid(exp['paid_by'])
+
+                paid_by_user = user_id_dict[exp['paid_by']]
+                
                 expenses.append(Expense(
                     group=group, 
                     paid_by=paid_by_user, 
@@ -325,11 +331,16 @@ class Expense:
         """Fetch all splits for the expense"""
         response = supa.table('expense_splits').select("user_id, amount").eq('expense_id', self.expense_id).execute()
         splits = []
+        user_id_dict = {}
 
         if response.data:
             for split in response.data:
+
                 # Fetch user details using user_id (assuming User has a method for this)
-                user = User.fetch_from_db_by_uuid(split['user_id'])
+                if not user_id_dict.get(split['user_id']):
+                    user_id_dict[split['user_id']] = User.fetch_from_db_by_uuid(split['user_id'])
+
+                user = user_id_dict[split['user_id']]
                 split_data = {
                     'user_id': split['user_id'],
                     'username': user.username if user else 'Unknown User',
