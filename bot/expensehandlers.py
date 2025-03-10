@@ -182,7 +182,8 @@ def register_expense_handlers(bot):
                 if splits:
                     split_details = ""
                     for split in splits:
-                        username = group_members_dict[split['user_id']].username or "Unknown User"
+                        user = group_members_dict.get(split['user_id'])
+                        username = "Unknown User" if not user else user.username
                         split_details += f"\n      - {username} owes {split['amount']}"
                     expense_details += split_details
 
