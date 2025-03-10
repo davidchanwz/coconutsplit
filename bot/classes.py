@@ -123,6 +123,7 @@ class Group:
             }
 
             existing_members = self.fetch_all_members()
+            debt_entries = []
             for member in existing_members:
                 # Create two entries in the debts table:
                 # 1. The new user owes the existing member 0
@@ -143,9 +144,10 @@ class Group:
                 }
 
                 # Insert into debts table
-                supa.table('debts').insert(split_data_new_to_existing).execute()
-                supa.table('debts').insert(split_data_existing_to_new).execute()
-
+                debt_entries.append(split_data_existing_to_new)
+                debt_entries.append(split_data_new_to_existing)
+                
+            supa.table('debts').insert(debt_entries).execute()
             return supa.table('group_members').insert(member_data).execute()
 
     def fetch_all_members(self):
