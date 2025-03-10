@@ -148,8 +148,8 @@ class Group:
                 debt_entries.append(split_data_new_to_existing)
                 
             if debt_entries:
-                 supa.table('debts').insert(debt_entries).execute()
-                 
+                supa.table('debts').insert(debt_entries).execute()
+                
             return supa.table('group_members').insert(member_data).execute()
 
     def fetch_all_members(self):
@@ -157,7 +157,7 @@ class Group:
         try:
             # Call the RPC function to get all members in one query
             response = supa.rpc('get_group_members', {'group_id_param': self.group_id}).execute()
-                        
+            
             if response.data:
                 # Create User objects from the response data
                 members = [
@@ -167,14 +167,14 @@ class Group:
                         user_uuid=member['uuid'],
                         currency=member['currency']
                     ) for member in response.data
-                ]                
+                ]
                 return members
-                            return []
-
+            return []
+            
         except Exception as e:
             logging.error(f"Error fetching members for group {self.group_id}: {e}")
             return []
-        
+
     def fetch_debts_by_group(self):
         """Fetch all splits from the debts table for a given group."""
         response = supa.table('debts').select('*').eq('group_id', self.group_id).execute()
@@ -186,7 +186,7 @@ class Group:
         try:
             response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
             group_data = response.data
-if group_data:
+            if group_data:
                 created_by_user = User(user_id=0, username="deleted_user", user_uuid=group_data['created_by'])
                 group_instance = Group(
                     group_id=group_data['group_id'],
