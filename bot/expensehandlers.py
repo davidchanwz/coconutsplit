@@ -151,6 +151,10 @@ def register_expense_handlers(bot):
         # Fetch expenses for the group (sorted by created_at automatically)
         expenses = Expense.fetch_expenses_by_group(group)
 
+        group_members_dict = Group.fetch_group_members_dict(group)
+
+        expense_splits_dict = Expense.fetch_expense_splits_dict(expenses)
+
         if not expenses:
             bot.send_message(chat_id, "There are no expenses recorded in this group.")
             return
@@ -166,7 +170,6 @@ def register_expense_handlers(bot):
 
         # Format the expenses for each date
         formatted_output = []
-        user_id_dict = {}
         for date in sorted_dates:
             formatted_output.append(f"📅 *{date}*")  # Display the date as a section header
             for expense in expenses_by_date[date]:
@@ -174,12 +177,13 @@ def register_expense_handlers(bot):
                 expense_details = f"  • {expense.description}: {expense.amount} (Paid by {expense.paid_by.username})"
                 
                 # Fetch splits for this expense
-                splits = expense.fetch_expense_splits(user_id_dict)
+                splits = expense_splits_dict[expense.expense_id]
                 
                 if splits:
                     split_details = ""
                     for split in splits:
-                        split_details += f"\n      - {split['username']} owes {split['amount']}"
+                        username = group_members_dict[split['user_id']].username or "Unknown User"
+                        split_details += f"\n      - {username} owes {split['amount']}"
                     expense_details += split_details
 
                 formatted_output.append(expense_details)

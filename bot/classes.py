@@ -231,6 +231,31 @@ class Group:
             print("Error incrementing amount owed:", response["error"])
         else:
             print("Amount successfully incremented.")
+    
+    @staticmethod
+    def fetch_group_members_dicts(group):
+        """Fetch all members of the group using a single database call."""
+        try:
+            # Call the RPC function to get all members in one query
+            response = supa.rpc('get_group_members', {'group_id_param': group.group_id}).execute()
+            user_id_to_user = {}
+            
+            if response.data:
+                # Create User objects from the response data
+                for member in member:
+                    user_id_to_user[member['user_id']] = User(
+                        user_id=member['user_id'],
+                        username=member['username'],
+                        user_uuid=member['uuid'],
+                        currency=member['currency']
+                    )
+                return user_id_to_user
+                
+            return {}
+            
+        except Exception as e:
+            logging.error(f"Error fetching members for group {group.group_id}: {e}")
+            return {}
         
 
 # Expense Class
@@ -331,7 +356,7 @@ class Expense:
         """Fetch all splits for the expense"""
         response = supa.table('expense_splits').select("user_id, amount").eq('expense_id', self.expense_id).execute()
         splits = []
-        
+
         if response.data:
             for split in response.data:
 
@@ -349,6 +374,19 @@ class Expense:
         
         return splits
 
+    @staticmethod
+    def fetch_expense_splits_dict(expenses):
+        expense_ids = [expense.expense_id for expense in expenses]
+        response = supa.table('expense_splits').select("*").in_('expense_id', expense_ids).execute()
+        expense_id_to_expense_splits = {}
+
+        for split in response.data:
+            if not expense_id_to_expense_splits.get(split['expense_id']):
+                expense_id_to_expense_splits[split['expense_id']] = []
+            
+            expense_id_to_expense_splits[split['expense_id']].append(split)
+
+        return expense_id_to_expense_splits
 
 class Settlement:
     def __init__(self, from_user: User, to_user: User, amount: float, group: Group, 
