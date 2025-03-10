@@ -315,7 +315,7 @@ class Expense:
                     user_id_dict[exp['paid_by']] = User.fetch_from_db_by_uuid(exp['paid_by'])
 
                 paid_by_user = user_id_dict[exp['paid_by']]
-                
+
                 expenses.append(Expense(
                     group=group, 
                     paid_by=paid_by_user, 
@@ -327,12 +327,11 @@ class Expense:
         
         return expenses
     
-    def fetch_expense_splits(self):
+    def fetch_expense_splits(self, user_id_dict):
         """Fetch all splits for the expense"""
         response = supa.table('expense_splits').select("user_id, amount").eq('expense_id', self.expense_id).execute()
         splits = []
-        user_id_dict = {}
-
+        
         if response.data:
             for split in response.data:
 

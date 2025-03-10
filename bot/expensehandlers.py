@@ -166,6 +166,7 @@ def register_expense_handlers(bot):
 
         # Format the expenses for each date
         formatted_output = []
+        user_id_dict = {}
         for date in sorted_dates:
             formatted_output.append(f"📅 *{date}*")  # Display the date as a section header
             for expense in expenses_by_date[date]:
@@ -173,7 +174,7 @@ def register_expense_handlers(bot):
                 expense_details = f"  • {expense.description}: {expense.amount} (Paid by {expense.paid_by.username})"
                 
                 # Fetch splits for this expense
-                splits = expense.fetch_expense_splits()
+                splits = expense.fetch_expense_splits(user_id_dict)
                 
                 if splits:
                     split_details = ""
