@@ -242,7 +242,7 @@ class Group:
             
             if response.data:
                 # Create User objects from the response data
-                for member in member:
+                for member in response.data:
                     user_id_to_user[member['uuid']] = User(
                         user_id=member['user_id'],
                         username=member['username'],
