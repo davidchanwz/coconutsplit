@@ -83,6 +83,28 @@ class User:
             print(f"Error fetching user by username @{username}: {e}")
             return None
 
+    @staticmethod
+    def fetch_usernames_dict(usernames):
+        try:
+            response = supa.table('users').select("*").in_("username", usernames).execute()
+            user_data = response.data
+            username_to_user_dict = {}
+            if user_data:
+                for user in user_data:
+                    username_to_user_dict[user['username']] = User(
+                        user_id=user['user_id'],
+                        username=user['username'],
+                        user_uuid=user['uuid'],
+                        currency=user['currency']
+                    )
+                return username_to_user_dict
+            else:
+                print(f"A user handle was  not found.")
+                return {}
+        except Exception as e:
+            print(f"Error fetching users by username: {e}")
+            return {}
+
 class Group:
     def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None):
         self.group_id = group_id or str(uuid.uuid4())  # Generate UUID if not provided

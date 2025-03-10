@@ -218,7 +218,7 @@ def register_expense_handlers(bot):
 
         # Step 3: Display the results
         if simplified_debts:
-            display_debts(simplified_debts, chat_id)
+            display_debts(simplified_debts, chat_id, group)
         else:
             bot.send_message(chat_id, "All debts have been settled!")
 
@@ -283,12 +283,15 @@ def register_expense_handlers(bot):
 
         return simplified_debts
 
-    def display_debts(debts, chat_id):
+    def display_debts(debts, chat_id, group):
         """Format and display simplified debts in the group."""
         debt_messages = []
+
+        group_members_dict = Group.fetch_group_members_dict(group)
+
         for debtor_id, creditor_id, amount in debts:
-            debtor = User.fetch_from_db_by_uuid(debtor_id)
-            creditor = User.fetch_from_db_by_uuid(creditor_id)
+            debtor = group_members_dict[debtor_id]
+            creditor = group_members_dict[creditor_id]
             debt_messages.append(f"{debtor.username} owes {creditor.username} {amount:.2f}")
 
         bot.send_message(chat_id, "\n".join(debt_messages))
@@ -322,10 +325,11 @@ def register_expense_handlers(bot):
             bot.send_message(chat_id, "Invalid format. Use @username1 @username2 ...")
             return
 
+        usernames_dict = User.fetch_usernames_dict(matches)
         # Fetch the users to whom the debts are being settled
         creditors = []
         for username in matches:
-            creditor = User.fetch_from_db_by_username(username)
+            creditor = usernames_dict.get[username]
             if creditor is None:
                 bot.send_message(chat_id, f"User @{username} not found.")
                 return
