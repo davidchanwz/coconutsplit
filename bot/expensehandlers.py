@@ -329,7 +329,7 @@ def register_expense_handlers(bot):
         # Fetch the users to whom the debts are being settled
         creditors = []
         for username in matches:
-            creditor = usernames_dict.get[username]
+            creditor = usernames_dict.get(username)
             if creditor is None:
                 bot.send_message(chat_id, f"User @{username} not found.")
                 return
