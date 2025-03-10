@@ -149,9 +149,10 @@ def register_expense_handlers(bot):
             return
 
         # Fetch expenses for the group (sorted by created_at automatically)
-        expenses = Expense.fetch_expenses_by_group(group)
 
         group_members_dict = Group.fetch_group_members_dict(group)
+
+        expenses = Expense.fetch_expenses_by_group(group, group_members_dict)
 
         expense_splits_dict = Expense.fetch_expense_splits_dict(expenses)
 

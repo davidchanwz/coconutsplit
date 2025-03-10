@@ -350,18 +350,14 @@ class Expense:
             supa.table('debts').insert(split_data).execute()
 
     @staticmethod
-    def fetch_expenses_by_group(group: Group):
+    def fetch_expenses_by_group(group: Group, group_members_dict):
         """Fetch all expenses for a group."""
         response = supa.table('expenses').select("*").eq('group_id', group.group_id).execute()
         expenses = []
-        user_id_dict = {}
         if response.data:
             for exp in response.data:
 
-                if not user_id_dict.get(exp['paid_by']):
-                    user_id_dict[exp['paid_by']] = User.fetch_from_db_by_uuid(exp['paid_by'])
-
-                paid_by_user = user_id_dict[exp['paid_by']]
+                paid_by_user = group_members_dict[exp['paid_by']]
 
                 expenses.append(Expense(
                     group=group, 
