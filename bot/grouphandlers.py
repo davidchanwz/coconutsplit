@@ -237,7 +237,7 @@ def register_group_handlers(bot):
 
     @bot.message_handler(commands=['delete_group'])
     def delete_group(message):
-        msg = bot.reply_to(message, 'Deleting this group will cause you to lose all recorded expenses!\\nPlease reply this with "coconut" to confirm.')
+        msg = bot.reply_to(message, 'Deleting this group will cause you to lose all recorded expenses!\n\nPlease reply this with "coconut" to confirm.')
         bot.register_next_step_handler(msg, process_delete_group)
         
 
