@@ -352,7 +352,7 @@ class Expense:
 
     def add_debt_bulk(self, debt_updates):
 
-        response = supa.rpc("bulk_update_debts", {"debt_updates": json.dumps(debt_updates)}).execute()
+        response = supa.rpc("bulk_update_debts", {"debt_updates": debt_updates}).execute()
 
         # Handle response
         if response.get("error"):
