@@ -100,114 +100,133 @@ def register_group_handlers(bot):
 
     @bot.message_handler(commands=['create_group'])
     def ask_group_name(message):
-        """Step 1: Ask the user for the group name."""
-        chat_id = message.chat.id
-        
-        # Check if a group already exists for this chat
-        existing_group = Group.fetch_from_db_by_chat(chat_id)
-        
-        if existing_group:
-            bot.reply_to(message, f"A group already exists in this chat: '{existing_group.group_name}'. Please delete the current group before creating a new one.")
-        else:
-            # Proceed with group creation if no group exists
-            msg = bot.reply_to(message, "Please reply this with the name of the group:")
-            bot.register_next_step_handler(msg, process_group_name)
+        try:
+            """Step 1: Ask the user for the group name."""
+            chat_id = message.chat.id
+            
+            # Check if a group already exists for this chat
+            existing_group = Group.fetch_from_db_by_chat(chat_id)
+            
+            if existing_group:
+                bot.reply_to(message, f"A group already exists in this chat: '{existing_group.group_name}'. Please delete the current group before creating a new one.")
+            else:
+                # Proceed with group creation if no group exists
+                msg = bot.reply_to(message, "Please reply this with the name of the group:")
+                bot.register_next_step_handler(msg, process_group_name)
+
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
     def process_group_name(message):
-        """Step 2: Process the group name and create a Group with UUID."""
-        if not is_valid_string(message):
-            bot.reply_to(message, "Invalid input. Please send /create_group command again and enter a valid group name.")
-            return
-        group_name = message.text
-        group_id = str(uuid.uuid4())  # Generate a UUID for the group
+        try:
+            if not is_valid_string(message):
+                bot.reply_to(message, "Invalid input. Please send /create_group command again and enter a valid group name.")
+                return
+            group_name = message.text
+            group_id = str(uuid.uuid4())  # Generate a UUID for the group
 
-        # Fetch user from the database using Telegram user_id (int), create new if necessary
-        user = User.fetch_from_db_by_user_id(message.from_user.id)
-        if not user:
-            user = User(user_id=message.from_user.id, username=message.from_user.username)
-            user.save_to_db()  # Save the user to the database if not already saved
+            # Fetch user from the database using Telegram user_id (int), create new if necessary
+            user = User.fetch_from_db_by_user_id(message.from_user.id)
+            if not user:
+                user = User(user_id=message.from_user.id, username=message.from_user.username)
+                user.save_to_db()  # Save the user to the database if not already saved
 
-        # Create the Group instance
-        group = Group(group_id=group_id, group_name=group_name, created_by=user, chat_id=message.chat.id)
-        group.save_to_db()  # Save the group to the database
+            # Create the Group instance
+            group = Group(group_id=group_id, group_name=group_name, created_by=user, chat_id=message.chat.id)
+            group.save_to_db()  # Save the group to the database
 
-        # Store group in temporary data
-        group_data[message.chat.id] = group
+            # Store group in temporary data
+            group_data[message.chat.id] = group
 
-        # Create an inline button for joining the group
-        join_button = types.InlineKeyboardMarkup()
-        join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group_id}"))
+            # Create an inline button for joining the group
+            join_button = types.InlineKeyboardMarkup()
+            join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group_id}"))
 
-        bot.send_message(message.chat.id, f"Group '{group_name}' has been created! Click below to join the group.", reply_markup=join_button)
+            bot.send_message(message.chat.id, f"Group '{group_name}' has been created! Click below to join the group.", reply_markup=join_button)
+
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
     @bot.message_handler(commands=['view_users'])
     def view_users(message):
-        """List all users in the group associated with the current chat."""
-        chat_id = message.chat.id
-        
-        # Fetch the group associated with the chat
-        group = Group.fetch_from_db_by_chat(chat_id)
+        try:
+            """List all users in the group associated with the current chat."""
+            chat_id = message.chat.id
+            
+            # Fetch the group associated with the chat
+            group = Group.fetch_from_db_by_chat(chat_id)
 
-        if group:
-            # Fetch all members of the group from the database
-            members = group.fetch_all_members()
+            if group:
+                # Fetch all members of the group from the database
+                members = group.fetch_all_members()
 
-            if members:
-                # Create a list of member usernames or display names
-                member_list = "\n".join([f"- {member.username}" for member in members])
-                bot.reply_to(message, f"Members in '{group.group_name}':\n{member_list}")
+                if members:
+                    # Create a list of member usernames or display names
+                    member_list = "\n".join([f"- {member.username}" for member in members])
+                    bot.reply_to(message, f"Members in '{group.group_name}':\n{member_list}")
+                else:
+                    bot.reply_to(message, f"No members found in '{group.group_name}'.")
             else:
-                bot.reply_to(message, f"No members found in '{group.group_name}'.")
-        else:
-            bot.reply_to(message, "No group exists in this chat.")
+                bot.reply_to(message, "No group exists in this chat.")
+        
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
     
     @bot.message_handler(commands=['join_group'])
     def join_group(message):
-        chat_id = message.chat.id
-        user = User.fetch_from_db_by_user_id(message.from_user.id)
+        try:
+            chat_id = message.chat.id
+            user = User.fetch_from_db_by_user_id(message.from_user.id)
 
-        if not user:
-            user = User(user_id=message.from_user.id, username=message.from_user.username)
-            user.save_to_db()  # Save the user to the database if not already present
+            if not user:
+                user = User(user_id=message.from_user.id, username=message.from_user.username)
+                user.save_to_db()  # Save the user to the database if not already present
 
-        group = Group.fetch_from_db_by_chat(chat_id)
+            group = Group.fetch_from_db_by_chat(chat_id)
 
-        # Add the user to the group in the database
-        if group:
-            if not group.check_user_in_group(user): 
-                group.add_member(user)
-                bot.send_message(message.chat.id, f"{user.username} has joined '{group.group_name}'!")
+            # Add the user to the group in the database
+            if group:
+                if not group.check_user_in_group(user): 
+                    group.add_member(user)
+                    bot.send_message(message.chat.id, f"{user.username} has joined '{group.group_name}'!")
+                else:
+                    bot.send_message(message.chat.id, f"{user.username} is already in '{group.group_name}'!")
+
             else:
-                bot.send_message(message.chat.id, f"{user.username} is already in '{group.group_name}'!")
-
-        else:
-            bot.send_message(message.chat.id, "No group associated with this chat.")
+                bot.send_message(message.chat.id, "No group associated with this chat.")
+        
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('join_'))
     def handle_join_group(call):
-        """Handle users clicking the 'Join Group' button."""
-        chat_id = call.message.chat.id  # Get the chat_id from the message
-        user = User.fetch_from_db_by_user_id(call.from_user.id)
+        try:
+            """Handle users clicking the 'Join Group' button."""
+            chat_id = call.message.chat.id  # Get the chat_id from the message
+            user = User.fetch_from_db_by_user_id(call.from_user.id)
 
-        if not user:
-            user = User(user_id=call.from_user.id, username=call.from_user.username)
-            user.save_to_db()  # Save the user to the database if not already present
+            if not user:
+                user = User(user_id=call.from_user.id, username=call.from_user.username)
+                user.save_to_db()  # Save the user to the database if not already present
 
-        group = Group.fetch_from_db_by_chat(chat_id)
+            group = Group.fetch_from_db_by_chat(chat_id)
 
-        # Add the user to the group in the database
-        if group:
-            if not group.check_user_in_group(user): 
-                group.add_member(user)
-                bot.answer_callback_query(call.id, f"You have joined '{group.group_name}'!")
-                bot.send_message(call.message.chat.id, f"{user.username} has joined '{group.group_name}'!")
+            # Add the user to the group in the database
+            if group:
+                if not group.check_user_in_group(user): 
+                    group.add_member(user)
+                    bot.answer_callback_query(call.id, f"You have joined '{group.group_name}'!")
+                    bot.send_message(call.message.chat.id, f"{user.username} has joined '{group.group_name}'!")
+                else:
+                    bot.answer_callback_query(call.id, f"You are already in {group.group_name}!")
+                    bot.send_message(call.message.chat.id, f"{user.username} is already in '{group.group_name}'!")
+
             else:
-                bot.answer_callback_query(call.id, f"You are already in {group.group_name}!")
-                bot.send_message(call.message.chat.id, f"{user.username} is already in '{group.group_name}'!")
+                bot.answer_callback_query(call.id, "Group not found.")
 
-        else:
-            bot.answer_callback_query(call.id, "Group not found.")
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
     # @bot.message_handler(commands=['leave_group'])
     # def handle_leave_group(message):
@@ -242,22 +261,26 @@ def register_group_handlers(bot):
         
 
     def process_delete_group(message):
-        """Delete the group associated with the current chat."""
+        try:
+            """Delete the group associated with the current chat."""
 
-        if not message.text.lower() == "coconut":
-            bot.send_message(message.chat.id, "Group was not deleted.")
-            return
+            if not message.text.lower() == "coconut":
+                bot.send_message(message.chat.id, "Group was not deleted.")
+                return
 
-        chat_id = message.chat.id
+            chat_id = message.chat.id
 
-        # Fetch the group associated with the chat
-        group = Group.fetch_from_db_by_chat(chat_id)
+            # Fetch the group associated with the chat
+            group = Group.fetch_from_db_by_chat(chat_id)
 
-        if group:
-            # Delete the group from the database
-            group.delete_from_db()
-            bot.reply_to(message, f"The group '{group.group_name}' has been deleted.")
-        else:
-            bot.reply_to(message, "No group exists in this chat to delete.")
+            if group:
+                # Delete the group from the database
+                group.delete_from_db()
+                bot.reply_to(message, f"The group '{group.group_name}' has been deleted.")
+            else:
+                bot.reply_to(message, "No group exists in this chat to delete.")
+        
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
         
