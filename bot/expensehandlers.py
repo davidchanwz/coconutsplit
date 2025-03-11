@@ -498,8 +498,8 @@ def register_expense_handlers(bot):
             # Format the settlements
             formatted_output = []
             for settlement in settlements:
-                from_user_username = settlement.from_user.replace('_', '\\_')
-                to_user_username = settlement.to_user.replace('_', '\\_')
+                from_user_username = settlement.from_user.username.replace('_', '\\_')
+                to_user_username = settlement.to_user.username.replace('_', '\\_')
                 formatted_output.append(f"{from_user_username} paid {to_user_username} ${settlement.amount:.2f} on {settlement.created_at.strftime('%Y-%m-%d')}")
 
             # Send the formatted list of settlements
