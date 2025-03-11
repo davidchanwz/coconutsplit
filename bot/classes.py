@@ -261,7 +261,7 @@ class Group:
             if debt_updates:
                 Expense.add_debts_bulk(debt_updates)
                 
-            supa.table('expenses').delete().eq('expense_id', expense_entry.expense_id).execute()    
+            supa.table('expenses').delete().eq('expense_id', expense_entry['expense_id']).execute()    
         
 
     @staticmethod
