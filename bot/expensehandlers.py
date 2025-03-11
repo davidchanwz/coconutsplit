@@ -113,7 +113,7 @@ def register_expense_handlers(bot):
                 tagged_users_so_far.append(tagged_user)
 
         if total_tagged_amount > expense_amount:
-            raise ValueError(f"Total tagged amount ${total_tagged_amount} exceeds the expense amount ${expense_amount}.")
+            raise ValueError(f"Total tagged amount ${total_tagged_amount:.2f} exceeds the expense amount ${expense_amount:.2f}.")
 
 
         # Step 3: Calculate the remaining amount to be split among users with no specific amount
