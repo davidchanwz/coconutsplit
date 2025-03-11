@@ -354,12 +354,11 @@ class Expense:
 
         response = supa.rpc("bulk_update_debts", {"debt_updates": debt_updates}).execute()
 
-        # Handle response
-        if response.get("error"):
-            print("Error:", response["error"])
+        # Check response
+        if "error" in response:
+            print("Error adding bulk debt records:", response["error"])
         else:
-            print("Debts updated successfully:", response["data"])
-
+            print("Bulk debt records added successfully.")
 
     @staticmethod
     def fetch_expenses_by_group(group: Group, group_members_dict):
