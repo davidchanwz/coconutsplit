@@ -244,11 +244,11 @@ class Group:
                 expense_entry['description'],
                 expense_entry['created_at'],
                 expense_entry['expense_id']
-                )
+            )
             expense_splits_dict = Expense.fetch_expense_splits_dict([expense])
 
             debt_updates = []
-            for split in expense_splits_dict.get(expense_entry['expense_id']):
+            for split in expense_splits_dict.get(expense_entry['expense_id'], []):
                 debt_details = {
                     "group_id": self.group_id,
                     "user_id": split['user_id'],
@@ -269,8 +269,9 @@ class Group:
             if debt_updates:
                 Expense.add_debts_bulk(debt_updates)
                 
-            supa.table('expenses').delete().eq('expense_id', expense_entry['expense_id']).execute()    
-        
+            supa.table('expenses').delete().eq('expense_id', expense_entry['expense_id']).execute()
+        else:
+            print("No expense found to delete.")
 
     @staticmethod
     def fetch_group_members_dict(group):
