@@ -28,10 +28,11 @@ def register_expense_handlers(bot):
             if group is None:
                 bot.send_message(chat_id, "No group associated with this chat.")
                 return
+            
+            group_members_dict = Group.fetch_group_members_dict(group)
 
-            if user is None:
-                bot.send_message(chat_id, "You are not registered. Please register first.")
-                return
+            if not user or not group_members_dict.get(user.uuid):
+                bot.reply_to(message, "You are not in the group! Please join first.")
             
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
@@ -41,6 +42,21 @@ def register_expense_handlers(bot):
         
         # Set up a handler to wait for the user's reply
         bot.register_next_step_handler(msg, process_expense_reply, group, user)
+
+    # @bot.message_handler(commands=['delete_latest_expense'])
+    # def delete_latest_expense(message):
+    #     try:
+    #         chat_id = message.chat.id
+    #         group = Group.fetch_from_db_by_chat(chat_id)
+
+    #         if group is None:
+    #             bot.send_message(chat_id, "No group associated with this chat.")
+    #             return
+            
+
+            
+    #     except Exception as e:
+    #         bot.send_message(chat_id, f"{e}")
 
     # Step 3: Process the user's reply
     def process_expense_reply(message, group, user):
