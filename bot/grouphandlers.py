@@ -237,7 +237,17 @@ def register_group_handlers(bot):
 
     @bot.message_handler(commands=['delete_group'])
     def delete_group(message):
+        msg = bot.reply_to(message, 'Deleting this group will cause you to lose all recorded expenses!\nPlease reply this with "coconut" to confirm.')
+        bot.register_next_step_handler(msg, process_delete_group, message)
+        
+
+    def process_delete_group(message):
         """Delete the group associated with the current chat."""
+
+        if not message.text.lower() == "coconut":
+            bot.send_message(message.chat.id, "Group was not deleted.")
+            return
+
         chat_id = message.chat.id
 
         # Fetch the group associated with the chat
