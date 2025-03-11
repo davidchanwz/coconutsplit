@@ -35,7 +35,7 @@ def register_expense_handlers(bot):
             return
 
         # Step 2: Ask for the expense details (name, amount, tagged users)
-        msg = bot.send_message(chat_id, "Please enter the expense details in the format:\n\n{expense name}\n{expense amount}\n@{user telegram handle} {amount}\n\nExample:\n\nDinner\n100\n@john 70")
+        msg = bot.send_message(chat_id, "Please reply this message with the expense details in the format:\n\n{expense name}\n{total expense amount}\n@{telegram handle} {amount[optional]} ...\n\nExample:\nDinner\n10\n@john 7 @david 2")
         
         # Set up a handler to wait for the user's reply
         bot.register_next_step_handler(msg, process_expense_reply, group, user)

@@ -26,7 +26,6 @@ app = FastAPI()
 
 # Define a list of BotCommand objects
 commands = [
-    types.BotCommand("random_word", "Generate random word"),
     types.BotCommand("start", "Start the bot"),
     types.BotCommand("help", "Get help"),
     types.BotCommand("create_group", "Create a new group"),
@@ -40,8 +39,6 @@ commands = [
     types.BotCommand("upload_receipt", "Upload receipt for parsing using nlp"),
     types.BotCommand("settle_debt", "Settle a debt"),
     types.BotCommand("show_settlements", "Show all settlements in the group"),
-
-
 
 
 # Add more commands as needed

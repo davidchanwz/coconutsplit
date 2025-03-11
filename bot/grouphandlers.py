@@ -12,7 +12,6 @@ group_data = {}  # To temporarily store active group data during creation
 def register_group_handlers(bot):
     """Register all command handlers for the bot."""
 
-    @bot.message_handler(commands=['random_word'])
     def send_random_word_command(message):
         # Create an inline keyboard with different category buttons
         markup = InlineKeyboardMarkup()
@@ -63,12 +62,17 @@ def register_group_handlers(bot):
             # If it is valid text, return True
             return True
  
-    @bot.message_handler(commands=['start', 'help'])
+    @bot.message_handler(commands=['start'])
     def send_welcome(message):
         welcome_message = (
         "🌴 *Welcome to CoconutSplit!* 🌴\n\n"
         "CoconutSplit helps you easily split expenses with your friends and track debts within a group. Here are all the commands you can use:\n\n"
-        
+        )
+        bot.reply_to(message, welcome_message)
+
+    @bot.message_handler(commands=['help'])
+    def send_help(message):
+        help_message = (
         "📚 *General Commands:*\n"
         "/start - Start the bot\n"
         "/help - View the list of all available commands\n\n"
@@ -80,20 +84,19 @@ def register_group_handlers(bot):
         "/view_users - View all users in the group\n\n"
 
         "💸 *Expense Management Commands:*\n"
-        "/add_expense - Add an expense\n"
+        "/add_expense - Add an expense paid by you\n"
         "/show_expenses - View all expenses in the group\n"
         "/upload_receipt - Upload a receipt to automatically extract and tag expenses\n\n"
 
         "🤝 *Debt Management Commands:*\n"
-        "/show_debts - View all debts and see who owes whom\n\n"
-
-        "🎲 *Fun Commands:*\n"
-        "/random_word - Generate a random word (just for fun!)\n\n"
+        "/show_debts - View all debts and see who owes whom\n"
+        "/settle_debt - Settle a debt you owe\n"
+        "/show_settlements - View all debts that's been settled in the group"
 
         "If you have any questions or get stuck, use /help to view this message again!\n"
         "Happy splitting! 😊"
         )
-        bot.reply_to(message, welcome_message)
+        bot.reply_to(message, help_message)
 
     @bot.message_handler(commands=['create_group'])
     def ask_group_name(message):
