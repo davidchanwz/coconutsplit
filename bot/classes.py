@@ -271,7 +271,7 @@ class Group:
                 
             supa.table('expenses').delete().eq('expense_id', expense_entry['expense_id']).execute()
         else:
-            print("No expense found to delete.")
+            raise Exception("Nothing to delete! There are no expenses recorded in this group.")
 
     @staticmethod
     def fetch_group_members_dict(group):
