@@ -91,7 +91,7 @@ def register_group_handlers(bot):
         "🤝 *Debt Management Commands:*\n"
         "/show_debts - View all debts and see who owes whom\n"
         "/settle_debt - Settle a debt you owe\n"
-        "/show_settlements - View all debts that's been settled in the group"
+        "/show_settlements - View all debts that's been settled in the group\n\n"
 
         "If you have any questions or get stuck, use /help to view this message again!\n"
         "Happy splitting! 😊"
