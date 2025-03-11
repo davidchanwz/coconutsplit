@@ -365,8 +365,11 @@ class Expense:
             print("Bulk debt records added successfully.")
 
     @staticmethod
-    def fetch_expenses_by_group(group: Group, group_members_dict):
+    def fetch_expenses_by_group(group: Group, group_members_dict = None):
         """Fetch all expenses for a group."""
+        if not group_members_dict:
+            group_members_dict = Group.fetch_group_members_dict(group)
+            
         response = supa.table('expenses').select("*").eq('group_id', group.group_id).execute()
         expenses = []
         if response.data:
