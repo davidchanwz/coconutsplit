@@ -368,6 +368,10 @@ class Expense:
 
     def add_debt(self, user: User, amount_owed: float):
         """Add debt for a user."""
+        # Ensure the amount owed is within the allowed range
+        if amount_owed >= 10**8:
+            raise ValueError(f"Amount owed must be less than {10**8}.")
+
         # Check if a split already exists
         response = supa.table('debts').select("*").eq('group_id', self.group.group_id).eq('user_id', user.uuid).eq('opp_user_id', self.paid_by.uuid).single().execute()
         
@@ -397,6 +401,11 @@ class Expense:
 
     @staticmethod
     def add_debts_bulk(debt_updates):
+        # Ensure the amount owed in each debt update is within the allowed range
+        for debt in debt_updates:
+            if debt['increment_value'] >= 10**8:
+                raise ValueError(f"Amount owed must be less than {10**8}.")
+
         response = supa.rpc("bulk_update_debts", {"debt_updates": debt_updates}).execute()
 
         # Check response
@@ -471,6 +480,10 @@ class Settlement:
         settlements_data = []
 
         for settlement in settlements_to_add:
+            # Ensure the amount in each settlement is within the allowed range
+            if settlement.amount >= 10**8:
+                raise ValueError(f"Settlement amount must be less than {10**8}.")
+
             settlement_data = {
                 "settlement_id": settlement.settlement_id,
                 "from_user": settlement.from_user.uuid,

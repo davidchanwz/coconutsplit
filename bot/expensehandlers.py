@@ -99,6 +99,10 @@ def register_expense_handlers(bot):
         if expense_amount <= 0:
             raise ValueError(f"Expense amount must be more than 0!")
 
+        # Ensure the expense amount is within the allowed range
+        if expense_amount >= 10**8:
+            raise ValueError(f"Expense amount must be less than {10**8}.")
+
         # Step 2: Parse tagged users and their amounts
         tagged_with_amount = {}
         tagged_without_amount = []
@@ -120,6 +124,9 @@ def register_expense_handlers(bot):
                 # User with a specific amount
                 username = match_with_amount.group(1)
                 amount = float(match_with_amount.group(2))
+                # Ensure the amount is within the allowed range
+                if amount >= 10**8:
+                    raise ValueError(f"Tagged amount must be less than {10**8}.")
                 tagged_user = group_members_username_dict.get(username)
                 if tagged_user:
                     tagged_with_amount[tagged_user] = amount
@@ -152,6 +159,10 @@ def register_expense_handlers(bot):
             split_amount_per_user = remaining_amount / (len(tagged_without_amount) + 1)
         else:
             split_amount_per_user = 0
+
+        # Ensure the split amount per user is within the allowed range
+        if split_amount_per_user >= 10**8:
+            raise ValueError(f"Split amount per user must be less than {10**8}.")
 
         # Step 4: Create the expense entry in the database
         expense = Expense(group=group, paid_by=user, amount=expense_amount, description=expense_name)
