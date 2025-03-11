@@ -384,9 +384,7 @@ def register_expense_handlers(bot):
         for debtor_id, creditor_id, amount in debts:
             debtor = group_members_dict[debtor_id]
             creditor = group_members_dict[creditor_id]
-debtor_username = debtor.username.replace('_', '\\_')
-            creditor_username = creditor.username.replace('_', '\\_')
-            debt_messages.append(f"{debtor_username} owes {creditor_username} ${amount:.2f}")
+            debt_messages.append(f"{debtor.username} owes {creditor.username} ${amount:.2f}")
 
         bot.send_message(chat_id, "\n".join(debt_messages))
 
