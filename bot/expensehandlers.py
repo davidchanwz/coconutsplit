@@ -55,6 +55,7 @@ def register_expense_handlers(bot):
                 return
             
             group.delete_latest_expense()
+            bot.send_message(chat_id, "Latest expense deleted successfully!")
             
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
