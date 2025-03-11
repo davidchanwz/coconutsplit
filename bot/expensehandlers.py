@@ -498,9 +498,9 @@ def register_expense_handlers(bot):
             # Format the settlements
             formatted_output = []
             for settlement in settlements:
-                from_user = settlement.from_user.replace('_', '\\_')
-                to_user = settlement.to_user.replace('_', '\\_')
-                formatted_output.append(f"{from_user.username} paid {to_user.username} ${settlement.amount:.2f} on {settlement.created_at.strftime('%Y-%m-%d')}")
+                from_user = settlement.from_user
+                to_user = settlement.to_user
+                formatted_output.append(f"{from_user.username.replace('_', '\\_')} paid {to_user.username.replace('_', '\\_')} ${settlement.amount:.2f} on {settlement.created_at.strftime('%Y-%m-%d')}")
 
             # Send the formatted list of settlements
             bot.send_message(chat_id, "\n".join(formatted_output), parse_mode='Markdown')
