@@ -94,7 +94,7 @@ def register_expense_handlers(bot):
                     tagged_with_amount[tagged_user] = amount
                     total_tagged_amount += amount
                 else:
-                    raise ValueError(f"User @{username} is not a member of this group.")
+                    raise ValueError(f"{username} is not a member of this group.")
 
             elif match_without_amount:
                 # User without a specific amount (to split remaining amount)
@@ -103,7 +103,7 @@ def register_expense_handlers(bot):
                 if tagged_user:
                     tagged_without_amount.append(tagged_user)
                 else:
-                    raise ValueError(f"User @{username} is not a member of this group.")
+                    raise ValueError(f"{username} is not a member of this group.")
         
         if total_tagged_amount > expense_amount:
             raise ValueError(f"Total tagged amount ${total_tagged_amount} exceeds the expense amount ${expense_amount}.")
@@ -360,14 +360,21 @@ def register_expense_handlers(bot):
         if group is None:
             bot.send_message(chat_id, "No group associated with this chat.")
             return
+        
+        # Fetch all debts for the group
+        debts = group.fetch_debts_by_group()
+
+        if not debts:
+            bot.send_message(chat_id, "There are no recorded debts in this group.")
+            return
 
         # Ask for the usernames to settle debts with
-        msg = bot.send_message(chat_id, "Please reply this with the usernames you wihsh to settle debts with in the format:\n\n@username1 @username2 ...")
+        msg = bot.send_message(chat_id, "Please reply this with the usernames you wish to settle debts with in the format:\n\n@username1 @username2 ...")
         
         # Set up a handler to wait for the user's reply
-        bot.register_next_step_handler(msg, process_settle_debt_reply, group, user)
+        bot.register_next_step_handler(msg, process_settle_debt_reply, group, user, debts)
 
-    def process_settle_debt_reply(message, group, user):
+    def process_settle_debt_reply(message, group, user, debts):
         chat_id = message.chat.id
         input_text = message.text  # Get the input text from the user's reply
 
@@ -383,16 +390,9 @@ def register_expense_handlers(bot):
         for username in matches:
             creditor = usernames_dict.get(username)
             if creditor is None:
-                bot.send_message(chat_id, f"User @{username} not found.")
+                bot.send_message(chat_id, f"User {username} not found.")
                 return
             creditors.append(creditor)
-
-        # Fetch all expense splits for the group
-        debts = group.fetch_debts_by_group()
-
-        if not debts:
-            bot.send_message(chat_id, "There are no recorded debts in this group.")
-            return
 
         # Step 1: Aggregate debts (netted amounts owed between users)
         user_balances = calculate_user_balances(debts)
@@ -424,10 +424,10 @@ def register_expense_handlers(bot):
                     # Create a new settlement record
                     settlement = Settlement(from_user=debtor, to_user=creditor, amount=debt_amount, group=group)
                     settlements_to_add.append(settlement)
-                    bot.send_message(chat_id, f"Debt of {debt_amount} from @{debtor.username} to @{creditor.username} settled.")
+                    bot.send_message(chat_id, f"Debt of {debt_amount} from {debtor.username} to {creditor.username} settled.")
                     return
 
-        bot.send_message(chat_id, f"No debt found from @{debtor.username} to @{creditor.username}!")
+        bot.send_message(chat_id, f"No debt found from {debtor.username} to {creditor.username}!")
 
     @bot.message_handler(commands=['show_settlements'])
     def show_settlements(message):

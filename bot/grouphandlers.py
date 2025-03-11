@@ -155,9 +155,9 @@ def register_group_handlers(bot):
             if members:
                 # Create a list of member usernames or display names
                 member_list = "\n".join([f"- {member.username}" for member in members])
-                bot.reply_to(message, f"Members in {group.group_name}:\n{member_list}")
+                bot.reply_to(message, f"Members in '{group.group_name}':\n{member_list}")
             else:
-                bot.reply_to(message, f"No members found in {group.group_name}.")
+                bot.reply_to(message, f"No members found in '{group.group_name}'.")
         else:
             bot.reply_to(message, "No group exists in this chat.")
     
@@ -176,9 +176,9 @@ def register_group_handlers(bot):
         if group:
             if not group.check_user_in_group(user): 
                 group.add_member(user)
-                bot.send_message(message.chat.id, f"{user.username} has joined {group.group_name}!")
+                bot.send_message(message.chat.id, f"{user.username} has joined '{group.group_name}'!")
             else:
-                bot.send_message(message.chat.id, f"{user.username} is already in {group.group_name}!")
+                bot.send_message(message.chat.id, f"{user.username} is already in '{group.group_name}'!")
 
         else:
             bot.send_message(message.chat.id, "No group associated with this chat.")
@@ -200,11 +200,11 @@ def register_group_handlers(bot):
         if group:
             if not group.check_user_in_group(user): 
                 group.add_member(user)
-                bot.answer_callback_query(call.id, f"You have joined {group.group_name}!")
-                bot.send_message(call.message.chat.id, f"{user.username} has joined {group.group_name}!")
+                bot.answer_callback_query(call.id, f"You have joined '{group.group_name}'!")
+                bot.send_message(call.message.chat.id, f"{user.username} has joined '{group.group_name}'!")
             else:
                 bot.answer_callback_query(call.id, f"You are already in {group.group_name}!")
-                bot.send_message(call.message.chat.id, f"{user.username} is already in {group.group_name}!")
+                bot.send_message(call.message.chat.id, f"{user.username} is already in '{group.group_name}'!")
 
         else:
             bot.answer_callback_query(call.id, "Group not found.")
