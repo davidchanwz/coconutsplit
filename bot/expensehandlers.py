@@ -472,7 +472,7 @@ def register_expense_handlers(bot):
                     # Create a new settlement record
                     settlement = Settlement(from_user=debtor, to_user=creditor, amount=debt_amount, group=group)
                     settlements_to_add.append(settlement)
-                    bot.send_message(chat_id, f"Debt of {debt_amount} from {debtor.username} to {creditor.username} settled.")
+                    bot.send_message(chat_id, f"Debt of ${debt_amount:.2f} from {debtor.username} to {creditor.username} settled.")
                     return
 
         bot.send_message(chat_id, f"No debt found from {debtor.username} to {creditor.username}!")
