@@ -50,7 +50,7 @@ def register_expense_handlers(bot):
             process_add_expense(group, user, input_text)
             bot.send_message(chat_id, "Expense added successfully.")
         except Exception as e:
-            bot.send_message(chat_id, f"Failed to add expense: {e}")
+            bot.send_message(chat_id, f"{e}")
 
     def process_add_expense(group: Group, user: User, input_text: str):
         """
@@ -81,6 +81,8 @@ def register_expense_handlers(bot):
 
         group_members_username_dict = Group.fetch_group_members_usernames_dict(group)
 
+        tagged_users_so_far = []
+
         for line in lines[2:]:
             match_with_amount = re.match(r'@(\w+)\s+(\d+(\.\d+)?)', line.strip())
             match_without_amount = re.match(r'@(\w+)', line.strip())
@@ -105,6 +107,11 @@ def register_expense_handlers(bot):
                 else:
                     raise ValueError(f"{username} is not a member of this group.")
         
+            if tagged_user in tagged_users_so_far:
+                raise ValueError(f"Please do not tag the same person more than once!")
+            else:
+                tagged_users_so_far.append(tagged_user)
+
         if total_tagged_amount > expense_amount:
             raise ValueError(f"Total tagged amount ${total_tagged_amount} exceeds the expense amount ${expense_amount}.")
 
