@@ -237,7 +237,15 @@ class Group:
 
         if response.data:
             expense_entry = response.data[0]
-            expense_splits_dict = Expense.fetch_expense_splits_dict([expense_entry])
+            expense = Expense(
+                expense_entry['expense_id'], 
+                self.group_id,
+                expense_entry['paid_by'],
+                expense_entry['amount'],
+                expense_entry['description'],
+                expense_entry['created_at']
+                )
+            expense_splits_dict = Expense.fetch_expense_splits_dict([expense])
 
             debt_updates = []
             for split in expense_splits_dict.get(expense_entry['expense_id']):
