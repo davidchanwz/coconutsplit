@@ -176,7 +176,8 @@ def register_expense_handlers(bot):
             
             expense.add_split(user=tagged_user, amount=split_amount_per_user) # Add expense split to table
 
-        expense.add_debt_bulk(debt_updates)
+        if debt_updates:
+            expense.add_debt_bulk(debt_updates)
 
         print("Expense processing complete.")
 
