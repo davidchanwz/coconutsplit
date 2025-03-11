@@ -89,6 +89,10 @@ def register_expense_handlers(bot):
         for line in lines[2:]:
             match_with_amount = re.match(r'@(\w+)\s+(\d+(\.\d+)?)', line.strip())
             match_without_amount = re.match(r'@(\w+)', line.strip())
+            tagged_user = None
+
+            if not match_with_amount or match_without_amount:
+                continue # ignore invalid lines
 
             if match_with_amount:
                 # User with a specific amount
@@ -110,11 +114,10 @@ def register_expense_handlers(bot):
                 else:
                     raise ValueError(f"{username} is not a member of this group.")
                 
-            if tagged_user:
-                if tagged_user in tagged_users_so_far:
-                    raise ValueError(f"Please do not tag the same person more than once!")
-                else:
-                    tagged_users_so_far.append(tagged_user)
+            if tagged_user in tagged_users_so_far:
+                raise ValueError(f"Please do not tag the same person more than once!")
+            else:
+                tagged_users_so_far.append(tagged_user)
 
         if total_tagged_amount > expense_amount:
             raise ValueError(f"Total tagged amount ${total_tagged_amount:.2f} exceeds the expense amount ${expense_amount:.2f}.")
