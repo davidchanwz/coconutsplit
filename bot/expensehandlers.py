@@ -89,8 +89,7 @@ def register_expense_handlers(bot):
                 # User with a specific amount
                 username = match_with_amount.group(1)
                 amount = float(match_with_amount.group(2))
-                tagged_user = group_members_username_dict.get(username)
-
+                tagged_user = User.fetch_from_db_by_username(username)  # Fetch user by Telegram handle
                 if tagged_user:
                     tagged_with_amount[tagged_user] = amount
                     total_tagged_amount += amount
@@ -109,6 +108,8 @@ def register_expense_handlers(bot):
                     raise ValueError(f"User @{username} not found in the database.")
                 if not group.check_user_in_group(tagged_user):
                     raise ValueError(f"User @{username} is not a member of this group.")
+        
+
         
 
         if total_tagged_amount > expense_amount:
