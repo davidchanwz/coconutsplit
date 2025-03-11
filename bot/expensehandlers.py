@@ -39,7 +39,7 @@ def register_expense_handlers(bot):
             bot.send_message(chat_id, f"{e}")
 
         # Step 2: Ask for the expense details (name, amount, tagged users)
-        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n[Expense name]\n[Total expense amount]\n@[Handle] [Amount[optional]]\n...\n\nExample:\nDinner\n10\n@john 3\n@david 2")
+        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n[Expense name]\n[Total expense amount]\n@[Username] [split amount[optional]]\n...\n\nExample:\nDinner\n10\n@john 3\n@david 2")
         
         # Set up a handler to wait for the user's reply
         bot.register_next_step_handler(msg, process_expense_reply, group, user)
@@ -84,6 +84,9 @@ def register_expense_handlers(bot):
             None
         """
         # Step 1: Parse the input
+        if not input_text:
+            raise Exception("Please send a proper text!")
+
         lines = input_text.strip().split('\n')
 
         if len(lines) < 2:
@@ -436,6 +439,10 @@ def register_expense_handlers(bot):
         try:
             chat_id = message.chat.id
             input_text = message.text  # Get the input text from the user's reply
+
+            if not input_text:
+                raise Exception("Please send a proper text!")
+
             # Parse the message to extract the usernames
             matches = re.findall(r'@(\w+)', input_text.strip())
             if len(matches) < 1:

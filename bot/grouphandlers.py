@@ -264,7 +264,7 @@ def register_group_handlers(bot):
         try:
             """Delete the group associated with the current chat."""
 
-            if not message.text.lower() == "coconut":
+            if not message.text or not message.text.lower() == "coconut":
                 bot.send_message(message.chat.id, "Group was not deleted.")
                 return
 
