@@ -35,7 +35,7 @@ def register_expense_handlers(bot):
             return
 
         # Step 2: Ask for the expense details (name, amount, tagged users)
-        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n{expense name}\n{total expense amount}\n@{handle} {amount[optional]} ...\n\nExample:\nDinner\n10\n@john 7 @david 2")
+        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n{expense name}\n{total expense amount}\n@{handle} {amount[optional]}\n.\n.\n.\n\nExample:\nDinner\n10\n@john 7\n@david 2")
         
         # Set up a handler to wait for the user's reply
         bot.register_next_step_handler(msg, process_expense_reply, group, user)
@@ -89,29 +89,22 @@ def register_expense_handlers(bot):
                 # User with a specific amount
                 username = match_with_amount.group(1)
                 amount = float(match_with_amount.group(2))
-                tagged_user = User.fetch_from_db_by_username(username)  # Fetch user by Telegram handle
+                tagged_user = group_members_username_dict.get(username)
                 if tagged_user:
                     tagged_with_amount[tagged_user] = amount
                     total_tagged_amount += amount
                 else:
-                    raise ValueError(f"User @{username} not found in the database.")
-                if not group.check_user_in_group(tagged_user):
                     raise ValueError(f"User @{username} is not a member of this group.")
 
             elif match_without_amount:
                 # User without a specific amount (to split remaining amount)
                 username = match_without_amount.group(1)
-                tagged_user = User.fetch_from_db_by_username(username)
+                tagged_user = group_members_username_dict.get(username)
                 if tagged_user:
                     tagged_without_amount.append(tagged_user)
                 else:
-                    raise ValueError(f"User @{username} not found in the database.")
-                if not group.check_user_in_group(tagged_user):
                     raise ValueError(f"User @{username} is not a member of this group.")
         
-
-        
-
         if total_tagged_amount > expense_amount:
             raise ValueError(f"Total tagged amount ${total_tagged_amount} exceeds the expense amount ${expense_amount}.")
 
