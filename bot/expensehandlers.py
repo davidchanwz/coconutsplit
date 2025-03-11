@@ -86,6 +86,9 @@ def register_expense_handlers(bot):
         # Step 1: Parse the input
         lines = input_text.strip().split('\n')
 
+        if len(lines) < 2:
+            raise Exception("Please follow the format given!")
+
         # Parse the expense name and total amount
         expense_name = lines[0]
         try:

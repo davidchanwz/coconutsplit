@@ -481,7 +481,7 @@ class Settlement:
             }
             settlements_data.append(settlement_data)
 
-        response = supa.table('expense_splits').insert(settlements_data).execute()
+        response = supa.table('settlements').insert(settlements_data).execute()
 
          # Check response
         if "error" in response:
