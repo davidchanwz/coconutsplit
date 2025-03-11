@@ -44,10 +44,9 @@ def register_expense_handlers(bot):
 
     # Step 3: Process the user's reply
     def process_expense_reply(message, group, user):
-        chat_id = message.chat.id
-        input_text = message.text  # Get the input text from the user's reply
-        
         try:
+            chat_id = message.chat.id
+            input_text = message.text  # Get the input text from the user's reply
             # Call the process_add_expense function to handle the input
             process_add_expense(group, user, input_text)
             bot.send_message(chat_id, "Expense added successfully.")
@@ -93,7 +92,7 @@ def register_expense_handlers(bot):
             match_without_amount = re.match(r'@(\w+)', line.strip())
             tagged_user = None
 
-            if not match_with_amount or match_without_amount:
+            if not match_with_amount and not match_without_amount:
                 continue # ignore invalid lines
 
             if match_with_amount:
