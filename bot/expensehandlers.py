@@ -260,7 +260,8 @@ def register_expense_handlers(bot):
                 formatted_output.append(f"📅 *{date}*")  # Display the date as a section header
                 for expense in expenses_by_date[date]:
                     # Add main expense details
-                    expense_details = f"  • {expense.description}: ${expense.amount:.2f} (Paid by {expense.paid_by.username})"
+                    paid_by_username = expense.paid_by.username.replace('_', '\\_')
+                    expense_details = f"  • {expense.description}: ${expense.amount:.2f} (Paid by {paid_by_username})"
                     # Fetch splits for this expense
                     splits = expense_splits_dict.get(expense.expense_id)
                     
@@ -268,7 +269,8 @@ def register_expense_handlers(bot):
                         split_details = ""
                         for split in splits:
                             user = group_members_dict.get(split['user_id'])
-                            username = "Unknown User" if not user else user.username
+                            username = "Unknown User" if not user else user.username.replace('_', '\\_')
+                            
                             split_details += f"\n      - {username} owes ${split['amount']}"
                         expense_details += split_details
 
@@ -382,7 +384,9 @@ def register_expense_handlers(bot):
         for debtor_id, creditor_id, amount in debts:
             debtor = group_members_dict[debtor_id]
             creditor = group_members_dict[creditor_id]
-            debt_messages.append(f"{debtor.username} owes {creditor.username} ${amount:.2f}")
+debtor_username = debtor.username.replace('_', '\\_')
+            creditor_username = creditor.username.replace('_', '\\_')
+            debt_messages.append(f"{debtor_username} owes {creditor_username} ${amount:.2f}")
 
         bot.send_message(chat_id, "\n".join(debt_messages))
 
