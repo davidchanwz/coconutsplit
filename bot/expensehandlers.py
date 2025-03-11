@@ -152,19 +152,19 @@ def register_expense_handlers(bot):
             expense.add_split(user=tagged_user, amount=amount) # Add expense split to table
 
         # Step 6: Update expense splits for users tagged without specific amounts (split the remaining amount)
-        for tagged_user, amount in tagged_without_amount:
+        for tagged_user in tagged_without_amount:
             debt_details = {
                 "group_id": expense.group.group_id,
                 "user_id": tagged_user.uuid,
                 "opp_user_id": expense.paid_by.uuid,
-                "increment_value": amount
+                "increment_value": split_amount_per_user
             }
 
             reverse_debt_details = {
                 "group_id": expense.group.group_id,
                 "user_id": expense.paid_by.uuid,
                 "opp_user_id": tagged_user.uuid,
-                "increment_value": -amount
+                "increment_value": -split_amount_per_user
             }
 
             debt_updates.append(debt_details)
