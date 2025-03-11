@@ -238,12 +238,12 @@ class Group:
         if response.data:
             expense_entry = response.data[0]
             expense = Expense(
-                expense_entry['expense_id'], 
-                self.group_id,
-                expense_entry['paid_by'],
+                self,
+                None,
                 expense_entry['amount'],
                 expense_entry['description'],
-                expense_entry['created_at']
+                expense_entry['created_at'],
+                expense_entry['expense_id']
                 )
             expense_splits_dict = Expense.fetch_expense_splits_dict([expense])
 
