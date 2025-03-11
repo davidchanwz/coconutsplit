@@ -69,7 +69,10 @@ def register_expense_handlers(bot):
 
         # Parse the expense name and total amount
         expense_name = lines[0]
-        expense_amount = float(lines[1])
+        try:
+            expense_amount = float(lines[1])
+        except ValueError:
+            raise ValueError(f"Please key in a valid number for expense amount!")
 
         if expense_amount <= 0:
             raise ValueError(f"Expense amount must be more than 0!")
@@ -106,11 +109,12 @@ def register_expense_handlers(bot):
                     tagged_without_amount.append(tagged_user)
                 else:
                     raise ValueError(f"{username} is not a member of this group.")
-        
-            if tagged_user in tagged_users_so_far:
-                raise ValueError(f"Please do not tag the same person more than once!")
-            else:
-                tagged_users_so_far.append(tagged_user)
+                
+            if tagged_user:
+                if tagged_user in tagged_users_so_far:
+                    raise ValueError(f"Please do not tag the same person more than once!")
+                else:
+                    tagged_users_so_far.append(tagged_user)
 
         if total_tagged_amount > expense_amount:
             raise ValueError(f"Total tagged amount ${total_tagged_amount:.2f} exceeds the expense amount ${expense_amount:.2f}.")
@@ -194,10 +198,16 @@ def register_expense_handlers(bot):
 
         print("Expense processing complete.")
 
+    @bot.message_handler(commands=['delete_latest_expense'])
+    def delete_latest_expense(message):
+        chat_id = message.chat.id
+        
+
+
+
     @bot.message_handler(commands=['show_expenses'])
     def show_expenses(message):
         chat_id = message.chat.id
-        user_id = message.from_user.id
 
         # Fetch the group by chat ID
         group = Group.fetch_from_db_by_chat(chat_id)
