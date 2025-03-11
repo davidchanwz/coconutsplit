@@ -126,6 +126,7 @@ def register_expense_handlers(bot):
         expense.save_to_db()
 
         debt_updates = []
+        splits_to_add = []
 
         # Step 5: Update expense splits for users tagged with specific amounts
         for tagged_user, amount in tagged_with_amount.items():
@@ -146,10 +147,14 @@ def register_expense_handlers(bot):
             debt_updates.append(debt_details)
             debt_updates.append(reverse_debt_details)
 
-            # expense.add_debt(user=tagged_user, amount_owed=amount)  # The tagged user owes the payer
-            # expense.add_debt_reverse(user=tagged_user, amount_owed=-amount)  # The payer is owed the same amount from the tagged user
+            split_details = {
+                "user_id" : tagged_user.uuid,
+                "expense_id": expense.expense_id,
+                "amount": amount
+            }
+
+            splits_to_add.append(split_details)
             
-            expense.add_split(user=tagged_user, amount=amount) # Add expense split to table
 
         # Step 6: Update expense splits for users tagged without specific amounts (split the remaining amount)
         for tagged_user in tagged_without_amount:
@@ -170,13 +175,19 @@ def register_expense_handlers(bot):
             debt_updates.append(debt_details)
             debt_updates.append(reverse_debt_details)
 
-            # expense.add_debt(user=tagged_user, amount_owed=split_amount_per_user)  # Tagged users without amount owe their split
-            # expense.add_debt_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
-            
-            expense.add_split(user=tagged_user, amount=split_amount_per_user) # Add expense split to table
+            split_details = {
+                "user_id" : tagged_user.uuid,
+                "expense_id": expense.expense_id,
+                "amount": split_amount_per_user
+            }
 
+            splits_to_add.append(split_details)
+            
         if debt_updates:
-            expense.add_debt_bulk(debt_updates)
+            Expense.add_debt_bulk(debt_updates)
+
+        if splits_to_add:
+            Expense.add_splits_bulk(splits_to_add)
 
         print("Expense processing complete.")
 

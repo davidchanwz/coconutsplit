@@ -331,6 +331,10 @@ class Expense:
         }
         supa.table('expense_splits').insert(split_data).execute()
 
+    @staticmethod
+    def add_splits_bulk(splits_to_add):
+        supa.table('expense_splits').insert(splits_to_add).execute()
+
     def add_debt_reverse(self, user: User, amount_owed: float):
         """Add debt (reverse) for a user."""
         # Check if a split already exists
@@ -350,8 +354,8 @@ class Expense:
             }
             supa.table('debts').insert(split_data).execute()
 
-    def add_debt_bulk(self, debt_updates):
-
+    @staticmethod
+    def add_debt_bulk(debt_updates):
         response = supa.rpc("bulk_update_debts", {"debt_updates": debt_updates}).execute()
 
         # Check response
