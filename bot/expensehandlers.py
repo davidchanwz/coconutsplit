@@ -35,7 +35,7 @@ def register_expense_handlers(bot):
             return
 
         # Step 2: Ask for the expense details (name, amount, tagged users)
-        msg = bot.send_message(chat_id, "Please reply this message with the expense details in the format:\n\n{expense name}\n{total expense amount}\n@{handle} {amount[optional]} ...\n\nExample:\nDinner\n10\n@john 7 @david 2")
+        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n{expense name}\n{total expense amount}\n@{handle} {amount[optional]} ...\n\nExample:\nDinner\n10\n@john 7 @david 2")
         
         # Set up a handler to wait for the user's reply
         bot.register_next_step_handler(msg, process_expense_reply, group, user)
@@ -71,6 +71,9 @@ def register_expense_handlers(bot):
         expense_name = lines[0]
         expense_amount = float(lines[1])
 
+        if expense_amount <= 0:
+            raise ValueError(f"Expense amount must be more than 0!")
+
         # Step 2: Parse tagged users and their amounts
         tagged_with_amount = {}
         tagged_without_amount = []
@@ -85,6 +88,10 @@ def register_expense_handlers(bot):
                 username = match_with_amount.group(1)
                 amount = float(match_with_amount.group(2))
                 tagged_user = User.fetch_from_db_by_username(username)  # Fetch user by Telegram handle
+
+                if amount <= 0:
+                    raise ValueError(f"Tagged amount must be more than 0!")
+
                 if tagged_user:
                     tagged_with_amount[tagged_user] = amount
                     total_tagged_amount += amount
@@ -106,7 +113,7 @@ def register_expense_handlers(bot):
         
 
         if total_tagged_amount > expense_amount:
-            raise ValueError(f"Total tagged amount ({total_tagged_amount}) exceeds the expense amount ({expense_amount}).")
+            raise ValueError(f"Total tagged amount ${total_tagged_amount} exceeds the expense amount ${expense_amount}.")
 
 
         # Step 3: Calculate the remaining amount to be split among users with no specific amount
@@ -185,7 +192,7 @@ def register_expense_handlers(bot):
                     for split in splits:
                         user = group_members_dict.get(split['user_id'])
                         username = "Unknown User" if not user else user.username
-                        split_details += f"\n      - {username} owes {split['amount']}"
+                        split_details += f"\n      - {username} owes ${split['amount']}"
                     expense_details += split_details
 
                 formatted_output.append(expense_details)
@@ -293,7 +300,7 @@ def register_expense_handlers(bot):
         for debtor_id, creditor_id, amount in debts:
             debtor = group_members_dict[debtor_id]
             creditor = group_members_dict[creditor_id]
-            debt_messages.append(f"{debtor.username} owes {creditor.username} {amount:.2f}")
+            debt_messages.append(f"{debtor.username} owes {creditor.username} ${amount:.2f}")
 
         bot.send_message(chat_id, "\n".join(debt_messages))
 
@@ -311,7 +318,7 @@ def register_expense_handlers(bot):
             return
 
         # Ask for the usernames to settle debts with
-        msg = bot.send_message(chat_id, "Please enter the usernames to settle debts with in the format:\n\n@username1 @username2 ...")
+        msg = bot.send_message(chat_id, "Please reply this with the usernames you wihsh to settle debts with in the format:\n\n@username1 @username2 ...")
         
         # Set up a handler to wait for the user's reply
         bot.register_next_step_handler(msg, process_settle_debt_reply, group, user)
@@ -395,7 +402,7 @@ def register_expense_handlers(bot):
         for settlement in settlements:
             from_user = settlement.from_user
             to_user = settlement.to_user
-            formatted_output.append(f"{from_user.username} paid {to_user.username} {settlement.amount:.2f} on {settlement.created_at.strftime('%Y-%m-%d')}")
+            formatted_output.append(f"{from_user.username} paid {to_user.username} ${settlement.amount:.2f} on {settlement.created_at.strftime('%Y-%m-%d')}")
 
         # Send the formatted list of settlements
         bot.send_message(chat_id, "\n".join(formatted_output), parse_mode='Markdown')

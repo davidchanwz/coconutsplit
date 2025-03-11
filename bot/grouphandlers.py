@@ -65,8 +65,8 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
         welcome_message = (
-        "🌴 *Welcome to CoconutSplit!* 🌴\n\n"
-        "CoconutSplit helps you easily split expenses with your friends and track debts within a group. Here are all the commands you can use:\n\n"
+        "🌴 Welcome to CoconutSplit! 🌴\n\n"
+        "CoconutSplit helps you easily split expenses with your friends and track debts within a group. Please enter /help for the list of available commands!"
         )
         bot.reply_to(message, welcome_message)
 
@@ -110,7 +110,7 @@ def register_group_handlers(bot):
             bot.reply_to(message, f"A group already exists in this chat: '{existing_group.group_name}'. Please delete the current group before creating a new one.")
         else:
             # Proceed with group creation if no group exists
-            msg = bot.reply_to(message, "Please enter the name of the group:")
+            msg = bot.reply_to(message, "Please reply this with the name of the group:")
             bot.register_next_step_handler(msg, process_group_name)
 
     def process_group_name(message):
