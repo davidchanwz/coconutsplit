@@ -80,7 +80,7 @@ def register_group_handlers(bot):
         "👥 *Group Management Commands:*\n"
         "/create_group - Create a new group\n"
         "/delete_group - Delete the existing group\n"
-        "/leave_group - Leave the group you are in\n"
+        "/join_group - Join the existing group\n"
         "/view_users - View all users in the group\n\n"
 
         "💸 *Expense Management Commands:*\n"
@@ -167,7 +167,7 @@ def register_group_handlers(bot):
         user = User.fetch_from_db_by_user_id(message.from_user.id)
 
         if not user:
-            user = User(user_id=call.from_user.id, username=call.from_user.username)
+            user = User(user_id=message.from_user.id, username=message.from_user.username)
             user.save_to_db()  # Save the user to the database if not already present
 
         group = Group.fetch_from_db_by_chat(chat_id)
@@ -176,14 +176,12 @@ def register_group_handlers(bot):
         if group:
             if not group.check_user_in_group(user): 
                 group.add_member(user)
-                bot.answer_callback_query(call.id, f"You have joined {group.group_name}!")
-                bot.send_message(call.message.chat.id, f"{user.username} has joined {group.group_name}!")
+                bot.send_message(message.chat.id, f"{user.username} has joined {group.group_name}!")
             else:
-                bot.answer_callback_query(call.id, f"You are already in {group.group_name}!")
-                bot.send_message(call.message.chat.id, f"{user.username} is already in {group.group_name}!")
+                bot.send_message(message.chat.id, f"{user.username} is already in {group.group_name}!")
 
         else:
-            bot.answer_callback_query(call.id, "Group not found.")
+            bot.send_message(message.chat.id, "No group associated with this chat.")
 
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('join_'))

@@ -35,7 +35,7 @@ commands = [
     types.BotCommand("view_users", "View all users in the group"),
     types.BotCommand("add_expense", "Add an expense"),
     types.BotCommand("show_expenses", "Show all expenses"),
-    types.BotCommand("show_debts", "View all debts"),
+    types.BotCommand("show_debts", "Show all debts"),
     # types.BotCommand("upload_receipt", "Upload receipt for parsing"),
     types.BotCommand("upload_receipt", "Upload receipt for parsing using nlp"),
     types.BotCommand("settle_debt", "Settle a debt"),
