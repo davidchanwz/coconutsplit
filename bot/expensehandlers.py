@@ -79,6 +79,8 @@ def register_expense_handlers(bot):
         tagged_without_amount = []
         total_tagged_amount = 0
 
+        group_members_username_dict = Group.fetch_group_members_usernames_dict(group)
+
         for line in lines[2:]:
             match_with_amount = re.match(r'@(\w+)\s+(\d+(\.\d+)?)', line.strip())
             match_without_amount = re.match(r'@(\w+)', line.strip())
@@ -87,7 +89,7 @@ def register_expense_handlers(bot):
                 # User with a specific amount
                 username = match_with_amount.group(1)
                 amount = float(match_with_amount.group(2))
-                tagged_user = User.fetch_from_db_by_username(username)  # Fetch user by Telegram handle
+                tagged_user = group_members_username_dict.get(username)
 
                 if tagged_user:
                     tagged_with_amount[tagged_user] = amount

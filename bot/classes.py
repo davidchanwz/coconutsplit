@@ -256,6 +256,31 @@ class Group:
         except Exception as e:
             logging.error(f"Error fetching members for group {group.group_id}: {e}")
             return {}
+        
+    @staticmethod
+    def fetch_group_members_usernames_dict(group):
+        """Fetch all members of the group using a single database call."""
+        try:
+            # Call the RPC function to get all members in one query
+            response = supa.rpc('get_group_members', {'group_id_param': group.group_id}).execute()
+            username_to_user = {}
+            
+            if response.data:
+                # Create User objects from the response data
+                for member in response.data:
+                    username_to_user[member['username']] = User(
+                        user_id=member['user_id'],
+                        username=member['username'],
+                        user_uuid=member['uuid'],
+                        currency=member['currency']
+                    )
+                return username_to_user
+                
+            return {}
+            
+        except Exception as e:
+            logging.error(f"Error fetching members for group {group.group_id}: {e}")
+            return {}
     
     @staticmethod
     def fetch_from_db_by_chat(chat_id: int):
