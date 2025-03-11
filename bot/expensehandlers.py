@@ -33,6 +33,7 @@ def register_expense_handlers(bot):
 
             if not user or not group_members_dict.get(user.uuid):
                 bot.reply_to(message, "You are not in the group! Please join first.")
+                return
             
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
