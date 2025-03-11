@@ -2,7 +2,7 @@
 from client import supa
 from telebot import types
 import requests
-from bot.classes import Group, User, Expense, Settlement
+from classes import Group, User, Expense, Settlement
 import uuid
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton

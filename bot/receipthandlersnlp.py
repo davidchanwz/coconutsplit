@@ -5,7 +5,7 @@ import uuid
 import os
 import logging
 from telebot import types
-from bot.classes import User, Group, Expense
+from classes import User, Group, Expense
 from client import supa  # Assuming you have a supabase client
 from collections import defaultdict
 import re

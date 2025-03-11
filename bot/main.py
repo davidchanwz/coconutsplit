@@ -6,10 +6,10 @@ from fastapi import FastAPI, Request
 from dotenv import load_dotenv
 import os
 import uvicorn
-from bot.grouphandlers import register_group_handlers  # Import the handler registration function
-from bot.expensehandlers import register_expense_handlers  # Import the handler registration function
-from bot.receipthandlers import register_receipt_handlers  # Import the handler registration function
-from bot.receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
+from grouphandlers import register_group_handlers  # Import the handler registration function
+from expensehandlers import register_expense_handlers  # Import the handler registration function
+from receipthandlers import register_receipt_handlers  # Import the handler registration function
+from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
 
 load_dotenv()
 

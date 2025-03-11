@@ -2,14 +2,14 @@
 from client import supa
 from telebot import types
 import requests
-from bot.classes import Group, User, Expense, Settlement
+from classes import Group, User, Expense, Settlement
 import uuid
 from collections import defaultdict
 from datetime import datetime
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 import re
-from bot.classes import User, Group, Expense
+from classes import User, Group, Expense
 
 
 def register_expense_handlers(bot):
