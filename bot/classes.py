@@ -233,7 +233,7 @@ class Group:
             print("Amount successfully incremented.")
     
     def delete_latest_expense(self):
-        response = supa.rpc("select_latest_expense", {'group_id_param': self.group_id})
+        response = supa.rpc("select_latest_expense", {'group_id_param': self.group_id}).execute()
 
         if response.data:
             expense_entry = response.data[0]
