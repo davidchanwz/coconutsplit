@@ -1,11 +1,9 @@
 # bot/classes.py
 
-from typing import List, Dict
 from datetime import datetime
 from client import supa
 import uuid
 import logging
-import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -203,27 +201,6 @@ class Group:
         response = supa.table('debts').select('*').eq('group_id', self.group_id).execute()
         return response.data
     
-    @staticmethod
-    def fetch_from_db_by_chat(chat_id: int):
-        """Fetch a group from the database using the chat_id."""
-        try:
-            response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
-            group_data = response.data
-            if group_data:
-                created_by_user = User(user_id=0, username="deleted_user", user_uuid=group_data['created_by'])
-                group_instance = Group(
-                    group_id=group_data['group_id'],
-                    group_name=group_data['group_name'],
-                    created_by=created_by_user,
-                    chat_id=group_data['chat_id']
-                )
-                return group_instance
-            else:
-                return None
-        except Exception as e:
-            print(f"No group found: {e}")
-            return None
-
     def delete_from_db(self):
         """Delete the group and related records (members, expenses, splits) from the database."""
         # Delete related data first (group members, expenses, etc.)
@@ -279,7 +256,27 @@ class Group:
         except Exception as e:
             logging.error(f"Error fetching members for group {group.group_id}: {e}")
             return {}
-        
+    
+    @staticmethod
+    def fetch_from_db_by_chat(chat_id: int):
+        """Fetch a group from the database using the chat_id."""
+        try:
+            response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
+            group_data = response.data
+            if group_data:
+                created_by_user = User(user_id=0, username="deleted_user", user_uuid=group_data['created_by'])
+                group_instance = Group(
+                    group_id=group_data['group_id'],
+                    group_name=group_data['group_name'],
+                    created_by=created_by_user,
+                    chat_id=group_data['chat_id']
+                )
+                return group_instance
+            else:
+                return None
+        except Exception as e:
+            print(f"No group found: {e}")
+            return None
 
 # Expense Class
 class Expense:
@@ -322,40 +319,18 @@ class Expense:
             }
             supa.table('debts').insert(split_data).execute()
 
-    def add_split(self, user: User, amount: float):
-        """Add an expense split for a user"""
-        split_data = {
-            "user_id": user.uuid,
-            "expense_id": self.expense_id,
-            "amount": amount
-        }
-        supa.table('expense_splits').insert(split_data).execute()
-
     @staticmethod
     def add_splits_bulk(splits_to_add):
-        supa.table('expense_splits').insert(splits_to_add).execute()
+        response = supa.table('expense_splits').insert(splits_to_add).execute()
 
-    def add_debt_reverse(self, user: User, amount_owed: float):
-        """Add debt (reverse) for a user."""
-        # Check if a split already exists
-        response = supa.table('debts').select("*").eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).single().execute()
-        
-        if response.data:
-            # If it exists, update the amount owed
-            new_amount = response.data['amount_owed'] + amount_owed
-            supa.table('debts').update({'amount_owed': new_amount}).eq('group_id', self.group.group_id).eq('user_id', self.paid_by.uuid).eq('opp_user_id', user.uuid).execute()
+         # Check response
+        if "error" in response:
+            print("Error adding bulk split records:", response["error"])
         else:
-            # Otherwise, insert a new entry
-            split_data = {
-                "group_id": self.group.group_id,
-                "user_id": self.paid_by.uuid,  # The user who owes
-                "opp_user_id": user.uuid,  # The user who is owed
-                "amount_owed": amount_owed
-            }
-            supa.table('debts').insert(split_data).execute()
+            print("Bulk split records added successfully.")
 
     @staticmethod
-    def add_debt_bulk(debt_updates):
+    def add_debts_bulk(debt_updates):
         response = supa.rpc("bulk_update_debts", {"debt_updates": debt_updates}).execute()
 
         # Check response
@@ -385,28 +360,6 @@ class Expense:
         
         return expenses
     
-    def fetch_expense_splits(self, user_id_dict):
-        """Fetch all splits for the expense"""
-        response = supa.table('expense_splits').select("user_id, amount").eq('expense_id', self.expense_id).execute()
-        splits = []
-
-        if response.data:
-            for split in response.data:
-
-                # Fetch user details using user_id (assuming User has a method for this)
-                if not user_id_dict.get(split['user_id']):
-                    user_id_dict[split['user_id']] = User.fetch_from_db_by_uuid(split['user_id'])
-
-                user = user_id_dict[split['user_id']]
-                split_data = {
-                    'user_id': split['user_id'],
-                    'username': user.username if user else 'Unknown User',
-                    'amount': float(split['amount'])  # Convert to float to ensure consistent data type
-                }
-                splits.append(split_data)
-        
-        return splits
-
     @staticmethod
     def fetch_expense_splits_dict(expenses):
         expense_ids = [expense.expense_id for expense in expenses]
@@ -442,6 +395,31 @@ class Settlement:
             "created_at": self.created_at.isoformat()
         }
         return supa.table('settlements').insert(settlement_data).execute()
+    
+    @staticmethod
+    def add_settlement_bulk(settlements_to_add):
+
+        settlements_data = []
+
+        for settlement in settlements_to_add:
+            settlement_data = {
+                "settlement_id": settlement.settlement_id,
+                "from_user": settlement.from_user.uuid,
+                "to_user": settlement.to_user.uuid,
+                "amount": settlement.amount,
+                "group_id": settlement.group.group_id,
+                "created_at": settlement.created_at.isoformat()
+            }
+            settlements_data.append(settlement_data)
+
+        response = supa.table('expense_splits').insert(settlements_data).execute()
+
+         # Check response
+        if "error" in response:
+            print("Error adding bulk settlement records:", response["error"])
+        else:
+            print("Bulk settlement records added successfully.")
+
 
     @staticmethod
     def fetch_settlements_by_group(group: Group):

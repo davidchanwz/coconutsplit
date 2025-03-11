@@ -184,7 +184,7 @@ def register_expense_handlers(bot):
             splits_to_add.append(split_details)
             
         if debt_updates:
-            Expense.add_debt_bulk(debt_updates)
+            Expense.add_debts_bulk(debt_updates)
 
         if splits_to_add:
             Expense.add_splits_bulk(splits_to_add)
@@ -405,13 +405,20 @@ def register_expense_handlers(bot):
         simplified_debts = simplify_debts(user_balances)
 
         # Step 3: Settle the debts
+        settlements_to_add = []
         for creditor in creditors:
-            settle_debt_transaction(simplified_debts, group, chat_id, user, creditor)
+            settle_debt_transaction(simplified_debts, group, chat_id, user, creditor, settlements_to_add)
+        
+        if settlements_to_add:
+            Settlement.add_settlement_bulk(settlements_to_add)
 
-    def settle_debt_transaction(simplified_debts, group, chat_id, debtor, creditor):
+
+
+    def settle_debt_transaction(simplified_debts, group, chat_id, debtor, creditor, settlements_to_add):
         """Settle the debt transaction between users."""
         payer_id = debtor.uuid
         payee_id = creditor.uuid
+        
         for debtor_id, creditor_id, debt_amount in simplified_debts:
             if debtor_id == payer_id and creditor_id == payee_id:
                 if debt_amount > 0:
@@ -420,7 +427,7 @@ def register_expense_handlers(bot):
                     group.update_debt(creditor_id, payer_id, -debt_amount)
                     # Create a new settlement record
                     settlement = Settlement(from_user=debtor, to_user=creditor, amount=debt_amount, group=group)
-                    settlement.save_to_db()
+                    settlements_to_add.append(settlement)
                     bot.send_message(chat_id, f"Debt of {debt_amount} from @{debtor.username} to @{creditor.username} settled.")
                     return
 
