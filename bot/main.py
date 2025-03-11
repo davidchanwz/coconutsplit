@@ -34,6 +34,7 @@ commands = [
     # types.BotCommand("leave_group", "Leave the group you are in"),
     types.BotCommand("view_users", "View all users in the group"),
     types.BotCommand("add_expense", "Add an expense"),
+    types.BotCommand("delete_latest_expense", "Delete the latest expense"),
     types.BotCommand("show_expenses", "Show all expenses"),
     types.BotCommand("show_debts", "Show all debts"),
     # types.BotCommand("upload_receipt", "Upload receipt for parsing"),

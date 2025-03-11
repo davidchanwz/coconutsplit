@@ -232,6 +232,38 @@ class Group:
         else:
             print("Amount successfully incremented.")
     
+    def delete_latest_expense(self):
+        response = supa.rpc("select_latest_expense", {'group_id_param': self.group_id})
+
+        if response.data:
+            expense_entry = response.data[0]
+            expense_splits_dict = Expense.fetch_expense_splits_dict([expense_entry])
+
+            debt_updates = []
+            for split in expense_splits_dict.get(expense_entry.expense_id):
+                debt_details = {
+                    "group_id": self.group_id,
+                    "user_id": split.user_id,
+                    "opp_user_id": expense_entry.paid_by,
+                    "increment_value": -split.amount
+                }
+
+                reverse_debt_details = {
+                    "group_id": self.group_id,
+                    "user_id": expense_entry.paid_by,
+                    "opp_user_id": split.user_id,
+                    "increment_value": split.amount
+                }
+
+                debt_updates.append(debt_details)
+                debt_updates.append(reverse_debt_details)
+
+            if debt_updates:
+                Expense.add_debts_bulk(debt_updates)
+                
+            supa.table('expenses').delete().eq('expense_id', expense_entry.expense_id).execute()    
+        
+
     @staticmethod
     def fetch_group_members_dict(group):
         """Fetch all members of the group using a single database call."""
