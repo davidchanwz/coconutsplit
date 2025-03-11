@@ -89,9 +89,6 @@ def register_expense_handlers(bot):
                 amount = float(match_with_amount.group(2))
                 tagged_user = User.fetch_from_db_by_username(username)  # Fetch user by Telegram handle
 
-                if amount <= 0:
-                    raise ValueError(f"Tagged amount must be more than 0!")
-
                 if tagged_user:
                     tagged_with_amount[tagged_user] = amount
                     total_tagged_amount += amount
@@ -128,18 +125,58 @@ def register_expense_handlers(bot):
         expense = Expense(group=group, paid_by=user, amount=expense_amount, description=expense_name)
         expense.save_to_db()
 
+        debt_updates = []
+
         # Step 5: Update expense splits for users tagged with specific amounts
         for tagged_user, amount in tagged_with_amount.items():
-            expense.add_debt(user=tagged_user, amount_owed=amount)  # The tagged user owes the payer
-            expense.add_debt_reverse(user=tagged_user, amount_owed=-amount)  # The payer is owed the same amount from the tagged user
+            debt_details = {
+                "group_id": expense.group.group_id,
+                "user_id": tagged_user.uuid,
+                "opp_user_id": expense.paid_by.uuid,
+                "increment_value": amount
+            }
+
+            reverse_debt_details = {
+                "group_id": expense.group.group_id,
+                "user_id": expense.paid_by.uuid,
+                "opp_user_id": tagged_user.uuid,
+                "increment_value": -amount
+            }
+
+            debt_updates.append(debt_details)
+            debt_updates.append(reverse_debt_details)
+
+            # expense.add_debt(user=tagged_user, amount_owed=amount)  # The tagged user owes the payer
+            # expense.add_debt_reverse(user=tagged_user, amount_owed=-amount)  # The payer is owed the same amount from the tagged user
+            
             expense.add_split(user=tagged_user, amount=amount) # Add expense split to table
 
         # Step 6: Update expense splits for users tagged without specific amounts (split the remaining amount)
         for tagged_user in tagged_without_amount:
-            expense.add_debt(user=tagged_user, amount_owed=split_amount_per_user)  # Tagged users without amount owe their split
-            expense.add_debt_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
+            debt_details = {
+                "group_id": expense.group.group_id,
+                "user_id": tagged_user.uuid,
+                "opp_user_id": expense.paid_by.uuid,
+                "increment_value": amount
+            }
+
+            reverse_debt_details = {
+                "group_id": expense.group.group_id,
+                "user_id": expense.paid_by.uuid,
+                "opp_user_id": tagged_user.uuid,
+                "increment_value": -amount
+            }
+
+            debt_updates.append(debt_details)
+
+            debt_updates.append(reverse_debt_details)
+
+            # expense.add_debt(user=tagged_user, amount_owed=split_amount_per_user)  # Tagged users without amount owe their split
+            # expense.add_debt_reverse(user=tagged_user, amount_owed=-split_amount_per_user)  # The payer is owed the split amount
+            
             expense.add_split(user=tagged_user, amount=split_amount_per_user) # Add expense split to table
 
+        expense.add_debt_bulk(debt_updates)
 
         print("Expense processing complete.")
 

@@ -5,6 +5,7 @@ from datetime import datetime
 from client import supa
 import uuid
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -348,6 +349,17 @@ class Expense:
                 "amount_owed": amount_owed
             }
             supa.table('debts').insert(split_data).execute()
+
+    def add_debt_bulk(self, debt_updates):
+
+        response = supa.rpc("bulk_update_debts", {"debt_updates": json.dumps(debt_updates)}).execute()
+
+        # Handle response
+        if response.get("error"):
+            print("Error:", response["error"])
+        else:
+            print("Debts updated successfully:", response["data"])
+
 
     @staticmethod
     def fetch_expenses_by_group(group: Group, group_members_dict):
