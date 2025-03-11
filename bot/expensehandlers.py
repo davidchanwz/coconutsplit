@@ -54,7 +54,7 @@ def register_expense_handlers(bot):
                 bot.send_message(chat_id, "No group associated with this chat.")
                 return
             
-            group.fetch_latest_expense()
+            group.delete_latest_expense()
             
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
