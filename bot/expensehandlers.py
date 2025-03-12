@@ -71,7 +71,59 @@ def register_expense_handlers(bot):
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
 
-    def process_add_expense(group: Group, user: User, input_text: str):
+    @bot.message_handler(commands=['add_expense_on_behalf'])
+    def add_expense_on_behalf(message):
+        try:
+            chat_id = message.chat.id
+            group = Group.fetch_from_db_by_chat(chat_id)
+
+            if group is None:
+                bot.send_message(chat_id, "No group associated with this chat.")
+                return
+        
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
+        
+        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n[@username of expense payer]\n[Expense name]\n[Total expense amount]\n@[Username] [split amount[optional]]\n...\n\nExample:\n@jane\nLunch\n9\n@john 3\n@david 5")
+        bot.register_next_step_handler(msg, process_expense_behalf_reply, group)
+
+    def process_expense_behalf_reply(message, group):
+        try:
+            chat_id = message.chat.id
+            input_text = message.text  # Get the input text from the user's reply
+
+            if not input_text:
+                raise Exception("Please send a proper text!")
+
+            lines = input_text.strip().split('\n')
+
+            if len(lines) < 3:
+                raise Exception("Please follow the format given!")
+
+            lines = input_text.strip().split('\n')
+
+            first_line = lines[0]
+            paid_by_username_match = re.match(r'@(\w+)', first_line.strip())
+
+            if not paid_by_username_match:
+                raise Exception("Please follow the given format!")
+            
+            username = paid_by_username_match.group(1)
+
+            group_members_dict = Group.fetch_group_members_dict(group)
+            paid_by_user = User.fetch_from_db_by_username(username)
+
+            if not paid_by_user or not group_members_dict.get(paid_by_user.uuid):
+                bot.reply_to(message, "Expense payer tagged is not in the group!")
+                return
+            
+            process_add_expense(group, paid_by_user, '\n'.join(lines[1:]))
+            bot.send_message(chat_id, "Expense added successfully on behalf.")
+
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
+
+    def process_add_expense(group: Group, user: User, input_text: str, group_members_username_dict = None):
         """
         Processes the /add_expense command input and updates the debts table accordingly.
 
@@ -111,7 +163,8 @@ def register_expense_handlers(bot):
         tagged_without_amount = []
         total_tagged_amount = 0
 
-        group_members_username_dict = Group.fetch_group_members_usernames_dict(group)
+        if not group_members_username_dict:
+            group_members_username_dict = Group.fetch_group_members_usernames_dict(group)
 
         tagged_users_so_far = []
 
