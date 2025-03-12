@@ -335,7 +335,7 @@ def register_expense_handlers(bot):
                 for expense in expenses_by_date[date]:
                     # Add main expense details
                     paid_by_username = expense.paid_by.username.replace('_', '\\_')
-                    expense_details = f"  • {expense.description}: ${expense.amount:.2f} (Paid by {paid_by_username})"
+                    expense_details = f"{expense.description}: ${expense.amount:.2f} (Paid by {paid_by_username})"
                     # Fetch splits for this expense
                     splits = expense_splits_dict.get(expense.expense_id)
                     
@@ -345,7 +345,7 @@ def register_expense_handlers(bot):
                             user = group_members_dict.get(split['user_id'])
                             username = "Unknown User" if not user else user.username.replace('_', '\\_')
                             
-                            split_details += f"\n      - {username} owes ${split['amount']:.2f}"
+                            split_details += f"\n  - {username} owes ${split['amount']:.2f}"
                         expense_details += split_details
 
                     formatted_output.append(expense_details)
