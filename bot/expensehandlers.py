@@ -345,7 +345,7 @@ def register_expense_handlers(bot):
                             user = group_members_dict.get(split['user_id'])
                             username = "Unknown User" if not user else user.username.replace('_', '\\_')
                             
-                            split_details += f"\n  - {username} owes ${split['amount']:.2f}"
+                            split_details += f"\n  • {username} owes ${split['amount']:.2f}"
                         expense_details += split_details
 
                     formatted_output.append(expense_details)
