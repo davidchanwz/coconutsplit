@@ -519,6 +519,6 @@ class Settlement:
                     to_user=to_user,
                     amount=settlement['amount'],
                     group=group,
-                    created_at=datetime.fromisoformat(settlement['created_at']) if settlement['created_at'] else None
+                    created_at=datetime.fromisoformat(settlement['created_at'].replace('Z', '+00:00')) if settlement['created_at'] else None
                 ))
         return settlements
