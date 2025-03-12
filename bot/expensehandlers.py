@@ -582,8 +582,9 @@ def register_expense_handlers(bot):
             # Format the settlements for each date
             formatted_output = []
             for date in sorted_dates:
-                formatted_output.append(f"📅 *{date}*")  # Display the date as a section header
+                formatted_output  # Display the date as a section header
                 string=""
+                string += f"📅 *{date}*"
                 for settlement in settlements_by_date[date]:
                     from_user_username = settlement.from_user.username.replace('_', '\\_')
                     to_user_username = settlement.to_user.username.replace('_', '\\_')
