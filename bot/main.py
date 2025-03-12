@@ -41,6 +41,7 @@ commands = [
     # types.BotCommand("upload_receipt", "Upload receipt for parsing"),
     types.BotCommand("upload_receipt", "Upload receipt for parsing using nlp"),
     types.BotCommand("settle_debt", "Settle a debt"),
+    types.BotCommand("delete_latest_settlement", "Delete the latest settlement"),
     types.BotCommand("show_settlements", "Show all settlements in the group"),
 
 

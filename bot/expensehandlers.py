@@ -580,3 +580,19 @@ def register_expense_handlers(bot):
         
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
+
+    @bot.message_handler(commands=['delete_latest_settlement'])
+    def delete_latest_settlements(message):
+        try:
+            chat_id = message.chat.id
+            group = Group.fetch_from_db_by_chat(chat_id)
+
+            if group is None:
+                bot.send_message(chat_id, "No group associated with this chat.")
+                return
+            
+            group.delete_latest_settlement()
+            bot.send_message(chat_id, "Latest settlement deleted successfully!")
+            
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")

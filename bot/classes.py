@@ -272,6 +272,38 @@ class Group:
             supa.table('expenses').delete().eq('expense_id', expense_entry['expense_id']).execute()
         else:
             raise Exception("Nothing to delete! There are no expenses recorded in this group.")
+        
+    def delete_latest_settlement(self):
+        response = supa.rpc("select_latest_settlement", {'group_id_param': self.group_id}).execute()
+
+        if response.data:
+            settlement_entry = response.data[0]
+
+            debt_updates = []
+
+            debt_details = {
+                "group_id": self.group_id,
+                "user_id": settlement_entry['from_user'],
+                "opp_user_id": settlement_entry['to_user'],
+                "increment_value": settlement_entry['amount']
+            }
+            reverse_debt_details = {
+                "group_id": self.group_id,
+                "user_id": settlement_entry['to_user'],
+                "opp_user_id": settlement_entry['from_user'],
+                "increment_value": -settlement_entry['amount']
+            }
+
+            debt_updates.append(debt_details)
+            debt_updates.append(reverse_debt_details)
+
+            if debt_updates:
+                Expense.add_debts_bulk(debt_updates)
+                
+            supa.table('settlements').delete().eq('settlement_id', settlement_entry['settlement_id']).execute()
+        else:
+            raise Exception("Nothing to delete! There are no settlements recorded in this group.")
+
 
     @staticmethod
     def fetch_group_members_dict(group):
