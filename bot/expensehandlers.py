@@ -40,7 +40,7 @@ def register_expense_handlers(bot):
 
         # Step 2: Ask for the expense details (name, amount, tagged users)
         msg = bot.reply_to(message, "Please reply this in the format:\n\n[expense name]\n[expense amt]\n" +
-        "@[username1] [split amt 1(optional)]\n...\n\nE.g. If you paid $25 total, and Jensen owes you $8 and David owes you $7:\nDinner\n25\n@jensen 8\n@david 7")
+        "@[username1] [split amt 1(optional)]\n...\n\nE.g. If you paid $25 total, and Jensen owes you $8 and David owes you $7, enter:\nDinner\n25\n@jensen 8\n@david 7")
         
         # Set up a handler to wait for the user's reply
         bot.register_next_step_handler(msg, process_expense_reply, group, user)
@@ -86,7 +86,7 @@ def register_expense_handlers(bot):
             bot.send_message(chat_id, f"{e}")
         
         msg = bot.reply_to(message, "Please reply this in the format:\n\n@[username of expense payer]" +
-        "\n[expense name]\n[expense amt]\n@[username1] [split amt 1(optional)]\n...\n\nE.g. If Aayush paid $12 total, and Ben owes him $3 and David owes him $5. Then enter:\n@aayush\nLunch\n12\n@ben 3\n@david 5")
+        "\n[expense name]\n[expense amt]\n@[username1] [split amt 1(optional)]\n...\n\nE.g. If Aayush paid $12 total, and Ben owes him $3 and David owes him $5, enter:\n@aayush\nLunch\n12\n@ben 3\n@david 5")
         bot.register_next_step_handler(msg, process_expense_behalf_reply, group)
 
     def process_expense_behalf_reply(message, group):
