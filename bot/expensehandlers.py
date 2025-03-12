@@ -583,10 +583,12 @@ def register_expense_handlers(bot):
             formatted_output = []
             for date in sorted_dates:
                 formatted_output.append(f"📅 *{date}*")  # Display the date as a section header
+                string=""
                 for settlement in settlements_by_date[date]:
                     from_user_username = settlement.from_user.username.replace('_', '\\_')
                     to_user_username = settlement.to_user.username.replace('_', '\\_')
-                    formatted_output.append(f"\n  • {from_user_username} paid ${settlement.amount:.2f} to {to_user_username}")
+                    string += f"\n  • {from_user_username} paid ${settlement.amount:.2f} to {to_user_username}"
+                formatted_output.append(string)
 
             # Send the formatted list of settlements
             bot.send_message(chat_id, "\n".join(formatted_output), parse_mode='Markdown')
