@@ -84,7 +84,7 @@ def register_expense_handlers(bot):
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
         
-        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n[@username of expense payer]\n[Expense name]\n[Total expense amount]\n@[Username] [split amount[optional]]\n...\n\nExample:\n@jane\nLunch\n9\n@john 3\n@david 5")
+        msg = bot.send_message(chat_id, "Please reply this with the expense details in the format:\n\n@[Username of expense payer]\n[Expense name]\n[Expense amt]\n@[Username1] [Split amt 1[optional]]\n...\n\nExample:\n@jane\nLunch\n9\n@john 3\n@david 5")
         bot.register_next_step_handler(msg, process_expense_behalf_reply, group)
 
     def process_expense_behalf_reply(message, group):
