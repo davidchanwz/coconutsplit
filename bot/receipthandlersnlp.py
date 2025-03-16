@@ -5,7 +5,7 @@ import uuid
 import os
 import logging
 from telebot import types
-from classes import User, Group, Expense
+from bot.classes import User, Group, Expense
 from client import supa  # Assuming you have a supabase client
 from collections import defaultdict
 import re
@@ -314,16 +314,49 @@ def register_receipt_handlers_nlp(bot):
             logging.error(f"Failed to save expense for chat {chat_id}: {str(e)}")
             return
 
-        # Add splits and update debts
+        # Prepare bulk operations
+        splits_to_add = []
+        debt_updates = []
+
+        # Process all tags in memory first
         for tagged_user, item in tagged_users:
-            try:
-                expense.add_split(user=tagged_user, amount=item['amount'])
-                expense.add_debt(user=tagged_user, amount_owed=item['amount'])
-                expense.add_debt_reverse(user=tagged_user, amount_owed=item['amount'])
+            # Prepare split data
+            split_data = {
+                "expense_id": expense.expense_id,
+                "user_id": tagged_user.uuid,
+                "amount": item['amount']
+            }
+            splits_to_add.append(split_data)
+
+            # Prepare debt updates
+            debt_details = {
+                "group_id": group.group_id,
+                "user_id": tagged_user.uuid,
+                "opp_user_id": payer_user.uuid,
+                "increment_value": item['amount']
+            }
+            reverse_debt_details = {
+                "group_id": group.group_id,
+                "user_id": payer_user.uuid,
+                "opp_user_id": tagged_user.uuid,
+                "increment_value": -item['amount']
+            }
+            debt_updates.append(debt_details)
+            debt_updates.append(reverse_debt_details)
+
+        # Execute bulk operations
+        try:
+            if splits_to_add:
+                Expense.add_splits_bulk(splits_to_add)
+            if debt_updates:
+                Expense.add_debts_bulk(debt_updates)
+                
+            # Send success messages
+            for tagged_user, item in tagged_users:
                 bot.send_message(chat_id, f"Tagged @{tagged_user.username} to '{item['item_name']}' (${item['amount']})")
-            except Exception as e:
-                bot.send_message(chat_id, f"Failed to tag @{tagged_user.username} to '{item['item_name']}': {str(e)}")
-                logging.error(f"Failed to tag @{tagged_user.username} to '{item['item_name']}' for chat {chat_id}: {str(e)}")
+        except Exception as e:
+            bot.send_message(chat_id, f"Failed to process tags: {str(e)}")
+            logging.error(f"Failed to process tags for chat {chat_id}: {str(e)}")
 
         # Clear the current receipt processing state
         del current_receipts_nlp[chat_id]
