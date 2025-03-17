@@ -330,7 +330,8 @@ class Group:
                         group_id=group_data['group_id'],
                         group_name=group_data['group_name'],
                         created_by=created_by_user,
-                        chat_id=group_data['chat_id']
+                        chat_id=group_data['chat_id'],
+                        reminders=True
                     )
                     groups.append(group)
                     
@@ -408,6 +409,7 @@ class Group:
                     group_name=group_data['group_name'],
                     created_by=created_by_user,
                     chat_id=group_data['chat_id']
+                    reminders=group_data['reminders']
                 )
                 return group_instance
             else:
