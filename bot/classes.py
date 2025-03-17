@@ -340,13 +340,18 @@ class Group:
             raise Exception(f"Error fetching groups with reminders on: {str(e)}")
         
     def toggle_reminders(self):
-        if self.reminders:
-            supa.table("groups").update({"reminders": False}).eq("group_id", self.group_id).execute()
-            self.reminders = False
-        else:
-            supa.table("groups").update({"reminders": True}).eq("group_id", self.group_id).execute()
-            self.reminders = True
-        
+        try:
+            if self.reminders:
+                supa.table("groups").update({"reminders": False}).eq("group_id", self.group_id).execute()
+                self.reminders = False
+                print("Reminders turned off for {self.group_id}.")
+            else:
+                supa.table("groups").update({"reminders": True}).eq("group_id", self.group_id).execute()
+                self.reminders = True
+                print("Reminders turned on for {self.group_id}.")
+        except Exception as e: 
+            print(f"Error toggling reminders for group {self.group_id}: {str(e)}")
+
     @staticmethod
     def fetch_group_members_dict(group):
         """Fetch all members of the group using a single database call."""
