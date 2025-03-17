@@ -304,7 +304,39 @@ class Group:
         else:
             raise Exception("Nothing to delete! There are no settlements recorded in this group.")
 
-
+    @staticmethod
+    def get_groups_with_reminders_on():
+        """
+        Fetch all groups that have reminders enabled and return them as Group objects.
+        Returns:
+            list[Group]: List of Group objects with reminders enabled
+        """
+        try:
+            response = supa.table('groups').select("*").eq("reminders", True).execute()
+            groups = []
+            
+            if response.data:
+                for group_data in response.data:
+                    # Create temporary User object for created_by
+                    created_by_user = User(
+                        user_id=0,  # placeholder
+                        username="deleted_user",  # placeholder
+                        user_uuid=group_data['created_by']
+                    )
+                    
+                    # Create Group object
+                    group = Group(
+                        group_id=group_data['group_id'],
+                        group_name=group_data['group_name'],
+                        created_by=created_by_user,
+                        chat_id=group_data['chat_id']
+                    )
+                    groups.append(group)
+                    
+            return groups
+        except Exception as e:
+            raise Exception(f"Error fetching groups with reminders on: {str(e)}")
+        
     @staticmethod
     def fetch_group_members_dict(group):
         """Fetch all members of the group using a single database call."""
@@ -322,9 +354,8 @@ class Group:
                         user_uuid=member['uuid'],
                         currency=member['currency']
                     )
-                return user_id_to_user
-                
-            return {}
+             
+            return user_id_to_user
             
         except Exception as e:
             logging.error(f"Error fetching members for group {group.group_id}: {e}")

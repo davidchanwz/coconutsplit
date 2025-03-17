@@ -211,24 +211,12 @@ def register_expense_handlers(bot):
 
             # Step 3: Display the results
             if simplified_debts:
-                display_debts(simplified_debts, chat_id, group)
+                display_debts_string = get_display_debts_string(simplified_debts, chat_id, group)
+                bot.send_message(chat_id, display_debts_string)
             else:
                 bot.send_message(chat_id, "All debts have been settled!")
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
-
-    def display_debts(debts, chat_id, group):
-        """Format and display simplified debts in the group."""
-        debt_messages = []
-
-        group_members_dict = Group.fetch_group_members_dict(group)
-
-        for debtor_id, creditor_id, amount in debts:
-            debtor = group_members_dict[debtor_id]
-            creditor = group_members_dict[creditor_id]
-            debt_messages.append(f"{debtor.username} owes {creditor.username} ${amount:.2f}")
-
-        bot.send_message(chat_id, "\n".join(debt_messages))
 
     @bot.message_handler(commands=['settle_debt'])
     def settle_debt_start(message):
@@ -380,3 +368,35 @@ def register_expense_handlers(bot):
             
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
+
+
+def get_display_debts_string(debts, chat_id, group):
+    """Format and display simplified debts in the group."""
+    debt_messages = []
+
+    group_members_dict = Group.fetch_group_members_dict(group)
+
+    for debtor_id, creditor_id, amount in debts:
+        debtor = group_members_dict[debtor_id]
+        creditor = group_members_dict[creditor_id]
+        debt_messages.append(f"{debtor.username} owes {creditor.username} ${amount:.2f}")
+
+    return "\n".join(debt_messages)
+
+def process_reminders():
+    groups = Group.get_groups_with_reminders_on()
+
+    chat_id_to_display_debts_string = {}
+
+    if groups:
+        for group in groups:
+            debts = group.fetch_debts_by_group()
+            if debts:
+                user_balances = calculate_user_balances(debts)
+                simplified_debts = simplify_debts(user_balances)
+                chat_id = group.chat_id
+                if simplified_debts:
+                    display_debts_string = get_display_debts_string(simplified_debts, chat_id, group)
+                    chat_id_to_display_debts_string[chat_id] = display_debts_string
+    
+    return chat_id_to_display_debts_string
