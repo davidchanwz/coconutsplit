@@ -262,8 +262,10 @@ def register_group_handlers(bot):
         try:
             chat_id = message.chat.id
             group = Group.fetch_from_db_by_chat(chat_id)
+            
 
             if group:
+                print("hello", group.reminders)
                 group.toggle_reminders()
                 if group.reminders:
                     bot.send_message(chat_id, "Reminders have been enabled for this group.")
