@@ -102,8 +102,7 @@ def process_add_expense(group: Group, user: User, input_text: str):
         tagged_without_amount = []
         total_tagged_amount = 0
 
-        if not group_members_username_dict:
-            group_members_username_dict = Group.fetch_group_members_usernames_dict(group)
+        group_members_username_dict = Group.fetch_group_members_usernames_dict(group)
 
         tagged_users_so_far = []
 
@@ -228,4 +227,3 @@ def process_add_expense(group: Group, user: User, input_text: str):
             Expense.add_splits_bulk(splits_to_add)
 
         print("Expense processing complete.")
-
