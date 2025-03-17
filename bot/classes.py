@@ -105,12 +105,13 @@ class User:
             return {}
 
 class Group:
-    def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None):
+    def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None, reminders = False):
         self.group_id = group_id or str(uuid.uuid4())  # Generate UUID if not provided
         self.group_name = group_name
         self.created_by = created_by
         self.chat_id = chat_id
         self.created_at = datetime.now()
+        self.reminders = False
 
         # Add logging to check UUID generation and its type
         logging.info(f"Generated group_id: {self.group_id}")
@@ -336,6 +337,14 @@ class Group:
             return groups
         except Exception as e:
             raise Exception(f"Error fetching groups with reminders on: {str(e)}")
+        
+    def toggle_reminders(self):
+        if self.reminders:
+            supa.table("groups").update({"reminders": False}).eq("group_id", self.group_id).execute()
+            self.reminders = False
+        else:
+            supa.table("groups").update({"reminders": True}).eq("group_id", self.group_id).execute()
+            self.reminders = True
         
     @staticmethod
     def fetch_group_members_dict(group):

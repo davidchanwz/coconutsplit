@@ -383,6 +383,19 @@ def get_display_debts_string(debts, chat_id, group):
 
     return "\n".join(debt_messages)
 
+def get_display_debts_string_with_at(debts, chat_id, group):
+    """Format and display simplified debts in the group."""
+    debt_messages = []
+
+    group_members_dict = Group.fetch_group_members_dict(group)
+
+    for debtor_id, creditor_id, amount in debts:
+        debtor = group_members_dict[debtor_id]
+        creditor = group_members_dict[creditor_id]
+        debt_messages.append(f"@{debtor.username}, please pay @{creditor.username} ${amount:.2f}")
+
+    return "\n".join(debt_messages)
+
 def process_reminders():
     groups = Group.get_groups_with_reminders_on()
 
@@ -396,7 +409,7 @@ def process_reminders():
                 simplified_debts = simplify_debts(user_balances)
                 chat_id = group.chat_id
                 if simplified_debts:
-                    display_debts_string = get_display_debts_string(simplified_debts, chat_id, group)
+                    display_debts_string = get_display_debts_string_with_at(simplified_debts, chat_id, group)
                     chat_id_to_display_debts_string[chat_id] = display_debts_string
     
     return chat_id_to_display_debts_string
