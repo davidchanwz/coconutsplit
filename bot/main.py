@@ -2,14 +2,15 @@
 
 import telebot
 from telebot import types
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response, status
 from dotenv import load_dotenv
 import os
 import uvicorn
 from grouphandlers import register_group_handlers  # Import the handler registration function
-from expensehandlers import register_expense_handlers  # Import the handler registration function
+from expensehandlers import register_expense_handlers, process_reminders  # Import the handler registration function
 from receipthandlers import register_receipt_handlers  # Import the handler registration function
 from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
+from utils import get_reminder_messages
 
 load_dotenv()
 
@@ -73,6 +74,46 @@ async def startup():
     bot.set_webhook(url=WEBHOOK_URL)
     bot.set_my_commands(commands)
 
+@app.post("/send-daily-reminder")
+async def send_daily_reminder(req: Request):
+    try:
+        # Get API key from request header
+        api_key = req.headers.get('x-api-key')
+        
+        # Validate API key (should match environment variable)
+        expected_key = os.getenv('REMINDER_API_KEY')
+        if not api_key or api_key != expected_key:
+            return Response(status_code=status.HTTP_401_UNAUTHORIZED)
+
+        # Get debt messages for each group using process_reminders
+        chat_id_to_debt_string = process_reminders()
+        
+        # Send reminders
+        sent_count = 0
+        for chat_id, debt_string in chat_id_to_debt_string.items():
+            try:
+                reminder_message = (
+                    f"🌴 Daily Debt Reminder 🌴\n\n"
+                    f"Here are the current outstanding debts:\n\n"
+                    f"{debt_string}\n\n"
+                    f"Use /settle_debt to settle up!"
+                )
+                bot.send_message(chat_id, reminder_message)
+                sent_count += 1
+            except Exception as e:
+                print(f"Failed to send reminder to chat {chat_id}: {e}")
+                continue
+
+        return {
+            "status": "success",
+            "reminders_sent": sent_count,
+            "total_groups": len(chat_id_to_debt_string)
+        }
+    except Exception as e:
+        return Response(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=str(e)
+        )
 
 # --- Optional: remove webhook on shutdown --- #
 @app.on_event("shutdown")

@@ -145,7 +145,7 @@ def register_group_handlers(bot):
             bot.send_message(message.chat.id, f"Group '{group_name}' has been created! Click below to join the group.", reply_markup=join_button)
 
         except Exception as e:
-            bot.send_message(chat_id, f"{e}")
+            bot.send_message(message.chat.id, f"{e}")
 
     @bot.message_handler(commands=['view_users'])
     def view_users(message):
