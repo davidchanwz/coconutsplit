@@ -407,6 +407,7 @@ class Group:
         try:
             response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
             group_data = response.data
+            print("hello0" ,group_data["reminders"])
             if group_data:
                 created_by_user = User(user_id=0, username="deleted_user", user_uuid=group_data['created_by'])
                 group_instance = Group(
