@@ -416,6 +416,7 @@ class Group:
                     chat_id=group_data['chat_id'],
                     reminders=group_data['reminders']
                 )
+                print("hello1", group_instance.reminders)
                 return group_instance
             else:
                 return None
