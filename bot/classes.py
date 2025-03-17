@@ -111,7 +111,7 @@ class Group:
         self.created_by = created_by
         self.chat_id = chat_id
         self.created_at = datetime.now()
-        self.reminders = False
+        self.reminders = reminders
 
         # Add logging to check UUID generation and its type
         logging.info(f"Generated group_id: {self.group_id}")
@@ -407,7 +407,6 @@ class Group:
         try:
             response = supa.table('groups').select("*").eq("chat_id", chat_id).maybe_single().execute()
             group_data = response.data
-            print("hello0" ,group_data["reminders"])
             if group_data:
                 created_by_user = User(user_id=0, username="deleted_user", user_uuid=group_data['created_by'])
                 group_instance = Group(
@@ -417,7 +416,6 @@ class Group:
                     chat_id=group_data['chat_id'],
                     reminders=group_data['reminders']
                 )
-                print("hello1", group_instance.reminders)
                 return group_instance
             else:
                 return None
