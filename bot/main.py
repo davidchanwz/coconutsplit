@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 import os
 import uvicorn
 from grouphandlers import register_group_handlers  # Import the handler registration function
-from expensehandlers import register_expense_handlers, process_reminders  # Import the handler registration function
+from expensehandlers import register_expense_handlers # Import the handler registration function
 from receipthandlers import register_receipt_handlers  # Import the handler registration function
 from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
+from utils import process_reminders
 
 load_dotenv()
 
