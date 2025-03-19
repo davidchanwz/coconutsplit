@@ -105,14 +105,14 @@ class User:
             return {}
 
 class Group:
-    def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None, reminders = False):
+    def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None, reminders = False, message_id = None):
         self.group_id = group_id or str(uuid.uuid4())  # Generate UUID if not provided
         self.group_name = group_name
         self.created_by = created_by
         self.chat_id = chat_id
         self.created_at = datetime.now()
         self.reminders = reminders
-        self.message_id = ""
+        self.message_id = message_id  # Initialize with provided message_id or None
 
         # Add logging to check UUID generation and its type
         logging.info(f"Generated group_id: {self.group_id}")
@@ -333,7 +333,8 @@ class Group:
                         group_name=group_data['group_name'],
                         created_by=created_by_user,
                         chat_id=group_data['chat_id'],
-                        reminders=True
+                        reminders=True,
+                        message_id=group_data.get('message_id')  # Load message_id from database
                     )
                     groups.append(group)
                     
@@ -416,7 +417,8 @@ class Group:
                     group_name=group_data['group_name'],
                     created_by=created_by_user,
                     chat_id=group_data['chat_id'],
-                    reminders=group_data['reminders']
+                    reminders=group_data['reminders'],
+                    message_id=group_data.get('message_id')  
                 )
                 return group_instance
             else:

@@ -4,6 +4,7 @@ from telebot import types
 import requests
 from classes import Group, User, Expense, Settlement
 import uuid
+import logging
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -145,7 +146,7 @@ def register_group_handlers(bot):
             # Send message and store its ID
             sent_message = bot.send_message(message.chat.id, f"Group '{group_name}' has been created! Click below to join the group.", reply_markup=join_button)
             
-            # Store the message ID in the group data
+            # Store the message ID in the group data and save to database
             group.message_id = sent_message.message_id
             group.save_to_db()  # Save the updated group with message ID
 
@@ -232,13 +233,18 @@ def register_group_handlers(bot):
                     join_button = types.InlineKeyboardMarkup()
                     join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group.group_id}"))
                     
-                    # Edit the original message
-                    bot.edit_message_text(
-                        chat_id=chat_id,
-                        message_id=group.message_id,
-                        text=updated_text,
-                        reply_markup=join_button
-                    )
+                    try:
+                        # Edit the original message
+                        bot.edit_message_text(
+                            chat_id=chat_id,
+                            message_id=group.message_id,
+                            text=updated_text,
+                            reply_markup=join_button
+                        )
+                    except Exception as e:
+                        # If message editing fails, send a new message
+                        bot.send_message(chat_id, updated_text, reply_markup=join_button)
+                        logging.error(f"Failed to edit message: {e}")
                 else:
                     bot.answer_callback_query(call.id, f"You are already in {group.group_name}!")
 
