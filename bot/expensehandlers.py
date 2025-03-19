@@ -42,10 +42,11 @@ def register_expense_handlers(bot):
             
             # Create inline keyboard with Mini App button
             keyboard = types.InlineKeyboardMarkup()
-            keyboard.add(types.InlineKeyboardButton(
+            web_app_button = types.InlineKeyboardButton(
                 text="Add Expense",
                 web_app=types.WebAppInfo(url=mini_app_url)
-            ))
+            )
+            keyboard.add(web_app_button)
             
             # Send message with Mini App button
             bot.send_message(
