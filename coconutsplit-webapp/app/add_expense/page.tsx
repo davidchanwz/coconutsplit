@@ -183,13 +183,22 @@ function AddExpenseForm() {
     setError('');
 
     try {
+      // Validate amount
+      const expenseAmount = parseFloat(amount);
+      if (expenseAmount <= 0) {
+        throw new Error('Expense amount must be more than 0!');
+      }
+      if (expenseAmount >= 10**8) {
+        throw new Error(`Expense amount must be less than ${10**8}.`);
+      }
+
       // Create expense
       const { data: expense, error: expenseError } = await supabase
         .from('expenses')
         .insert({
           group_id: groupId,
           paid_by: userId,
-          amount: parseFloat(amount),
+          amount: expenseAmount,
           description
         })
         .select()
@@ -197,7 +206,7 @@ function AddExpenseForm() {
 
       if (expenseError) throw expenseError;
 
-      // Create splits
+      // Create splits and debt updates
       const splits = Object.entries(selectedMembers)
         .filter(([_, amount]) => amount !== '')
         .map(([memberId, amount]) => ({
@@ -207,22 +216,32 @@ function AddExpenseForm() {
         }));
 
       if (splits.length > 0) {
+        // Insert splits
         const { error: splitsError } = await supabase
           .from('expense_splits')
           .insert(splits);
 
         if (splitsError) throw splitsError;
-      }
 
-      // Update debts
-      const debtUpdates = splits.map(split => ({
-        group_id: groupId,
-        user_id: split.user_id,
-        opp_user_id: userId,
-        increment_value: split.amount
-      }));
+        // Create debt updates including reverse entries
+        const debtUpdates = splits.flatMap(split => [
+          // Forward debt (member owes payer)
+          {
+            group_id: groupId,
+            user_id: split.user_id,
+            opp_user_id: userId,
+            increment_value: split.amount
+          },
+          // Reverse debt (payer owes member)
+          {
+            group_id: groupId,
+            user_id: userId,
+            opp_user_id: split.user_id,
+            increment_value: -split.amount
+          }
+        ]);
 
-      if (debtUpdates.length > 0) {
+        // Update debts
         const { error: debtError } = await supabase
           .rpc('bulk_update_debts', { debt_updates: debtUpdates });
 
@@ -232,7 +251,7 @@ function AddExpenseForm() {
       // Show success message
       setSuccess(true);
     } catch (err) {
-      setError('Failed to create expense');
+      setError(err instanceof Error ? err.message : 'Failed to create expense');
       console.error(err);
     } finally {
       setLoading(false);
