@@ -19,6 +19,7 @@ WEBHOOK_HOST = os.getenv("WEBHOOK_HOST")
 WEBHOOK_PATH = f"/{API_TOKEN}/"
 
 WEBHOOK_URL = f"https://{WEBHOOK_HOST}{WEBHOOK_PATH}"
+MINIAPP_URL = os.getenv("MINIAPP_URL")
 
 # Initialize the bot with the token from environment variables
 bot = telebot.TeleBot(API_TOKEN)

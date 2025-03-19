@@ -1,10 +1,12 @@
 # bot/expensehandlers.py
+from bot.main import MINIAPP_URL
 from classes import Group, User, Expense, Settlement
 from collections import defaultdict
 from utils import simplify_debts, calculate_user_balances, process_add_expense, get_display_debts_string, get_display_debts_string_with_at
 
 import re
 from classes import User, Group, Expense
+from telebot import types
 
 
 def register_expense_handlers(bot):
@@ -31,16 +33,25 @@ def register_expense_handlers(bot):
                 bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
                 return
             
+            # Create Mini App URL with necessary parameters
+            mini_app_url = f"{MINIAPP_URL}/add_expense?startapp=1&group_id={group.group_id}&user_id={user.uuid}"
+            
+            # Create inline keyboard with Mini App button
+            keyboard = types.InlineKeyboardMarkup()
+            keyboard.add(types.InlineKeyboardButton(
+                text="Add Expense",
+                web_app=types.WebAppInfo(url=mini_app_url)
+            ))
+            
+            # Send message with Mini App button
+            bot.send_message(
+                chat_id,
+                "Click the button below to add an expense:",
+                reply_markup=keyboard
+            )
+            
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
-
-        # Step 2: Ask for the expense details (name, amount, tagged users)
-        msg = bot.reply_to(message, "Please reply this in the format:\n\n[expense name]\n[expense amt]\n" +
-        "@[username1] [split amt 1(optional)]\n...\n\n" +
-        "E.g. if you paid $25 total, and Jensen owes you $8 and David owes you $7, enter the following:\n\nDinner\n25\n@jensen 8\n@david 7")
-        
-        # Set up a handler to wait for the user's reply
-        bot.register_next_step_handler(msg, process_expense_reply, group, user)
 
     @bot.message_handler(commands=['delete_latest_expense'])
     def delete_latest_expense(message):
