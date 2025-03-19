@@ -19,6 +19,30 @@ interface Expense {
   expense_id: string;
 }
 
+function SuccessMessage() {
+  return (
+    <div className="p-4 max-w-md mx-auto text-center">
+      <div className="mb-4">
+        <svg className="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h1 className="text-xl font-bold mb-2">Expense Added Successfully!</h1>
+      <p className="text-gray-600 mb-4">Your expense has been recorded and split with the group.</p>
+      <button
+        onClick={() => {
+          if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.close();
+          }
+        }}
+        className="w-full bg-blue-500 text-white p-3 rounded-lg text-base font-medium hover:bg-blue-600 active:bg-blue-700"
+      >
+        Close
+      </button>
+    </div>
+  );
+}
+
 function AddExpenseForm() {
   const searchParams = useSearchParams();
   const groupId = searchParams.get('group_id');
@@ -30,6 +54,7 @@ function AddExpenseForm() {
   const [selectedMembers, setSelectedMembers] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     async function fetchMembers() {
@@ -60,6 +85,72 @@ function AddExpenseForm() {
 
     fetchMembers();
   }, [groupId, userId]);
+
+  // Recalculate splits when amount changes
+  useEffect(() => {
+    if (!amount) {
+      setSelectedMembers(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(key => {
+          if (updated[key] !== '') {
+            updated[key] = '';
+          }
+        });
+        return updated;
+      });
+      return;
+    }
+
+    const totalAmount = parseFloat(amount);
+    const selectedCount = Object.values(selectedMembers).filter(val => val !== '').length + 1;
+    
+    if (selectedCount > 1) {
+      const splitAmount = totalAmount / selectedCount;
+      setSelectedMembers(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(key => {
+          if (updated[key] !== '') {
+            updated[key] = splitAmount.toFixed(2);
+          }
+        });
+        return updated;
+      });
+    }
+  }, [amount]);
+
+  const handleMemberClick = (memberId: string) => {
+    if (!amount) {
+      setError('Please enter the total amount first');
+      return;
+    }
+
+    const totalAmount = parseFloat(amount);
+    const updatedSelected = { ...selectedMembers };
+    
+    // Toggle selection
+    if (updatedSelected[memberId] !== '') {
+      // Deselect the member
+      updatedSelected[memberId] = '';
+    } else {
+      // Select the member
+      updatedSelected[memberId] = '0'; // Temporary value to include in count
+    }
+
+    // Count selected members (including the payer)
+    const selectedCount = Object.values(updatedSelected).filter(val => val !== '').length + 1;
+    
+    // Calculate new split amount
+    const splitAmount = totalAmount / selectedCount;
+
+    // Update all selected members with the new split amount
+    Object.keys(updatedSelected).forEach(key => {
+      if (updatedSelected[key] !== '') {
+        updatedSelected[key] = splitAmount.toFixed(2);
+      }
+    });
+
+    setSelectedMembers(updatedSelected);
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -115,10 +206,8 @@ function AddExpenseForm() {
         if (debtError) throw debtError;
       }
 
-      // Close the Mini App
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.close();
-      }
+      // Show success message
+      setSuccess(true);
     } catch (err) {
       setError('Failed to create expense');
       console.error(err);
@@ -139,60 +228,90 @@ function AddExpenseForm() {
     return <div className="p-4 text-red-500">{error}</div>;
   }
 
+  if (success) {
+    return <SuccessMessage />;
+  }
+
   return (
-    <div className="p-4">
+    <div className="p-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-4">Add New Expense</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block mb-1">Description</label>
+          <label className="block mb-1 text-sm font-medium">Description</label>
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border rounded-lg text-base"
             required
+            placeholder="Enter expense description"
           />
         </div>
         
         <div>
-          <label className="block mb-1">Amount</label>
+          <label className="block mb-1 text-sm font-medium">Amount</label>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border rounded-lg text-base"
             step="0.01"
             min="0"
             required
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="Enter amount"
           />
         </div>
 
         <div>
-          <label className="block mb-1">Split With</label>
-          {members.map((member) => (
-            member.uuid !== userId && (
-              <div key={member.uuid} className="flex items-center gap-2 mb-2">
-                <input
-                  type="number"
-                  value={selectedMembers[member.uuid]}
-                  onChange={(e) => setSelectedMembers({
-                    ...selectedMembers,
-                    [member.uuid]: e.target.value
-                  })}
-                  className="w-24 p-2 border rounded"
-                  step="0.01"
-                  min="0"
-                  placeholder="Amount"
-                />
-                <span>{member.username}</span>
-              </div>
-            )
-          ))}
+          <label className="block mb-1 text-sm font-medium">Split With</label>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {members.map((member) => (
+              member.uuid !== userId && (
+                <button
+                  key={member.uuid}
+                  type="button"
+                  onClick={() => handleMemberClick(member.uuid)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedMembers[member.uuid] !== ''
+                      ? 'bg-blue-500 text-white hover:bg-blue-600'
+                      : 'bg-gray-200 hover:bg-gray-300'
+                  }`}
+                >
+                  {member.username}
+                </button>
+              )
+            ))}
+          </div>
+          {Object.entries(selectedMembers)
+            .filter(([_, amount]) => amount !== '')
+            .map(([memberId, amount]) => {
+              const member = members.find(m => m.uuid === memberId);
+              return member && (
+                <div key={memberId} className="flex items-center gap-2 mb-2">
+                  <input
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setSelectedMembers({
+                      ...selectedMembers,
+                      [memberId]: e.target.value
+                    })}
+                    className="w-28 p-3 border rounded-lg text-base"
+                    step="0.01"
+                    min="0"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
+                  <span className="text-sm font-medium">{member.username}</span>
+                </div>
+              );
+            })}
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+          className="w-full bg-blue-500 text-white p-3 rounded-lg text-base font-medium hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={loading}
         >
           {loading ? 'Creating...' : 'Create Expense'}
