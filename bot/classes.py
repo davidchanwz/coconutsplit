@@ -112,6 +112,7 @@ class Group:
         self.chat_id = chat_id
         self.created_at = datetime.now()
         self.reminders = reminders
+        self.message_id = ""
 
         # Add logging to check UUID generation and its type
         logging.info(f"Generated group_id: {self.group_id}")
@@ -133,9 +134,8 @@ class Group:
             "chat_id": self.chat_id,  # Store the chat ID in the database
             "created_at": self.created_at.isoformat(timespec="seconds"),  # Serialize datetime to ISO 8601 string,
             "message_id": self.message_id
-
         }
-        return supa.table('groups').insert(group_data).execute()
+        return supa.table('groups').upsert(group_data, on_conflict='group_id').execute()
 
     def add_member(self, user: User):
         """Add a user to the group and save to database."""
