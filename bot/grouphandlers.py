@@ -218,38 +218,35 @@ def register_group_handlers(bot):
 
             group = Group.fetch_from_db_by_chat(chat_id)
 
-            # Handle the group
+            # Add the user to the group in the database
             if group:
                 if not group.check_user_in_group(user): 
-                    # User is not in group, add them
                     group.add_member(user)
                     bot.answer_callback_query(call.id, f"You have joined '{group.group_name}'!")
+                    
+                    # Update the original message with the new member
+                    members = group.fetch_all_members()
+                    member_list = "\n".join([f"- {member.username}" for member in members])
+                    updated_text = f"Group '{group.group_name}' has been created!\n\nMembers:\n{member_list}"
+                    
+                    # Create new inline keyboard
+                    join_button = types.InlineKeyboardMarkup()
+                    join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group.group_id}"))
+                    
+                    try:
+                        # Edit the original message
+                        bot.edit_message_text(
+                            chat_id=chat_id,
+                            message_id=group.message_id,
+                            text=updated_text,
+                            reply_markup=join_button
+                        )
+                    except Exception as e:
+                        # If message editing fails, send a new message
+                        bot.send_message(chat_id, updated_text, reply_markup=join_button)
+                        logging.error(f"Failed to edit message: {e}")
                 else:
-                    # User is already in group, remove them
-                    group.remove_member(user)
-                    bot.answer_callback_query(call.id, f"You have left '{group.group_name}'!")
-                
-                # Update the message with current members
-                members = group.fetch_all_members()
-                member_list = "\n".join([f"- {member.username}" for member in members])
-                updated_text = f"Group '{group.group_name}' has been created!\n\nMembers:\n{member_list}"
-                
-                # Create new inline keyboard
-                join_button = types.InlineKeyboardMarkup()
-                join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group.group_id}"))
-                
-                try:
-                    # Edit the original message
-                    bot.edit_message_text(
-                        chat_id=chat_id,
-                        message_id=group.message_id,
-                        text=updated_text,
-                        reply_markup=join_button
-                    )
-                except Exception as e:
-                    # If message editing fails, send a new message
-                    bot.send_message(chat_id, updated_text, reply_markup=join_button)
-                    logging.error(f"Failed to edit message: {e}")
+                    bot.answer_callback_query(call.id, f"You are already in {group.group_name}!")
 
             else:
                 bot.answer_callback_query(call.id, "Group not found.")
