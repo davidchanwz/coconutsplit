@@ -131,7 +131,7 @@ class Group:
             "group_name": self.group_name,
             "created_by": self.created_by.uuid,
             "chat_id": self.chat_id,  # Store the chat ID in the database
-            "created_at": self.created_at.isoformat(timespec="seconds")  # Serialize datetime to ISO 8601 string,
+            "created_at": self.created_at.isoformat(timespec="seconds"),  # Serialize datetime to ISO 8601 string,
             "message_id": self.message_id
 
         }
