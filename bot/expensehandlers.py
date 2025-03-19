@@ -1,5 +1,4 @@
 # bot/expensehandlers.py
-from bot.main import MINIAPP_URL
 from classes import Group, User, Expense, Settlement
 from collections import defaultdict
 from utils import simplify_debts, calculate_user_balances, process_add_expense, get_display_debts_string, get_display_debts_string_with_at
@@ -7,6 +6,11 @@ from utils import simplify_debts, calculate_user_balances, process_add_expense, 
 import re
 from classes import User, Group, Expense
 from telebot import types
+import dotenv
+import os
+
+dotenv.load_dotenv()
+MINIAPP_URL = os.getenv("MINIAPP_URL")
 
 
 def register_expense_handlers(bot):
