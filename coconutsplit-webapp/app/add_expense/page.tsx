@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
@@ -19,7 +19,7 @@ interface Expense {
   expense_id: string;
 }
 
-export default function AddExpense() {
+function AddExpenseForm() {
   const searchParams = useSearchParams();
   const groupId = searchParams.get('group_id');
   const userId = searchParams.get('user_id');
@@ -199,5 +199,13 @@ export default function AddExpense() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function AddExpense() {
+  return (
+    <Suspense fallback={<div className="p-4">Loading...</div>}>
+      <AddExpenseForm />
+    </Suspense>
   );
 } 
