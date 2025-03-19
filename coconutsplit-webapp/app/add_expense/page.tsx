@@ -152,6 +152,29 @@ function AddExpenseForm() {
     setSelectedMembers(updatedSelected);
   };
 
+  const handleSplitAmountChange = (memberId: string, newAmount: string) => {
+    if (!amount) return;
+
+    const totalAmount = parseFloat(amount);
+    const newSplitAmount = parseFloat(newAmount) || 0;
+    const otherSplits = Object.entries(selectedMembers)
+      .filter(([id, amt]) => id !== memberId && amt !== '')
+      .reduce((sum, [_, amt]) => sum + (parseFloat(amt) || 0), 0);
+
+    // If the new amount would exceed the total, set it to the remaining amount
+    if (newSplitAmount + otherSplits > totalAmount) {
+      setSelectedMembers(prev => ({
+        ...prev,
+        [memberId]: (totalAmount - otherSplits).toFixed(2)
+      }));
+    } else {
+      setSelectedMembers(prev => ({
+        ...prev,
+        [memberId]: newAmount
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!groupId || !userId) return;
@@ -293,13 +316,11 @@ function AddExpenseForm() {
                   <input
                     type="number"
                     value={amount}
-                    onChange={(e) => setSelectedMembers({
-                      ...selectedMembers,
-                      [memberId]: e.target.value
-                    })}
+                    onChange={(e) => handleSplitAmountChange(memberId, e.target.value)}
                     className="w-28 p-3 border rounded-lg text-base"
                     step="0.01"
                     min="0"
+                    max={amount}
                     inputMode="numeric"
                     pattern="[0-9]*"
                   />
@@ -307,12 +328,20 @@ function AddExpenseForm() {
                 </div>
               );
             })}
+          {amount && (
+            <div className="mt-2 text-sm text-gray-600">
+              Total: ${amount} | Split: ${Object.values(selectedMembers)
+                .filter(val => val !== '')
+                .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+                .toFixed(2)}
+            </div>
+          )}
         </div>
 
         <button
           type="submit"
           className="w-full bg-blue-500 text-white p-3 rounded-lg text-base font-medium hover:bg-blue-600 active:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={loading}
+          disabled={loading || !amount || Object.values(selectedMembers).filter(val => val !== '').length === 0}
         >
           {loading ? 'Creating...' : 'Create Expense'}
         </button>
