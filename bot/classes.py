@@ -516,7 +516,7 @@ class Expense:
                     amount=exp['amount'], 
                     description=exp['description'], 
                     expense_id=exp['expense_id'],
-                    created_at=datetime.fromisoformat(exp['created_at']) if exp['created_at'] else None
+                    created_at=datetime.isoformat(timespec="seconds").fromisoformat(exp['created_at']) if exp['created_at'] else None
                     )),
         
         return expenses
@@ -602,6 +602,6 @@ class Settlement:
                     to_user=to_user,
                     amount=settlement['amount'],
                     group=group,
-                    created_at=datetime.fromisoformat(settlement['created_at']) if settlement['created_at'] else None
+                    created_at=datetime.isoformat(timespec="seconds").fromisoformat(settlement['created_at']) if settlement['created_at'] else None
                 ))
         return settlements
