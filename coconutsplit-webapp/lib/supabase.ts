@@ -42,6 +42,13 @@ export interface Settlement {
   created_at: string;
 }
 
+export interface DebtUpdate {
+  group_id: string;
+  user_id: string;
+  opp_user_id: string;
+  increment_value: number;
+}
+
 export class SupabaseService {
   static async getGroup(groupId: string): Promise<Group | null> {
     const { data, error } = await supabase
@@ -97,6 +104,24 @@ export class SupabaseService {
   }
 
   static async addExpense(expense: Omit<Expense, 'expense_id' | 'created_at'>, splits: Omit<ExpenseSplit, 'expense_id'>[]): Promise<void> {
+    // Validate expense amount
+    if (expense.amount >= 10**8) {
+      throw new Error(`Expense amount must be less than ${10**8}.`);
+    }
+    
+    // Validate that all split amounts are valid
+    for (const split of splits) {
+      if (split.amount >= 10**8) {
+        throw new Error(`Split amount must be less than ${10**8}.`);
+      }
+    }
+    
+    // Ensure splits total equals expense amount
+    const splitsTotal = splits.reduce((sum, split) => sum + split.amount, 0);
+    if (Math.abs(splitsTotal - expense.amount) > 0.01) {
+      throw new Error(`Total of splits (${splitsTotal.toFixed(2)}) doesn't match expense amount (${expense.amount.toFixed(2)})`);
+    }
+
     const { data: expenseData, error: expenseError } = await supabase
       .from('expenses')
       .insert([expense])
@@ -115,6 +140,34 @@ export class SupabaseService {
       .insert(splitsWithExpenseId);
 
     if (splitsError) throw splitsError;
+
+    // Create debt records for each split
+    const debtUpdates: DebtUpdate[] = [];
+    for (const split of splits) {
+      // User owes the payer
+      debtUpdates.push({
+        group_id: expense.group_id,
+        user_id: split.user_id,
+        opp_user_id: expense.paid_by,
+        increment_value: split.amount
+      });
+      
+      // Reverse entry: payer is owed by the user
+      debtUpdates.push({
+        group_id: expense.group_id,
+        user_id: expense.paid_by,
+        opp_user_id: split.user_id,
+        increment_value: -split.amount
+      });
+    }
+
+    // Use the bulk_update_debts RPC function to update debts
+    if (debtUpdates.length > 0) {
+      const { error: debtsError } = await supabase
+        .rpc("bulk_update_debts", { debt_updates: debtUpdates });
+      
+      if (debtsError) throw debtsError;
+    }
   }
 
   static async getUser(userId: string): Promise<User | null> {
@@ -127,4 +180,4 @@ export class SupabaseService {
     if (error) throw error;
     return data;
   }
-} 
+}
