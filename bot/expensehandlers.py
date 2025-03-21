@@ -44,17 +44,21 @@ def register_expense_handlers(bot):
                 return
             
             # Create Mini App URL with necessary parameters
-            mini_app_url = f"{MINIAPP_URL}/add_expense?group_id={group.group_id}&user_id={user.uuid}"
+            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp=group_id={group.group_id}&user_id={user.uuid}"
             
             # Create inline keyboard with Mini App button
-            reply_keyboard_markup = ReplyKeyboardMarkup(resize_keyboard=True)
-            reply_keyboard_markup.row(KeyboardButton("Start MiniApp", web_app=WebAppInfo(mini_app_url)))
+            keyboard = InlineKeyboardMarkup()
+            web_app_button = InlineKeyboardButton(
+                text="Add Expense",
+                web_app=WebAppInfo(url=mini_app_url)
+            )
+            keyboard.add(web_app_button)
             
             # Send message with Mini App button
             bot.send_message(
                 chat_id,
                 "Click the button below to add an expense:",
-                reply_markup=reply_keyboard_markup
+                reply_markup=keyboard
             )
             
         except Exception as e:
