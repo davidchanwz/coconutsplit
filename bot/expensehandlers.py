@@ -5,7 +5,13 @@ from utils import simplify_debts, calculate_user_balances, process_add_expense, 
 
 import re
 from classes import User, Group, Expense
-from telebot import types
+from telebot.types import (
+    ReplyKeyboardMarkup, 
+    KeyboardButton, 
+    WebAppInfo,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
 import dotenv
 import os
 
@@ -41,8 +47,8 @@ def register_expense_handlers(bot):
             mini_app_url = f"{MINIAPP_URL}/add_expense?group_id={group.group_id}&user_id={user.uuid}"
             
             # Create inline keyboard with Mini App button
-            reply_keyboard_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-            reply_keyboard_markup.row(types.KeyboardButton("Start MiniApp", web_app=types.webAppInfo(mini_app_url)))
+            reply_keyboard_markup = ReplyKeyboardMarkup(resize_keyboard=True)
+            reply_keyboard_markup.row(KeyboardButton("Start MiniApp", web_app=WebAppInfo(mini_app_url)))
             
             # Send message with Mini App button
             bot.send_message(
