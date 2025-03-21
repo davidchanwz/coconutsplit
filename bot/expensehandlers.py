@@ -45,7 +45,7 @@ def register_expense_handlers(bot):
                 return
             
             # Create Mini App URL with necessary parameters using & as delimiter
-            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp=group_id={group.group_id}&user_id={user.uuid}"
+            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp=group_id{group.group_id}__user_id={user.uuid}"
             
             # Create inline keyboard with Mini App button
             keyboard = InlineKeyboardMarkup()

@@ -1,30 +1,27 @@
+import { initData } from "@telegram-apps/sdk-react";
+
 export interface QueryParams {
   group_id?: string;
   user_id?: string;
-  route?: string;
 }
 
 export function parseQueryParams(): QueryParams {
-  if (typeof window === 'undefined') return {};
+  const lp = initData.startParam();
+  if (!lp) return {};
+  
+  const [group_id, user_id] = lp.split("__");
 
-  const hash = window.location.hash.slice(1); // Remove the # symbol
-  if (!hash) return {};
-
-  // Split by & to get individual parameters
-  const params = hash.split('&').reduce((acc, param) => {
-    const [key, value] = param.split('=');
-    if (key && value) {
-      acc[key] = decodeURIComponent(value);
-    }
-    return acc;
-  }, {} as Record<string, string>);
-
-  return params;
+  return {
+    group_id: group_id || undefined,
+    user_id: user_id || undefined,
+  };
 }
 
 export function buildQueryString(params: QueryParams): string {
-  return Object.entries(params)
-    .filter(([_, value]) => value !== undefined)
-    .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join('&');
-} 
+  const searchParams = new URLSearchParams();
+
+  if (params.group_id) searchParams.append("group_id", params.group_id);
+  if (params.user_id) searchParams.append("user_id", params.user_id);
+
+  return searchParams.toString();
+}

@@ -61,7 +61,7 @@ export class SupabaseService {
       .eq('group_id', groupId);
 
     if (error) throw error;
-    return data.map(item => item.user);
+    return data.map(item => item.user as unknown as User);
   }
 
   static async getExpenses(groupId: string): Promise<Expense[]> {
