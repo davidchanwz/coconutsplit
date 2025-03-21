@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { SupabaseService, User, Expense, ExpenseSplit } from '../../lib/supabase';
 import { parseQueryParams } from '../../lib/utils';
 
