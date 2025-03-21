@@ -50,7 +50,7 @@ def register_expense_handlers(bot):
             keyboard = InlineKeyboardMarkup()
             web_app_button = InlineKeyboardButton(
                 text="Add Expense",
-                web_app=WebAppInfo(url=mini_app_url)
+                url=mini_app_url
             )
             keyboard.add(web_app_button)
             
