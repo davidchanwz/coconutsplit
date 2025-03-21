@@ -129,7 +129,6 @@ export class SupabaseService {
       .single();
 
     if (expenseError) throw expenseError;
-
     const splitsWithExpenseId = splits.map(split => ({
       ...split,
       expense_id: expenseData.expense_id
@@ -144,6 +143,9 @@ export class SupabaseService {
     // Create debt records for each split
     const debtUpdates: DebtUpdate[] = [];
     for (const split of splits) {
+      // Skip creating debt records if the payer is also the one being charged
+      if (split.user_id === expense.paid_by) continue;
+      
       // User owes the payer
       debtUpdates.push({
         group_id: expense.group_id,
