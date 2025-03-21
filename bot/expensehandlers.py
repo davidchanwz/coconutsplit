@@ -16,7 +16,8 @@ import dotenv
 import os
 
 dotenv.load_dotenv()
-MINIAPP_URL = os.getenv("MINIAPP_URL")
+MINIAPP_UNIQUE_IDENTIFIER = os.getenv("MINIAPP_UNIQUE_IDENTIFIER")
+
 
 
 def register_expense_handlers(bot):
@@ -43,7 +44,7 @@ def register_expense_handlers(bot):
                 bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
                 return
             
-            # Create Mini App URL with necessary parameters
+            # Create Mini App URL with necessary parameters using & as delimiter
             mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp=group_id={group.group_id}&user_id={user.uuid}"
             
             # Create inline keyboard with Mini App button
