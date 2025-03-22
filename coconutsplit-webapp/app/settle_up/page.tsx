@@ -84,15 +84,15 @@ export default function SettleUp() {
     return balances;
   };
 
-  // Helper function to simplify debts to match Python implementation
-  const simplifyDebts = (balances: UserBalance): SimplifiedDebt[] => {
-    if (!members || members.length === 0) {
-      console.log("No members available for simplifyDebts");
+  // New function to simplify debts that accepts members as a parameter
+  const simplifyDebtsWithMembers = (balances: UserBalance, membersData: User[]): SimplifiedDebt[] => {
+    if (!membersData || membersData.length === 0) {
+      console.log("No members provided to simplifyDebtsWithMembers");
       return [];
     }
     
     const userMap = new Map<string, User>();
-    members.forEach(member => userMap.set(member.uuid, member));
+    membersData.forEach(member => userMap.set(member.uuid, member));
     
     // Split users into creditors (positive balance) and debtors (negative balance)
     const creditors: [string, number][] = [];
@@ -128,18 +128,18 @@ export default function SettleUp() {
       // Calculate the minimum of what the debtor owes and what the creditor is owed
       const amount = Math.min(creditAmount, debtAmount);
       
-      if (amount > 0 && userMap.has(debtorId) && userMap.has(creditorId)) {
-        const fromUser = userMap.get(debtorId);
-        const toUser = userMap.get(creditorId);
-        
-        if (fromUser && toUser) {
-          // Record this transaction if we have both users
-          simplified.push({
-            from: fromUser,
-            to: toUser,
-            amount: parseFloat(amount.toFixed(2)) // Ensure we have clean numbers
-          });
-        }
+      const fromUser = userMap.get(debtorId);
+      const toUser = userMap.get(creditorId);
+      
+      if (amount > 0 && fromUser && toUser) {
+        // Record this transaction if we have both users
+        simplified.push({
+          from: fromUser,
+          to: toUser,
+          amount: parseFloat(amount.toFixed(2)) // Ensure we have clean numbers
+        });
+      } else {
+        console.log(`Could not create debt: amount=${amount}, fromUser=${!!fromUser}, toUser=${!!toUser}`);
       }
       
       // Adjust the remaining balances
@@ -165,7 +165,9 @@ export default function SettleUp() {
       if (!groupId) return;
 
       try {
+        // First fetch members and wait for the result
         const membersData = await SupabaseService.getGroupMembers(groupId);
+        console.log("Fetched members:", membersData);
         setMembers(membersData);
 
         if (userId) {
@@ -173,23 +175,35 @@ export default function SettleUp() {
           setCurrentUser(userData);
         }
 
-        // Fetch all debts for the group
+        // Then fetch debts after we have members
         const debtsData = await SupabaseService.getGroupDebts(groupId);
+        console.log("Raw debts data:", debtsData);
         
-        console.log("Raw debts data:", debtsData); // Add this for debugging
-        
-        if (debtsData.length === 0) {
+        if (!debtsData || debtsData.length === 0) {
           setDebts([]);
           setLoading(false);
           return;
         }
         
+        // Make sure membersData is populated before calculating balances
+        if (!membersData || membersData.length === 0) {
+          console.error("No members available when trying to process debts");
+          setError('Failed to load group members');
+          setLoading(false);
+          return;
+        }
+        
+        // Create a members map for direct access to use with balances
+        const membersMap = new Map<string, User>();
+        membersData.forEach(member => membersMap.set(member.uuid, member));
+        
         // Calculate balances and simplify debts (matching Python implementation)
         const balances = calculateUserBalances(debtsData);
-        console.log("Calculated balances:", balances); // Add this for debugging
+        console.log("Calculated balances:", balances);
         
-        const simplifiedDebts = simplifyDebts(balances);
-        console.log("Simplified debts:", simplifiedDebts); // Add this for debugging
+        // Pass the membersMap to simplifyDebts to avoid timing issues
+        const simplifiedDebts = simplifyDebtsWithMembers(balances, membersData);
+        console.log("Simplified debts:", simplifiedDebts);
         
         // Update state with simplified debts
         setDebts(simplifiedDebts);
