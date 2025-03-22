@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { SupabaseService, User, Expense, ExpenseSplit } from '../../lib/supabase';
 import { parseQueryParams } from '../../lib/utils';
+import { backButton, init } from '@telegram-apps/sdk';
 
 export default function AddExpense() {
   const params = parseQueryParams();
@@ -19,6 +20,17 @@ export default function AddExpense() {
   });
   const [splitType, setSplitType] = useState<'equal' | 'custom'>('equal');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    init();
+    // Show the back button when component mounts
+    backButton.show();
+    
+    // Hide the back button when component unmounts
+    return () => {
+      backButton.hide();
+    };
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
