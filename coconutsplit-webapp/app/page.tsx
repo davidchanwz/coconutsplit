@@ -73,14 +73,8 @@ export default function Home() {
 
   return (
     <main className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white">Group Expenses</h1>
-        <Link 
-          href={groupId ? `/add_expense?group_id=${groupId}` : '/add_expense'} 
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-        >
-          Add Expense
-        </Link>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-white">Group Expenses</h1>
       </div>
       
       {error && (
@@ -89,7 +83,7 @@ export default function Home() {
         </div>
       )}
       
-      <div className="grid gap-6">
+      <div className="grid gap-6 mb-8">
         {expenses.map((expense) => {
           const paidBy = members.find(m => m.uuid === expense.paid_by);
           return (
@@ -132,10 +126,28 @@ export default function Home() {
       </div>
 
       {expenses.length === 0 && (
-        <div className="text-center text-gray-400 mt-8">
+        <div className="text-center text-gray-400 mt-8 mb-16">
           No expenses recorded yet.
         </div>
       )}
+      
+      {/* Action buttons at the bottom of the page */}
+      <div className="fixed bottom-6 left-0 right-0 px-4">
+        <div className="max-w-screen-lg mx-auto flex gap-4">
+          <Link 
+            href={groupId ? `/add_expense?group_id=${groupId}` : '/add_expense'} 
+            className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-center font-medium"
+          >
+            Add Expense
+          </Link>
+          <Link 
+            href={groupId ? `/settle_up?group_id=${groupId}` : '/settle_up'} 
+            className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors text-center font-medium"
+          >
+            Settle Up
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }

@@ -49,6 +49,12 @@ export interface DebtUpdate {
   increment_value: number;
 }
 
+export interface SimplifiedDebt {
+  from: User;
+  to: User;
+  amount: number;
+}
+
 export class SupabaseService {
   static async getGroup(groupId: string): Promise<Group | null> {
     const { data, error } = await supabase
@@ -247,5 +253,87 @@ export class SupabaseService {
 
     if (error) throw error;
     return data;
+  }
+
+  static async getGroupDebts(groupId: string): Promise<SimplifiedDebt[]> {
+    // Get all debts for the group
+    const { data: debts, error: debtsError } = await supabase
+      .from('debts')
+      .select('user_id, opp_user_id, amount_owed')
+      .eq('group_id', groupId)
+      .gt('amount_owed', 0); // Only get positive debts (amount_owed > 0)
+    
+    if (debtsError) throw debtsError;
+    if (!debts || debts.length === 0) return [];
+    
+    // Get all members of this group for user details
+    const { data: membersData, error: membersError } = await supabase
+      .from('group_members')
+      .select('user:users(*)')
+      .eq('group_id', groupId);
+    
+    if (membersError) throw membersError;
+    
+    const members = membersData.map(item => item.user as unknown as User);
+    const userMap = new Map<string, User>();
+    members.forEach(member => userMap.set(member.uuid, member));
+    
+    // Convert to simplified debts format
+    const simplifiedDebts: SimplifiedDebt[] = debts
+      .filter(debt => userMap.has(debt.user_id) && userMap.has(debt.opp_user_id))
+      .map(debt => ({
+        from: userMap.get(debt.user_id)!,
+        to: userMap.get(debt.opp_user_id)!,
+        amount: debt.amount_owed
+      }));
+    
+    return simplifiedDebts;
+  }
+
+  static async settleDebts(groupId: string, debts: SimplifiedDebt[]): Promise<void> {
+    const debtUpdates: DebtUpdate[] = [];
+    const settlements = [];
+    
+    for (const debt of debts) {
+      // Create settlement record
+      settlements.push({
+        group_id: groupId,
+        from_user: debt.from.uuid,
+        to_user: debt.to.uuid,
+        amount: debt.amount
+      });
+      
+      // Update debt records
+      debtUpdates.push({
+        group_id: groupId,
+        user_id: debt.from.uuid,
+        opp_user_id: debt.to.uuid,
+        increment_value: -debt.amount // Negative to reduce the debt
+      });
+      
+      debtUpdates.push({
+        group_id: groupId,
+        user_id: debt.to.uuid,
+        opp_user_id: debt.from.uuid,
+        increment_value: debt.amount // Positive to reduce the negative debt
+      });
+    }
+    
+    // Create settlement records
+    if (settlements.length > 0) {
+      const { error: settlementsError } = await supabase
+        .from('settlements')
+        .insert(settlements);
+      
+      if (settlementsError) throw settlementsError;
+    }
+    
+    // Update debt records
+    if (debtUpdates.length > 0) {
+      const { error: debtsError } = await supabase
+        .rpc("bulk_update_debts", { debt_updates: debtUpdates });
+      
+      if (debtsError) throw debtsError;
+    }
   }
 }
