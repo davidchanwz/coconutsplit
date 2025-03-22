@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { SupabaseService, User, Expense, ExpenseSplit } from '../../lib/supabase';
 import { parseQueryParams } from '../../lib/utils';
-import { backButton, init } from '@telegram-apps/sdk';
 
 export default function AddExpense() {
   const params = parseQueryParams();
@@ -22,13 +21,30 @@ export default function AddExpense() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    init();
-    // Show the back button when component mounts
-    backButton.show();
+    // Initialize Telegram SDK only on client-side
+    const initTelegramBackButton = async () => {
+      try {
+        const { backButton, init } = await import('@telegram-apps/sdk');
+        init();
+        backButton.show();  // This displays the back button in Telegram's UI
+        
+        return () => {
+          backButton.hide();
+        };
+      } catch (error) {
+        console.error('Failed to initialize Telegram SDK:', error);
+      }
+    };
     
-    // Hide the back button when component unmounts
+    const cleanup = initTelegramBackButton();
+    
     return () => {
-      backButton.hide();
+      // Call the cleanup function if it exists
+      if (cleanup) {
+        cleanup.then(cleanupFn => {
+          if (cleanupFn) cleanupFn();
+        });
+      }
     };
   }, []);
 
