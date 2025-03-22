@@ -109,18 +109,16 @@ export default function SettleUp() {
       // Calculate the minimum of what the debtor owes and what the creditor is owed
       const amount = Math.min(creditAmount, debtAmount);
       
-      if (amount > 0) {
+      if (amount > 0 && userMap.has(debtorId) && userMap.has(creditorId)) {
         // Record this transaction if we have both users
-        if (userMap.has(debtorId) && userMap.has(creditorId)) {
-          simplified.push({
-            from: userMap.get(debtorId)!,
-            to: userMap.get(creditorId)!,
-            amount: amount
-          });
-        }
+        simplified.push({
+          from: userMap.get(debtorId)!,
+          to: userMap.get(creditorId)!,
+          amount: amount
+        });
       }
       
-      // Adjust the remaining balances - directly update the variables as in Python
+      // Adjust the remaining balances and push back if needed
       const remainingCredit = creditAmount - amount;
       const remainingDebt = debtAmount - amount;
       
