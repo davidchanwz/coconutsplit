@@ -12,6 +12,10 @@ interface SimplifiedDebt {
   amount: number;
 }
 
+interface UserBalance {
+  [userId: string]: number;
+}
+
 export default function SettleUp() {
   const params = parseQueryParams();
   const groupId = params.group_id;
@@ -59,6 +63,81 @@ export default function SettleUp() {
     };
   }, [groupId]);
 
+  // Helper function to calculate user balances from debts
+  const calculateUserBalances = (debts: SimplifiedDebt[]): UserBalance => {
+    const balances: UserBalance = {};
+    
+    for (const debt of debts) {
+      // User who owes money (negative balance)
+      if (!balances[debt.from.uuid]) {
+        balances[debt.from.uuid] = 0;
+      }
+      balances[debt.from.uuid] -= debt.amount;
+      
+      // User who is owed money (positive balance)
+      if (!balances[debt.to.uuid]) {
+        balances[debt.to.uuid] = 0;
+      }
+      balances[debt.to.uuid] += debt.amount;
+    }
+    
+    return balances;
+  };
+
+  // Helper function to simplify debts like in the Python code
+  const simplifyDebts = (balances: UserBalance): SimplifiedDebt[] => {
+    const creditors: [string, number][] = [];
+    const debtors: [string, number][] = [];
+    
+    // Split users into creditors (positive balance) and debtors (negative balance)
+    for (const [userId, balance] of Object.entries(balances)) {
+      if (balance > 0) {
+        creditors.push([userId, balance]); // Users who are owed money
+      } else if (balance < 0) {
+        debtors.push([userId, -balance]); // Users who owe money
+      }
+    }
+    
+    const simplified: SimplifiedDebt[] = [];
+    const userMap = new Map<string, User>();
+    members.forEach(member => userMap.set(member.uuid, member));
+    
+    while (creditors.length > 0 && debtors.length > 0) {
+      const [creditorId, creditAmount] = creditors.pop()!;
+      const [debtorId, debtAmount] = debtors.pop()!;
+      
+      // Calculate the minimum of what the debtor owes and what the creditor is owed
+      const amount = Math.min(creditAmount, debtAmount);
+      
+      if (amount > 0) {
+        // Record this transaction if we have both users
+        if (userMap.has(debtorId) && userMap.has(creditorId)) {
+          simplified.push({
+            from: userMap.get(debtorId)!,
+            to: userMap.get(creditorId)!,
+            amount: amount
+          });
+        }
+      }
+      
+      // Adjust the remaining balances
+      const remainingCredit = creditAmount - amount;
+      const remainingDebt = debtAmount - amount;
+      
+      // If there's remaining debt, push the debtor back
+      if (remainingDebt > 0.01) {
+        debtors.push([debtorId, remainingDebt]);
+      }
+      
+      // If there's remaining credit, push the creditor back
+      if (remainingCredit > 0.01) {
+        creditors.push([creditorId, remainingCredit]);
+      }
+    }
+    
+    return simplified;
+  };
+
   useEffect(() => {
     async function fetchData() {
       if (!groupId) return;
@@ -72,10 +151,15 @@ export default function SettleUp() {
           setCurrentUser(userData);
         }
 
-        // Here you would fetch simplified debts
-        // This is placeholder logic - real implementation would depend on your backend
+        // Fetch all debts for the group
         const debtsData = await SupabaseService.getGroupDebts(groupId);
-        setDebts(debtsData);
+        
+        // Calculate balances and simplify debts
+        const balances = calculateUserBalances(debtsData);
+        const simplifiedDebts = simplifyDebts(balances);
+        
+        // Update state with simplified debts
+        setDebts(simplifiedDebts);
       } catch (err) {
         setError('Failed to load data');
         console.error(err);
