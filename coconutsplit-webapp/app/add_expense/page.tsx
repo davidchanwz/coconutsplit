@@ -32,10 +32,17 @@ export default function AddExpense() {
       try {
         init();
         backButton.mount();
+        
         if (backButton.show.isAvailable()) {
           backButton.show();
-        } // This displays the back button in Telegram's UI
-
+          
+          // Configure back button click handler to navigate to home page
+          backButton.onClick(() => {
+            // Navigate to the home page and pass along the group_id
+            window.location.href = `/?group_id=${groupId}`;
+          });
+        }
+        
         return () => {
           backButton.hide();
         };
@@ -43,9 +50,9 @@ export default function AddExpense() {
         console.error("Failed to initialize Telegram SDK:", error);
       }
     };
-
+    
     const cleanup = initTelegramBackButton();
-
+    
     return () => {
       // Call the cleanup function if it exists
       if (cleanup) {
@@ -54,7 +61,7 @@ export default function AddExpense() {
         });
       }
     };
-  }, []);
+  }, [groupId]);
 
   useEffect(() => {
     async function fetchData() {
