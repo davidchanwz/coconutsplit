@@ -23,6 +23,45 @@ MINIAPP_UNIQUE_IDENTIFIER = os.getenv("MINIAPP_UNIQUE_IDENTIFIER")
 def register_expense_handlers(bot):
     """Register all command handlers for the bot."""
 
+    @bot.message_handler(commands=['coconutSplit'])
+    def launch_coconut_split_app(message):
+        try:
+            chat_id = message.chat.id
+            user_id = message.from_user.id
+            # Fetch the user and group from the database
+            user = User.fetch_from_db_by_user_id(user_id)
+            group = Group.fetch_from_db_by_chat(chat_id)
+
+            if group is None:
+                bot.send_message(chat_id, "No group associated with this chat.")
+                return
+            
+            group_members_dict = Group.fetch_group_members_dict(group)
+
+            if not user or not group_members_dict.get(user.uuid):
+                bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
+                return
+            
+            # Create Mini App URL with necessary parameters
+            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplitHome?startapp={group.group_id}__{user.uuid}"
+            
+            # Create inline keyboard with Mini App button
+            keyboard = InlineKeyboardMarkup()
+            web_app_button = InlineKeyboardButton(
+                text="Open Coconut Split",
+                url=mini_app_url
+            )
+            keyboard.add(web_app_button)
+            
+            # Send message with Mini App button
+            bot.send_message(
+                chat_id,
+                "Click the button below to open Coconut Split:",
+                reply_markup=keyboard
+            )
+            
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
     # Step 1: Start the /add_expense process
     @bot.message_handler(commands=['add_expense'])

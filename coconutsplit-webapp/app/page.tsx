@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SupabaseService, Expense, User } from '../lib/supabase';
 import { parseQueryParams } from '../lib/utils';
+import Link from 'next/link';
 
 export default function Home() {
   const params = parseQueryParams();
@@ -12,6 +13,7 @@ export default function Home() {
   const [members, setMembers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -36,43 +38,92 @@ export default function Home() {
     fetchData();
   }, [groupId]);
 
+  const handleDeleteExpense = async (expenseId: string) => {
+    if (!groupId || isDeleting) return;
+    
+    try {
+      setIsDeleting(expenseId);
+      await SupabaseService.deleteExpense(expenseId, groupId);
+      
+      // Update the expenses list after deletion
+      setExpenses(expenses.filter(expense => expense.expense_id !== expenseId));
+    } catch (err) {
+      setError('Failed to delete expense');
+      console.error(err);
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-red-500">{error}</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-red-400">{error}</div>
       </div>
     );
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Group Expenses</h1>
+    <main className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-white">Group Expenses</h1>
+        <Link 
+          href={groupId ? `/add_expense?group_id=${groupId}` : '/add_expense'} 
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+        >
+          Add Expense
+        </Link>
+      </div>
+      
+      {error && (
+        <div className="mb-6 p-4 bg-red-900 border border-red-700 text-red-200 rounded">
+          {error}
+        </div>
+      )}
       
       <div className="grid gap-6">
         {expenses.map((expense) => {
           const paidBy = members.find(m => m.uuid === expense.paid_by);
           return (
-            <div key={expense.expense_id} className="bg-white p-6 rounded-lg shadow">
+            <div key={expense.expense_id} className="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h2 className="text-xl font-semibold">{expense.description}</h2>
-                  <p className="text-gray-600">
+                  <h2 className="text-xl font-semibold text-white">{expense.description}</h2>
+                  <p className="text-gray-300">
                     Paid by {paidBy?.username || 'Unknown User'}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold">${expense.amount.toFixed(2)}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(expense.created_at).toLocaleDateString()}
-                  </p>
+                <div className="flex items-start gap-4">
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-white">${expense.amount.toFixed(2)}</p>
+                    <p className="text-sm text-gray-400">
+                      {new Date(expense.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteExpense(expense.expense_id)}
+                    disabled={isDeleting === expense.expense_id}
+                    className={`p-2 rounded-full text-red-400 hover:text-red-300 hover:bg-gray-700 focus:outline-none transition-colors ${
+                      isDeleting === expense.expense_id ? 'opacity-50 cursor-wait' : ''
+                    }`}
+                    title="Delete expense"
+                  >
+                    {isDeleting === expense.expense_id ? (
+                      <span className="block h-5 w-5 animate-spin rounded-full border-2 border-t-red-400"></span>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
@@ -81,7 +132,7 @@ export default function Home() {
       </div>
 
       {expenses.length === 0 && (
-        <div className="text-center text-gray-500 mt-8">
+        <div className="text-center text-gray-400 mt-8">
           No expenses recorded yet.
         </div>
       )}

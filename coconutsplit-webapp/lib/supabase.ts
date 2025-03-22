@@ -178,6 +178,66 @@ export class SupabaseService {
     }
   }
 
+  static async deleteExpense(expenseId: string, groupId: string): Promise<void> {
+    // First, get the expense and its splits to recalculate the debts properly
+    const { data: expense, error: fetchExpenseError } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('expense_id', expenseId)
+      .eq('group_id', groupId)
+      .single();
+    
+    if (fetchExpenseError) throw fetchExpenseError;
+    if (!expense) throw new Error('Expense not found');
+    
+    // Get the splits for this expense
+    const { data: splits, error: fetchSplitsError } = await supabase
+      .from('expense_splits')
+      .select('*')
+      .eq('expense_id', expenseId);
+    
+    if (fetchSplitsError) throw fetchSplitsError;
+    
+    // Delete the expense (this will cascade to delete the expense_splits due to foreign key constraints)
+    const { error: deleteError } = await supabase
+      .from('expenses')
+      .delete()
+      .eq('expense_id', expenseId);
+    
+    if (deleteError) throw deleteError;
+    
+    // Update the debt records by negating the original debt amounts
+    const debtUpdates: DebtUpdate[] = [];
+    for (const split of splits) {
+      // Skip if there was a split where user is paying themselves
+      if (split.user_id === expense.paid_by) continue;
+      
+      // Reverse the debt: negate the original increment_value
+      debtUpdates.push({
+        group_id: groupId,
+        user_id: split.user_id,
+        opp_user_id: expense.paid_by,
+        increment_value: -split.amount // Negative amount to reverse the debt
+      });
+      
+      // Reverse the opposing entry
+      debtUpdates.push({
+        group_id: groupId,
+        user_id: expense.paid_by,
+        opp_user_id: split.user_id,
+        increment_value: split.amount // Positive amount to reverse the negative debt
+      });
+    }
+    
+    // Only update if there are debt records to update
+    if (debtUpdates.length > 0) {
+      const { error: debtsError } = await supabase
+        .rpc("bulk_update_debts", { debt_updates: debtUpdates });
+      
+      if (debtsError) throw debtsError;
+    }
+  }
+
   static async getUser(userId: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('users')
