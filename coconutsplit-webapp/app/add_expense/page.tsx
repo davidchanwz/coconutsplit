@@ -17,6 +17,7 @@ export default function AddExpense() {
     amount: '',
     splits: [] as { userId: string; amount: string }[]
   });
+  const [splitType, setSplitType] = useState<'equal' | 'custom'>('equal');
 
   useEffect(() => {
     async function fetchData() {
@@ -68,15 +69,37 @@ export default function AddExpense() {
     }));
   };
 
+  const updateEqualSplits = (amount: number) => {
+    if (members.length === 0) return [];
+    
+    const equalAmount = (amount / members.length).toFixed(2);
+    return members.map(member => ({
+      userId: member.uuid,
+      amount: equalAmount
+    }));
+  };
+
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAmount = e.target.value;
     const numericAmount = parseFloat(newAmount) || 0;
     
-    setFormData(prev => ({
-      ...prev,
-      amount: newAmount,
-      splits: distributeAmountEqually(numericAmount, prev.splits)
-    }));
+    setFormData(prev => {
+      // If equal splits, generate them for all members
+      if (splitType === 'equal') {
+        return {
+          ...prev,
+          amount: newAmount,
+          splits: updateEqualSplits(numericAmount)
+        };
+      }
+      
+      // For custom splits, use existing logic
+      return {
+        ...prev,
+        amount: newAmount,
+        splits: distributeAmountEqually(numericAmount, prev.splits)
+      };
+    });
   };
 
   const addSplit = () => {
@@ -96,28 +119,70 @@ export default function AddExpense() {
   const updateSplit = (index: number, field: 'userId' | 'amount', value: string) => {
     setFormData(prev => {
       const newSplits = [...prev.splits];
-      newSplits[index] = { ...newSplits[index], [field]: value };
-      
+
       if (field === 'userId') {
-        return { ...prev, splits: newSplits };
+        newSplits[index] = { ...newSplits[index], userId: value };
+      } else {
+        // For amount changes, just update the value without auto-adjusting other splits
+        newSplits[index] = { ...newSplits[index], amount: value };
       }
       
-      const totalExpense = parseFloat(prev.amount) || 0;
-      const updatedSplitAmount = parseFloat(value) || 0;
-      const currentSplitAmount = parseFloat(prev.splits[index].amount) || 0;
-      const difference = updatedSplitAmount - currentSplitAmount;
-      const remainingAmount = totalExpense - (calculateSplitsTotal() + difference);
-      const adjustableSplits = newSplits.filter((_, i) => i !== index && newSplits[i].userId);
+      return { ...prev, splits: newSplits };
+    });
+  };
+
+  const removeSplit = (indexToRemove: number) => {
+    setFormData(prev => {
+      const newSplits = prev.splits.filter((_, index) => index !== indexToRemove);
+      const expenseAmount = parseFloat(prev.amount) || 0;
+      return {
+        ...prev,
+        splits: distributeAmountEqually(expenseAmount, newSplits)
+      };
+    });
+  };
+
+  const handleSplitTypeChange = (type: 'equal' | 'custom') => {
+    setSplitType(type);
+    
+    // Update splits based on the new type
+    const expenseAmount = parseFloat(formData.amount) || 0;
+    if (type === 'equal') {
+      setFormData(prev => ({
+        ...prev,
+        splits: updateEqualSplits(expenseAmount)
+      }));
+    } else if (formData.splits.length === 0) {
+      // For switching to custom with no existing splits, add one empty split
+      setFormData(prev => ({
+        ...prev,
+        splits: [{ userId: '', amount: '0' }]
+      }));
+    }
+  };
+
+  const calculateRemainingToSplit = (): number => {
+    const expenseAmount = parseFloat(formData.amount) || 0;
+    const splitsTotal = calculateSplitsTotal();
+    return expenseAmount - splitsTotal;
+  };
+
+  const addRemainingToUser = (userIndex: number) => {
+    setFormData(prev => {
+      const newSplits = [...prev.splits];
+      const remainingAmount = calculateRemainingToSplit();
       
-      if (adjustableSplits.length > 0 && remainingAmount >= 0) {
-        const amountPerSplit = (remainingAmount / adjustableSplits.length).toFixed(2);
-        
-        newSplits.forEach((split, i) => {
-          if (i !== index && split.userId) {
-            newSplits[i] = { ...split, amount: amountPerSplit };
-          }
-        });
-      }
+      if (Math.abs(remainingAmount) <= 0.01) return prev; // No remaining amount to add
+      
+      const currentAmount = parseFloat(newSplits[userIndex].amount) || 0;
+      const newAmount = currentAmount + remainingAmount;
+      
+      if (newAmount < 0) return prev; // Don't allow negative amounts
+      
+      newSplits[userIndex] = {
+        ...newSplits[userIndex],
+        amount: newAmount.toFixed(2)
+      };
       
       return { ...prev, splits: newSplits };
     });
@@ -129,10 +194,10 @@ export default function AddExpense() {
 
     try {
       const expenseAmount = parseFloat(formData.amount);
-      const splitsTotal = calculateSplitsTotal();
       
-      if (Math.abs(splitsTotal - expenseAmount) > 0.01) {
-        setError(`The sum of splits (${splitsTotal.toFixed(2)}) doesn't match the total expense amount (${expenseAmount.toFixed(2)})`);
+      // Validate amount
+      if (expenseAmount <= 0) {
+        setError('Please enter a valid expense amount greater than 0.');
         return;
       }
       
@@ -141,6 +206,40 @@ export default function AddExpense() {
         return;
       }
 
+      // For equal splits, make sure we have the latest equal splits generated
+      let splitsToSubmit: Omit<ExpenseSplit, 'expense_id'>[];
+      
+      if (splitType === 'equal') {
+        const equalSplits = updateEqualSplits(expenseAmount);
+        splitsToSubmit = equalSplits
+          .filter(split => split.userId && parseFloat(split.amount) > 0)
+          .map(split => ({
+            user_id: split.userId,
+            amount: parseFloat(split.amount)
+          }));
+      } else {
+        // Validate custom splits
+        const splitsTotal = calculateSplitsTotal();
+        if (Math.abs(splitsTotal - expenseAmount) > 0.01) {
+          setError(`The sum of splits (${splitsTotal.toFixed(2)}) doesn't match the total expense amount (${expenseAmount.toFixed(2)})`);
+          return;
+        }
+        
+        splitsToSubmit = formData.splits
+          .filter(split => split.userId && parseFloat(split.amount) > 0)
+          .map(split => ({
+            user_id: split.userId,
+            amount: parseFloat(split.amount)
+          }));
+      }
+      
+      // Validate we have at least one split
+      if (splitsToSubmit.length === 0) {
+        setError('Please create at least one split with a valid amount.');
+        return;
+      }
+
+      // Create expense object
       const expense: Omit<Expense, 'expense_id' | 'created_at'> = {
         group_id: groupId,
         paid_by: currentUser.uuid,
@@ -148,22 +247,8 @@ export default function AddExpense() {
         amount: expenseAmount
       };
 
-      for (const split of formData.splits) {
-        const splitAmount = parseFloat(split.amount);
-        if (splitAmount >= 100000000) {
-          setError(`Split amount for ${members.find(m => m.uuid === split.userId)?.username || 'user'} is too large. Maximum value is 99,999,999.99.`);
-          return;
-        }
-      }
-
-      const splits: Omit<ExpenseSplit, 'expense_id'>[] = formData.splits
-        .filter(split => split.amount && parseFloat(split.amount) > 0)
-        .map(split => ({
-          user_id: split.userId,
-          amount: parseFloat(split.amount)
-        }));
-
-      await SupabaseService.addExpense(expense, splits);
+      // Submit
+      await SupabaseService.addExpense(expense, splitsToSubmit);
       window.location.href = `/?group_id=${groupId}`;
     } catch (err) {
       setError('Failed to add expense');
@@ -225,56 +310,127 @@ export default function AddExpense() {
             onChange={handleAmountChange}
           />
         </div>
-
+        
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-white">Splits</h2>
-          <div className="mb-2 text-sm text-gray-400">
-            Total Split: {calculateSplitsTotal().toFixed(2)} / {formData.amount || '0.00'}
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Split Type
+          </label>
+          <div className="flex gap-4">
+            <button
+              type="button"
+              className={`px-4 py-2 rounded-md ${
+                splitType === 'equal' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-700 text-gray-300'
+              }`}
+              onClick={() => handleSplitTypeChange('equal')}
+            >
+              Equal Splits
+            </button>
+            <button
+              type="button"
+              className={`px-4 py-2 rounded-md ${
+                splitType === 'custom' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-700 text-gray-300'
+              }`}
+              onClick={() => handleSplitTypeChange('custom')}
+            >
+              Custom Splits
+            </button>
           </div>
-          
-          {formData.splits.map((split, index) => (
-            <div key={index} className="flex gap-4 mb-4">
-              <select
-                required
-                className="flex-1 px-3 py-2 border bg-gray-800 border-gray-700 text-white rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                value={split.userId}
-                onChange={(e) => updateSplit(index, 'userId', e.target.value)}
-              >
-                <option value="">Select User</option>
-                {members
-                  .filter(member => 
-                    member.uuid === split.userId || 
-                    !formData.splits.some(s => s.userId === member.uuid)
-                  )
-                  .map(member => (
-                    <option key={member.uuid} value={member.uuid}>
-                      {member.username}
-                    </option>
-                  ))
-                }
-              </select>
-              <input
-                type="number"
-                required
-                min="0"
-                step="0.01"
-                className="w-32 px-3 py-2 border bg-gray-800 border-gray-700 text-white rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                placeholder="Amount"
-                value={split.amount}
-                onChange={(e) => updateSplit(index, 'amount', e.target.value)}
-              />
-            </div>
-          ))}
-          
-          <button
-            type="button"
-            onClick={addSplit}
-            className={`text-blue-400 hover:text-blue-300 ${formData.splits.length >= members.length ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={formData.splits.length >= members.length}
-          >
-            + Add Split
-          </button>
         </div>
+
+        {splitType === 'equal' ? (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-white">Equal Splits</h2>
+            <div className="p-4 bg-gray-800 rounded-md text-gray-300">
+              Each member will pay {members.length ? ((parseFloat(formData.amount) || 0) / members.length).toFixed(2) : '0.00'} 
+              <ul className="mt-2 space-y-1">
+                {members.map(member => (
+                  <li key={member.uuid}>• {member.username}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-4 text-white">Custom Splits</h2>
+            <div className={`mb-2 text-sm ${Math.abs(calculateRemainingToSplit()) > 0.01 ? 'text-yellow-400' : 'text-green-400'}`}>
+              {Math.abs(calculateRemainingToSplit()) > 0.01 ? (
+                <>
+                  <span className="inline-block mr-2">⚠️</span>
+                  Remaining to split: ${calculateRemainingToSplit().toFixed(2)} of ${formData.amount || '0.00'}
+                </>
+              ) : (
+                <>
+                  <span className="inline-block mr-2">✓</span>
+                  Splits total matches expense amount: ${formData.amount || '0.00'}
+                </>
+              )}
+            </div>
+            
+            {formData.splits.map((split, index) => (
+              <div key={index} className="flex gap-4 mb-4">
+                <select
+                  required
+                  className="flex-1 px-3 py-2 border bg-gray-800 border-gray-700 text-white rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  value={split.userId}
+                  onChange={(e) => updateSplit(index, 'userId', e.target.value)}
+                >
+                  <option value="">Select User</option>
+                  {members
+                    .filter(member => 
+                      member.uuid === split.userId || 
+                      !formData.splits.some(s => s.userId === member.uuid)
+                    )
+                    .map(member => (
+                      <option key={member.uuid} value={member.uuid}>
+                        {member.username}
+                      </option>
+                    ))
+                  }
+                </select>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  step="0.01"
+                  className="w-32 px-3 py-2 border bg-gray-800 border-gray-700 text-white rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  placeholder="Amount"
+                  value={split.amount}
+                  onChange={(e) => updateSplit(index, 'amount', e.target.value)}
+                />
+                {split.userId && Math.abs(calculateRemainingToSplit()) > 0.01 && (
+                  <button
+                    type="button"
+                    onClick={() => addRemainingToUser(index)}
+                    className="px-3 py-2 bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-md text-blue-400 hover:text-blue-300 focus:outline-none focus:ring-1 focus:ring-blue-500 whitespace-nowrap font-medium transition-colors"
+                    title="Add remaining amount to this user"
+                  >
+                    +${calculateRemainingToSplit().toFixed(2)}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeSplit(index)}
+                  className="px-2 py-1 text-red-400 hover:text-red-300 focus:outline-none"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            
+            <button
+              type="button"
+              onClick={addSplit}
+              className={`text-blue-400 hover:text-blue-300 ${formData.splits.length >= members.length ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={formData.splits.length >= members.length}
+            >
+              + Add Split
+            </button>
+          </div>
+        )}
 
         <button
           type="submit"
