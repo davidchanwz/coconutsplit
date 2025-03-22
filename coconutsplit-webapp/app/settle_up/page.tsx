@@ -120,17 +120,17 @@ export default function SettleUp() {
         }
       }
       
-      // Adjust the remaining balances
+      // Adjust the remaining balances - directly update the variables as in Python
       const remainingCredit = creditAmount - amount;
       const remainingDebt = debtAmount - amount;
       
       // If there's remaining debt, push the debtor back
-      if (remainingDebt > 0.01) {
+      if (remainingDebt > 0) {
         debtors.push([debtorId, remainingDebt]);
       }
       
       // If there's remaining credit, push the creditor back
-      if (remainingCredit > 0.01) {
+      if (remainingCredit > 0) {
         creditors.push([creditorId, remainingCredit]);
       }
     }
