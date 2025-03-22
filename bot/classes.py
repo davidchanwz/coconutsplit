@@ -23,7 +23,7 @@ class User:
             "user_id": self.user_id,  # The Telegram user ID (integer)
             "username": self.username,
             "currency": self.currency,
-            "created_at": self.created_at.isoformat(timespec="seconds"), # Seralise datetime
+            "created_at": self.created_at.isoformat(timespec="microseconds"), # Seralise datetime
         }
         return supa.table('users').insert(user_data).execute()
 
@@ -132,7 +132,7 @@ class Group:
             "group_name": self.group_name,
             "created_by": self.created_by.uuid,
             "chat_id": self.chat_id,  # Store the chat ID in the database
-            "created_at": self.created_at.isoformat(timespec="seconds"),  # Serialize datetime to ISO 8601 string,
+            "created_at": self.created_at.isoformat(timespec="microseconds"),  # Serialize datetime to ISO 8601 string,
             "message_id": self.message_id
         }
         return supa.table('groups').upsert(group_data, on_conflict='group_id').execute()
@@ -143,7 +143,7 @@ class Group:
             member_data = {
                 "group_id": self.group_id,
                 "user_uuid": user.uuid,
-                "joined_at": datetime.now().isoformat(timespec="seconds")
+                "joined_at": datetime.now().isoformat(timespec="microseconds")
             }
 
             existing_members = self.fetch_all_members()
@@ -445,7 +445,7 @@ class Expense:
             "paid_by": self.paid_by.uuid,
             "amount": self.amount,
             "description": self.description,
-            "created_at": self.created_at.isoformat(timespec="seconds")
+            "created_at": self.created_at.isoformat(timespec="microseconds")
         }
         return supa.table('expenses').insert(expense_data).execute()
 
@@ -553,7 +553,7 @@ class Settlement:
             "to_user": self.to_user.uuid,
             "amount": self.amount,
             "group_id": self.group.group_id,
-            "created_at": self.created_at.isoformat(timespec="seconds")
+            "created_at": self.created_at.isoformat(timespec="microseconds")
         }
         return supa.table('settlements').insert(settlement_data).execute()
     
@@ -573,7 +573,7 @@ class Settlement:
                 "to_user": settlement.to_user.uuid,
                 "amount": settlement.amount,
                 "group_id": settlement.group.group_id,
-                "created_at": settlement.created_at.isoformat(timespec="seconds")
+                "created_at": settlement.created_at.isoformat(timespec="microseconds")
             }
             settlements_data.append(settlement_data)
 
