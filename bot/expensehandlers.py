@@ -101,14 +101,60 @@ def register_expense_handlers(bot):
             if group is None:
                 bot.send_message(chat_id, "No group associated with this chat.")
                 return
-        
+            
+            # Ask user to specify a username
+            msg = bot.reply_to(message, "Please reply with the username of the person who paid the expense (format: @username)")
+            bot.register_next_step_handler(msg, process_username_selection, group)
+            
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
-        
-        msg = bot.reply_to(message, "Please reply this in the format:\n\n@[username of expense payer]" +
-        "\n[expense name]\n[expense amt]\n@[username1] [split amt 1(optional)]\n...\n\n" +
-        "E.g. if Aayush paid $12 total, and Ben owes him $3 and David owes him $5, enter the following:\n\n@aayush\nLunch\n12\n@ben 3\n@david 5")
-        bot.register_next_step_handler(msg, process_expense_behalf_reply, group)
+    
+    def process_username_selection(message, group):
+        try:
+            chat_id = message.chat.id
+            input_text = message.text.strip()
+            
+            # Parse the username from the input
+            username_match = re.match(r'@(\w+)', input_text)
+            if not username_match:
+                bot.send_message(chat_id, "Invalid format. Please use @username")
+                return
+            
+            username = username_match.group(1)
+            
+            # Get the user by username
+            paid_by_user = User.fetch_from_db_by_username(username)
+            
+            if not paid_by_user:
+                bot.send_message(chat_id, f"User @{username} not found.")
+                return
+            
+            # Get group members and check if the user is in the group
+            group_members_dict = Group.fetch_group_members_dict(group)
+            if not group_members_dict.get(paid_by_user.uuid):
+                bot.send_message(chat_id, f"User @{username} is not in the group! They must join the group first.")
+                return
+            
+            # Create Mini App URL with necessary parameters
+            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp={group.group_id}__{paid_by_user.uuid}"
+            
+            # Create inline keyboard with Mini App button
+            keyboard = InlineKeyboardMarkup()
+            web_app_button = InlineKeyboardButton(
+                text=f"Add Expense for @{username}",
+                url=mini_app_url
+            )
+            keyboard.add(web_app_button)
+            
+            # Send message with Mini App button
+            bot.send_message(
+                chat_id,
+                f"Click the button below to add an expense on behalf of @{username}:",
+                reply_markup=keyboard
+            )
+            
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
     def process_expense_behalf_reply(message, group):
         try:
@@ -123,8 +169,6 @@ def register_expense_handlers(bot):
             if len(lines) < 3:
                 raise Exception("Please follow the format given!")
 
-            lines = input_text.strip().split('\n')
-
             first_line = lines[0]
             paid_by_username_match = re.match(r'@(\w+)', first_line.strip())
 
@@ -133,19 +177,19 @@ def register_expense_handlers(bot):
             
             username = paid_by_username_match.group(1)
 
-            group_members_dict = Group.fetch_group_members_dict(group)
             paid_by_user = User.fetch_from_db_by_username(username)
-
-            if not paid_by_user or not group_members_dict.get(paid_by_user.uuid):
-                bot.reply_to(message, "Expense payer tagged is not in the group!")
-                return
+            if not paid_by_user:
+                raise Exception(f"User @{username} not found.")
+                
+            group_members_dict = Group.fetch_group_members_dict(group)
+            if not group_members_dict.get(paid_by_user.uuid):
+                raise Exception(f"User @{username} is not in the group! They must join the group first.")
             
             process_add_expense(group, paid_by_user, '\n'.join(lines[1:]))
-            bot.send_message(chat_id, "Expense added successfully on behalf.")
+            bot.send_message(chat_id, f"Expense added successfully on behalf of @{username}.")
 
         except Exception as e:
-            bot.send_message(chat_id, f"{e}")
-
+            bot.send_message(chat_id, f"Error: {e}")
 
     @bot.message_handler(commands=['show_expenses'])
     def show_expenses(message):
