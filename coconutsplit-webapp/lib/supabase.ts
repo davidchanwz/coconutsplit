@@ -129,16 +129,22 @@ export class SupabaseService {
       .single();
 
     if (expenseError) throw expenseError;
-    const splitsWithExpenseId = splits.map(split => ({
+    
+    // Filter out splits where the payer is also the one being charged
+    const validSplits = splits.filter(split => split.user_id !== expense.paid_by);
+    const splitsWithExpenseId = validSplits.map(split => ({
       ...split,
       expense_id: expenseData.expense_id
     }));
 
-    const { error: splitsError } = await supabase
-      .from('expense_splits')
-      .insert(splitsWithExpenseId);
+    // Only insert if there are valid splits
+    if (splitsWithExpenseId.length > 0) {
+      const { error: splitsError } = await supabase
+        .from('expense_splits')
+        .insert(splitsWithExpenseId);
 
-    if (splitsError) throw splitsError;
+      if (splitsError) throw splitsError;
+    }
 
     // Create debt records for each split
     const debtUpdates: DebtUpdate[] = [];
