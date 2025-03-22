@@ -86,6 +86,11 @@ export default function SettleUp() {
 
   // Helper function to simplify debts to match Python implementation
   const simplifyDebts = (balances: UserBalance): SimplifiedDebt[] => {
+    if (!members || members.length === 0) {
+      console.log("No members available for simplifyDebts");
+      return [];
+    }
+    
     const userMap = new Map<string, User>();
     members.forEach(member => userMap.set(member.uuid, member));
     
@@ -101,9 +106,17 @@ export default function SettleUp() {
       }
     }
     
-    // Sort by amount (ascending)
+    if (creditors.length === 0 || debtors.length === 0) {
+      console.log("No creditors or debtors found");
+      return [];
+    }
+    
+    // Sort by amount (ascending) - so we can pop the largest values from the end
     creditors.sort((a, b) => a[1] - b[1]);
     debtors.sort((a, b) => a[1] - b[1]);
+    
+    console.log("Sorted creditors:", creditors);
+    console.log("Sorted debtors:", debtors);
     
     const simplified: SimplifiedDebt[] = [];
     
@@ -116,12 +129,17 @@ export default function SettleUp() {
       const amount = Math.min(creditAmount, debtAmount);
       
       if (amount > 0 && userMap.has(debtorId) && userMap.has(creditorId)) {
-        // Record this transaction if we have both users
-        simplified.push({
-          from: userMap.get(debtorId)!,
-          to: userMap.get(creditorId)!,
-          amount: amount
-        });
+        const fromUser = userMap.get(debtorId);
+        const toUser = userMap.get(creditorId);
+        
+        if (fromUser && toUser) {
+          // Record this transaction if we have both users
+          simplified.push({
+            from: fromUser,
+            to: toUser,
+            amount: parseFloat(amount.toFixed(2)) // Ensure we have clean numbers
+          });
+        }
       }
       
       // Adjust the remaining balances
@@ -138,6 +156,7 @@ export default function SettleUp() {
       }
     }
     
+    console.log("Simplified debts result:", simplified);
     return simplified;
   };
 
@@ -157,9 +176,20 @@ export default function SettleUp() {
         // Fetch all debts for the group
         const debtsData = await SupabaseService.getGroupDebts(groupId);
         
+        console.log("Raw debts data:", debtsData); // Add this for debugging
+        
+        if (debtsData.length === 0) {
+          setDebts([]);
+          setLoading(false);
+          return;
+        }
+        
         // Calculate balances and simplify debts (matching Python implementation)
         const balances = calculateUserBalances(debtsData);
+        console.log("Calculated balances:", balances); // Add this for debugging
+        
         const simplifiedDebts = simplifyDebts(balances);
+        console.log("Simplified debts:", simplifiedDebts); // Add this for debugging
         
         // Update state with simplified debts
         setDebts(simplifiedDebts);
@@ -223,6 +253,9 @@ export default function SettleUp() {
     );
   }
 
+  // Debug information for component render
+  console.log("Rendering component with debts:", debts);
+
   return (
     <main className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-8 text-white">Settle Up</h1>
@@ -236,7 +269,7 @@ export default function SettleUp() {
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4 text-white">Outstanding Debts</h2>
         
-        {debts.length === 0 ? (
+        {!debts || debts.length === 0 ? (
           <div className="p-4 bg-gray-800 border border-gray-700 rounded-md text-gray-300">
             No outstanding debts found.
           </div>
