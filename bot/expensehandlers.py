@@ -42,8 +42,8 @@ def register_expense_handlers(bot):
                 bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
                 return
             
-            # Create Mini App URL with necessary parameters
-            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplitHome?startapp={group.group_id}__{user.uuid}"
+            # Create Mini App URL with only group_id parameter
+            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplitHome?startapp={group.group_id}"
             
             # Create inline keyboard with Mini App button
             keyboard = InlineKeyboardMarkup()
@@ -83,8 +83,8 @@ def register_expense_handlers(bot):
                 bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
                 return
             
-            # Create Mini App URL with necessary parameters using & as delimiter
-            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp={group.group_id}__{user.uuid}"
+            # Create Mini App URL with only group_id parameter
+            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp={group.group_id}"
             
             # Create inline keyboard with Mini App button
             keyboard = InlineKeyboardMarkup()
@@ -174,8 +174,8 @@ def register_expense_handlers(bot):
                 bot.send_message(chat_id, f"User @{username} is not in the group! They must join the group first.")
                 return
             
-            # Create Mini App URL with necessary parameters
-            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp={group.group_id}__{paid_by_user.uuid}"
+            # Create Mini App URL with only group_id parameter
+            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp={group.group_id}"
             
             # Create inline keyboard with Mini App button
             keyboard = InlineKeyboardMarkup()

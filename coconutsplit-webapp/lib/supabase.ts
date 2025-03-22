@@ -255,6 +255,21 @@ export class SupabaseService {
     return data;
   }
 
+  static async getUserByTelegramId(telegramId: string): Promise<User | null> {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', telegramId)  // Changed from 'telegram_id' to 'user_id' to match the Python code
+      .single();
+
+    if (error) {
+      console.error("Error fetching user by Telegram ID:", error);
+      return null;
+    }
+    
+    return data;
+  }
+
   static async getGroupDebts(groupId: string): Promise<SimplifiedDebt[]> {
     // Get all debts for the group
     const { data: debts, error: debtsError } = await supabase

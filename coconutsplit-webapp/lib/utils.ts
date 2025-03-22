@@ -4,7 +4,6 @@ import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
 
 export interface QueryParams {
   group_id?: string;
-  user_id?: string;
 }
 
 // Create a safe version that won't execute during SSR
@@ -26,11 +25,11 @@ export function parseQueryParams(): QueryParams {
     console.log(lp);
     if (!lp) return {};
     
-    const [group_id, user_id] = lp.split("__");
+    // Now we only need the group_id from the launch params
+    const group_id = lp;
     
     parseQueryParamsCache = {
       group_id: group_id || undefined,
-      user_id: user_id || undefined,
     };
     
     return parseQueryParamsCache;
@@ -49,7 +48,31 @@ export function buildQueryString(params: QueryParams): string {
   const searchParams = new URLSearchParams();
 
   if (params.group_id) searchParams.append("group_id", params.group_id);
-  if (params.user_id) searchParams.append("user_id", params.user_id);
 
   return searchParams.toString();
+}
+
+/**
+ * Gets the Telegram user ID from the launch parameters
+ * Returns undefined if running in SSR or if user ID is not available
+ */
+export function getTelegramUserId(): string | undefined {
+  // Early return during SSR
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+  
+  try {
+    const launchParams = retrieveLaunchParams();
+    
+    // Get user ID from tgWebAppData.user.id
+    if (launchParams.tgWebAppData?.user?.id) {
+      return launchParams.tgWebAppData.user.id.toString();
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.error("Error getting Telegram user ID:", error);
+    return undefined;
+  }
 }

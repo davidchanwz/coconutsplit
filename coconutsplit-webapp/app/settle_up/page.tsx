@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { SupabaseService, User } from '../../lib/supabase';
-import { parseQueryParams } from '../../lib/utils';
+import { parseQueryParams, getTelegramUserId } from '../../lib/utils';
 import Link from 'next/link';
 import { init, backButton } from "@telegram-apps/sdk";
 
@@ -19,7 +19,6 @@ interface UserBalance {
 export default function SettleUp() {
   const params = parseQueryParams();
   const groupId = params.group_id;
-  const userId = params.user_id;
   const [members, setMembers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [debts, setDebts] = useState<SimplifiedDebt[]>([]);
@@ -165,14 +164,35 @@ export default function SettleUp() {
       if (!groupId) return;
 
       try {
+        // Get the Telegram user ID using our utility function
+        const telegramUserId = getTelegramUserId();
+        
+        if (!telegramUserId) {
+          setError('Unable to identify user from Telegram');
+          setLoading(false);
+          return;
+        }
+
+        // Load user data
+        const userData = await SupabaseService.getUserByTelegramId(telegramUserId);
+        if (!userData) {
+          setError('User not found. Please ensure you have joined the group.');
+          setLoading(false);
+          return;
+        }
+        setCurrentUser(userData);
+
         // First fetch members and wait for the result
         const membersData = await SupabaseService.getGroupMembers(groupId);
         console.log("Fetched members:", membersData);
         setMembers(membersData);
 
-        if (userId) {
-          const userData = await SupabaseService.getUser(userId);
-          setCurrentUser(userData);
+        // Verify the user is a member of this group
+        const isMember = membersData.some(member => member.uuid === userData.uuid);
+        if (!isMember) {
+          setError('You are not a member of this group.');
+          setLoading(false);
+          return;
         }
 
         // Then fetch debts after we have members
@@ -216,7 +236,7 @@ export default function SettleUp() {
     }
 
     fetchData();
-  }, [groupId, userId]);
+  }, [groupId]);
 
   const toggleDebtSelection = (debtId: string) => {
     setSelectedDebts(prev => ({

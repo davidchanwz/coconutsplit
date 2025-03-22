@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SupabaseService, Expense, User } from '../lib/supabase';
-import { parseQueryParams } from '../lib/utils';
+import { parseQueryParams, getTelegramUserId } from '../lib/utils';
 import Link from 'next/link';
 
 export default function Home() {
@@ -14,16 +14,44 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       if (!groupId) return;
 
       try {
+        // Get the Telegram user ID using our utility function
+        const telegramUserId = getTelegramUserId();
+        
+        if (!telegramUserId) {
+          setError('Unable to identify user from Telegram');
+          setLoading(false);
+          return;
+        }
+
+        // Load user data
+        const userData = await SupabaseService.getUserByTelegramId(telegramUserId);
+        if (!userData) {
+          setError('User not found. Please ensure you have joined the group.');
+          setLoading(false);
+          return;
+        }
+        setCurrentUser(userData);
+
+        // Load group data
         const [expensesData, membersData] = await Promise.all([
           SupabaseService.getExpenses(groupId),
           SupabaseService.getGroupMembers(groupId)
         ]);
+
+        // Verify the user is a member of this group
+        const isMember = membersData.some(member => member.uuid === userData.uuid);
+        if (!isMember) {
+          setError('You are not a member of this group.');
+          setLoading(false);
+          return;
+        }
 
         setExpenses(expensesData);
         setMembers(membersData);
