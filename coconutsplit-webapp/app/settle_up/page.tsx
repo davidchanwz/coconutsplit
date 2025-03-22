@@ -84,27 +84,33 @@ export default function SettleUp() {
     return balances;
   };
 
-  // Helper function to simplify debts like in the Python code
+  // Helper function to simplify debts to match Python implementation
   const simplifyDebts = (balances: UserBalance): SimplifiedDebt[] => {
+    const userMap = new Map<string, User>();
+    members.forEach(member => userMap.set(member.uuid, member));
+    
+    // Split users into creditors (positive balance) and debtors (negative balance)
     const creditors: [string, number][] = [];
     const debtors: [string, number][] = [];
     
-    // Split users into creditors (positive balance) and debtors (negative balance)
     for (const [userId, balance] of Object.entries(balances)) {
       if (balance > 0) {
         creditors.push([userId, balance]); // Users who are owed money
       } else if (balance < 0) {
-        debtors.push([userId, -balance]); // Users who owe money
+        debtors.push([userId, -balance]); // Users who owe money (use positive amount)
       }
     }
     
+    // Sort by amount (ascending)
+    creditors.sort((a, b) => a[1] - b[1]);
+    debtors.sort((a, b) => a[1] - b[1]);
+    
     const simplified: SimplifiedDebt[] = [];
-    const userMap = new Map<string, User>();
-    members.forEach(member => userMap.set(member.uuid, member));
     
     while (creditors.length > 0 && debtors.length > 0) {
-      const [creditorId, creditAmount] = creditors.pop()!;
-      const [debtorId, debtAmount] = debtors.pop()!;
+      // Get the largest creditor and debtor
+      const [creditorId, creditAmount] = creditors[creditors.length - 1];
+      const [debtorId, debtAmount] = debtors[debtors.length - 1];
       
       // Calculate the minimum of what the debtor owes and what the creditor is owed
       const amount = Math.min(creditAmount, debtAmount);
@@ -118,18 +124,17 @@ export default function SettleUp() {
         });
       }
       
-      // Adjust the remaining balances and push back if needed
-      const remainingCredit = creditAmount - amount;
-      const remainingDebt = debtAmount - amount;
-      
-      // If there's remaining debt, push the debtor back
-      if (remainingDebt > 0) {
-        debtors.push([debtorId, remainingDebt]);
+      // Adjust the remaining balances
+      if (creditAmount === amount) {
+        creditors.pop(); // Remove this creditor if fully paid
+      } else {
+        creditors[creditors.length - 1][1] -= amount; // Reduce the credit amount
       }
       
-      // If there's remaining credit, push the creditor back
-      if (remainingCredit > 0) {
-        creditors.push([creditorId, remainingCredit]);
+      if (debtAmount === amount) {
+        debtors.pop(); // Remove this debtor if fully paid
+      } else {
+        debtors[debtors.length - 1][1] -= amount; // Reduce the debt amount
       }
     }
     
@@ -152,7 +157,7 @@ export default function SettleUp() {
         // Fetch all debts for the group
         const debtsData = await SupabaseService.getGroupDebts(groupId);
         
-        // Calculate balances and simplify debts
+        // Calculate balances and simplify debts (matching Python implementation)
         const balances = calculateUserBalances(debtsData);
         const simplifiedDebts = simplifyDebts(balances);
         
