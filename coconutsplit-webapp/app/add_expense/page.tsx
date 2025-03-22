@@ -18,6 +18,7 @@ export default function AddExpense() {
     splits: [] as { userId: string; amount: string }[]
   });
   const [splitType, setSplitType] = useState<'equal' | 'custom'>('equal');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -190,8 +191,10 @@ export default function AddExpense() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!groupId || !currentUser) return;
+    if (!groupId || !currentUser || isSubmitting) return;
 
+    setIsSubmitting(true);
+    
     try {
       const expenseAmount = parseFloat(formData.amount);
       
@@ -253,6 +256,7 @@ export default function AddExpense() {
     } catch (err) {
       setError('Failed to add expense');
       console.error(err);
+      setIsSubmitting(false);
     }
   };
 
@@ -434,9 +438,14 @@ export default function AddExpense() {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+          disabled={isSubmitting}
+          className={`w-full ${
+            isSubmitting 
+              ? 'bg-blue-500 cursor-not-allowed' 
+              : 'bg-blue-600 hover:bg-blue-700'
+          } text-white py-2 px-4 rounded-md transition-colors`}
         >
-          Add Expense
+          {isSubmitting ? 'Adding Expense...' : 'Add Expense'}
         </button>
       </form>
     </main>
