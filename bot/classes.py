@@ -23,7 +23,7 @@ class User:
             "user_id": self.user_id,  # The Telegram user ID (integer)
             "username": self.username,
             "currency": self.currency,
-            "created_at": self.created_at.isoformat(timespec="seconds") # Seralise datetime
+            "created_at": self.created_at.isoformat(timespec="microseconds"), # Seralise datetime
         }
         return supa.table('users').insert(user_data).execute()
 
@@ -105,13 +105,14 @@ class User:
             return {}
 
 class Group:
-    def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None, reminders = False):
+    def __init__(self, group_name: str, created_by: User, chat_id: int, group_id: str = None, reminders = False, message_id = None):
         self.group_id = group_id or str(uuid.uuid4())  # Generate UUID if not provided
         self.group_name = group_name
         self.created_by = created_by
         self.chat_id = chat_id
         self.created_at = datetime.now()
         self.reminders = reminders
+        self.message_id = message_id  # Initialize with provided message_id or None
 
         # Add logging to check UUID generation and its type
         logging.info(f"Generated group_id: {self.group_id}")
@@ -131,9 +132,10 @@ class Group:
             "group_name": self.group_name,
             "created_by": self.created_by.uuid,
             "chat_id": self.chat_id,  # Store the chat ID in the database
-            "created_at": self.created_at.isoformat(timespec="seconds")  # Serialize datetime to ISO 8601 string
+            "created_at": self.created_at.isoformat(timespec="microseconds"),  # Serialize datetime to ISO 8601 string,
+            "message_id": self.message_id
         }
-        return supa.table('groups').insert(group_data).execute()
+        return supa.table('groups').upsert(group_data, on_conflict='group_id').execute()
 
     def add_member(self, user: User):
         """Add a user to the group and save to database."""
@@ -141,7 +143,7 @@ class Group:
             member_data = {
                 "group_id": self.group_id,
                 "user_uuid": user.uuid,
-                "joined_at": datetime.now().isoformat(timespec="seconds")
+                "joined_at": datetime.now().isoformat(timespec="microseconds")
             }
 
             existing_members = self.fetch_all_members()
@@ -331,7 +333,8 @@ class Group:
                         group_name=group_data['group_name'],
                         created_by=created_by_user,
                         chat_id=group_data['chat_id'],
-                        reminders=True
+                        reminders=True,
+                        message_id=group_data.get('message_id')  # Load message_id from database
                     )
                     groups.append(group)
                     
@@ -414,7 +417,8 @@ class Group:
                     group_name=group_data['group_name'],
                     created_by=created_by_user,
                     chat_id=group_data['chat_id'],
-                    reminders=group_data['reminders']
+                    reminders=group_data['reminders'],
+                    message_id=group_data.get('message_id')  
                 )
                 return group_instance
             else:
@@ -441,7 +445,7 @@ class Expense:
             "paid_by": self.paid_by.uuid,
             "amount": self.amount,
             "description": self.description,
-            "created_at": self.created_at.isoformat(timespec="seconds")
+            "created_at": self.created_at.isoformat(timespec="microseconds")
         }
         return supa.table('expenses').insert(expense_data).execute()
 
@@ -549,7 +553,7 @@ class Settlement:
             "to_user": self.to_user.uuid,
             "amount": self.amount,
             "group_id": self.group.group_id,
-            "created_at": self.created_at.isoformat(timespec="seconds")
+            "created_at": self.created_at.isoformat(timespec="microseconds")
         }
         return supa.table('settlements').insert(settlement_data).execute()
     
@@ -569,7 +573,7 @@ class Settlement:
                 "to_user": settlement.to_user.uuid,
                 "amount": settlement.amount,
                 "group_id": settlement.group.group_id,
-                "created_at": settlement.created_at.isoformat(timespec="seconds")
+                "created_at": settlement.created_at.isoformat(timespec="microseconds")
             }
             settlements_data.append(settlement_data)
 

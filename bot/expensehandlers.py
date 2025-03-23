@@ -4,12 +4,65 @@ from collections import defaultdict
 from utils import simplify_debts, calculate_user_balances, process_add_expense, get_display_debts_string, get_display_debts_string_with_at
 
 import re
+import json
 from classes import User, Group, Expense
+from telebot.types import (
+    ReplyKeyboardMarkup, 
+    KeyboardButton, 
+    WebAppInfo,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton
+)
+import dotenv
+import os
+
+dotenv.load_dotenv()
+MINIAPP_UNIQUE_IDENTIFIER = os.getenv("MINIAPP_UNIQUE_IDENTIFIER")
+
 
 
 def register_expense_handlers(bot):
     """Register all command handlers for the bot."""
 
+    @bot.message_handler(commands=['split'])
+    def launch_coconut_split_app(message):
+        try:
+            chat_id = message.chat.id
+            user_id = message.from_user.id
+            # Fetch the user and group from the database
+            user = User.fetch_from_db_by_user_id(user_id)
+            group = Group.fetch_from_db_by_chat(chat_id)
+
+            if group is None:
+                bot.send_message(chat_id, "No group associated with this chat.")
+                return
+            
+            group_members_dict = Group.fetch_group_members_dict(group)
+
+            if not user or not group_members_dict.get(user.uuid):
+                bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
+                return
+            
+            # Create Mini App URL with only group_id parameter
+            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={group.group_id}"
+            
+            # Create inline keyboard with Mini App button
+            keyboard = InlineKeyboardMarkup()
+            web_app_button = InlineKeyboardButton(
+                text="Add Expense",
+                url=mini_app_url
+            )
+            keyboard.add(web_app_button)
+            
+            # Send message with Mini App button
+            bot.send_message(
+                chat_id,
+                "Click the button below to open Coconut Split:",
+                reply_markup=keyboard
+            )
+            
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
     # Step 1: Start the /add_expense process
     @bot.message_handler(commands=['add_expense'])
@@ -31,16 +84,113 @@ def register_expense_handlers(bot):
                 bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
                 return
             
+            # Create Mini App URL with only group_id parameter
+            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp={group.group_id}"
+            
+            # Create inline keyboard with Mini App button
+            keyboard = InlineKeyboardMarkup()
+            web_app_button = InlineKeyboardButton(
+                text="Add Expense",
+                url=mini_app_url
+            )
+            keyboard.add(web_app_button)
+            
+            # Send message with Mini App button
+            bot.send_message(
+                chat_id,
+                "Click the button below to add an expense:",
+                reply_markup=keyboard
+            )
+            
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
-
-        # Step 2: Ask for the expense details (name, amount, tagged users)
-        msg = bot.reply_to(message, "Please reply this in the format:\n\n[expense name]\n[expense amt]\n" +
-        "@[username1] [split amt 1(optional)]\n...\n\n" +
-        "E.g. if you paid $25 total, and Jensen owes you $8 and David owes you $7, enter the following:\n\nDinner\n25\n@jensen 8\n@david 7")
-        
-        # Set up a handler to wait for the user's reply
-        bot.register_next_step_handler(msg, process_expense_reply, group, user)
+            
+    # Handler for web_app_data from Mini Apps
+    @bot.message_handler(content_types=['web_app_data'])
+    def handle_web_app_data(message):
+        try:
+            chat_id = message.chat.id
+            user_id = message.from_user.id
+            
+            # Get web_app_data from the message
+            web_app_data = message.web_app_data.data
+            
+            # Parse the JSON data
+            data = json.loads(web_app_data)
+            
+            # Get the action type
+            action = data.get('action')
+            
+            if action == 'add_expense':
+                # Handle add_expense data
+                handle_add_expense_data(message, data)
+            elif action == 'settle_up':
+                # Handle settle_up data
+                handle_settle_up_data(message, data)
+            else:
+                bot.send_message(chat_id, "Unknown action received from the mini app.")
+                
+        except Exception as e:
+            bot.send_message(chat_id, f"Error processing web app data: {e}")
+            
+    def handle_add_expense_data(message, data):
+        """Process web_app_data for add_expense action"""
+        try:
+            chat_id = message.chat.id
+            description = data.get('description')
+            amount = data.get('amount')
+            payer = data.get('payer')
+            splits = data.get('splits', [])
+            
+            # Format the splits for display
+            splits_text = ""
+            for split in splits:
+                username = split.get('username')
+                split_amount = split.get('amount')
+                splits_text += f"\n- @{username}: ${split_amount}"
+            
+            # Send a message to the group with the expense details
+            notification_text = (
+                f"💰 *New Expense Added*\n"
+                f"*Description:* {description}\n"
+                f"*Amount:* ${amount}\n"
+                f"*Paid by:* @{payer}\n"
+                f"*Split with:*{splits_text}"
+            )
+            
+            bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+            
+        except Exception as e:
+            bot.send_message(chat_id, f"Error processing expense data: {e}")
+            
+    def handle_settle_up_data(message, data):
+        """Process web_app_data for settle_up action"""
+        try:
+            chat_id = message.chat.id
+            settlements = data.get('settlements', [])
+            
+            if not settlements:
+                bot.send_message(chat_id, "No settlements were made.")
+                return
+            
+            # Format the settlement details for display
+            settlements_text = ""
+            for settlement in settlements:
+                from_user = settlement.get('from')
+                to_user = settlement.get('to')
+                amount = settlement.get('amount')
+                settlements_text += f"\n- @{from_user} → @{to_user}: ${amount}"
+            
+            # Send a message to the group with the settlement details
+            notification_text = (
+                f"✅ *Settlements Completed*\n"
+                f"The following debts have been settled:{settlements_text}"
+            )
+            
+            bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+            
+        except Exception as e:
+            bot.send_message(chat_id, f"Error processing settlement data: {e}")
 
     @bot.message_handler(commands=['delete_latest_expense'])
     def delete_latest_expense(message):
@@ -78,14 +228,60 @@ def register_expense_handlers(bot):
             if group is None:
                 bot.send_message(chat_id, "No group associated with this chat.")
                 return
-        
+            
+            # Ask user to specify a username
+            msg = bot.reply_to(message, "Please reply with the username of the person who paid the expense (format: @username)")
+            bot.register_next_step_handler(msg, process_username_selection, group)
+            
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
-        
-        msg = bot.reply_to(message, "Please reply this in the format:\n\n@[username of expense payer]" +
-        "\n[expense name]\n[expense amt]\n@[username1] [split amt 1(optional)]\n...\n\n" +
-        "E.g. if Aayush paid $12 total, and Ben owes him $3 and David owes him $5, enter the following:\n\n@aayush\nLunch\n12\n@ben 3\n@david 5")
-        bot.register_next_step_handler(msg, process_expense_behalf_reply, group)
+    
+    def process_username_selection(message, group):
+        try:
+            chat_id = message.chat.id
+            input_text = message.text.strip()
+            
+            # Parse the username from the input
+            username_match = re.match(r'@(\w+)', input_text)
+            if not username_match:
+                bot.send_message(chat_id, "Invalid format. Please use @username")
+                return
+            
+            username = username_match.group(1)
+            
+            # Get the user by username
+            paid_by_user = User.fetch_from_db_by_username(username)
+            
+            if not paid_by_user:
+                bot.send_message(chat_id, f"User @{username} not found.")
+                return
+            
+            # Get group members and check if the user is in the group
+            group_members_dict = Group.fetch_group_members_dict(group)
+            if not group_members_dict.get(paid_by_user.uuid):
+                bot.send_message(chat_id, f"User @{username} is not in the group! They must join the group first.")
+                return
+            
+            # Create Mini App URL with only group_id parameter
+            mini_app_url = f"https://t.me/{bot.get_me().username}/add_expense?startapp={group.group_id}"
+            
+            # Create inline keyboard with Mini App button
+            keyboard = InlineKeyboardMarkup()
+            web_app_button = InlineKeyboardButton(
+                text=f"Add Expense for @{username}",
+                url=mini_app_url
+            )
+            keyboard.add(web_app_button)
+            
+            # Send message with Mini App button
+            bot.send_message(
+                chat_id,
+                f"Click the button below to add an expense on behalf of @{username}:",
+                reply_markup=keyboard
+            )
+            
+        except Exception as e:
+            bot.send_message(chat_id, f"{e}")
 
     def process_expense_behalf_reply(message, group):
         try:
@@ -100,8 +296,6 @@ def register_expense_handlers(bot):
             if len(lines) < 3:
                 raise Exception("Please follow the format given!")
 
-            lines = input_text.strip().split('\n')
-
             first_line = lines[0]
             paid_by_username_match = re.match(r'@(\w+)', first_line.strip())
 
@@ -110,19 +304,19 @@ def register_expense_handlers(bot):
             
             username = paid_by_username_match.group(1)
 
-            group_members_dict = Group.fetch_group_members_dict(group)
             paid_by_user = User.fetch_from_db_by_username(username)
-
-            if not paid_by_user or not group_members_dict.get(paid_by_user.uuid):
-                bot.reply_to(message, "Expense payer tagged is not in the group!")
-                return
+            if not paid_by_user:
+                raise Exception(f"User @{username} not found.")
+                
+            group_members_dict = Group.fetch_group_members_dict(group)
+            if not group_members_dict.get(paid_by_user.uuid):
+                raise Exception(f"User @{username} is not in the group! They must join the group first.")
             
             process_add_expense(group, paid_by_user, '\n'.join(lines[1:]))
-            bot.send_message(chat_id, "Expense added successfully on behalf.")
+            bot.send_message(chat_id, f"Expense added successfully on behalf of @{username}.")
 
         except Exception as e:
-            bot.send_message(chat_id, f"{e}")
-
+            bot.send_message(chat_id, f"Error: {e}")
 
     @bot.message_handler(commands=['show_expenses'])
     def show_expenses(message):

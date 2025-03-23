@@ -4,6 +4,7 @@ from telebot import types
 import requests
 from classes import Group, User, Expense, Settlement
 import uuid
+import logging
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -142,7 +143,12 @@ def register_group_handlers(bot):
             join_button = types.InlineKeyboardMarkup()
             join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group_id}"))
 
-            bot.send_message(message.chat.id, f"Group '{group_name}' has been created! Click below to join the group.", reply_markup=join_button)
+            # Send message and store its ID
+            sent_message = bot.send_message(message.chat.id, f"Group '{group_name}' has been created! Click below to join the group.", reply_markup=join_button)
+            
+            # Store the message ID in the group data and save to database
+            group.message_id = sent_message.message_id
+            group.save_to_db()  # Save the updated group with message ID
 
         except Exception as e:
             bot.send_message(message.chat.id, f"{e}")
@@ -217,10 +223,30 @@ def register_group_handlers(bot):
                 if not group.check_user_in_group(user): 
                     group.add_member(user)
                     bot.answer_callback_query(call.id, f"You have joined '{group.group_name}'!")
-                    bot.send_message(call.message.chat.id, f"{user.username} has joined '{group.group_name}'!")
+                    
+                    # Update the original message with the new member
+                    members = group.fetch_all_members()
+                    member_list = "\n".join([f"- {member.username}" for member in members])
+                    updated_text = f"Group '{group.group_name}' has been created!\n\nMembers:\n{member_list}"
+                    
+                    # Create new inline keyboard
+                    join_button = types.InlineKeyboardMarkup()
+                    join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group.group_id}"))
+                    
+                    try:
+                        # Edit the original message
+                        bot.edit_message_text(
+                            chat_id=chat_id,
+                            message_id=group.message_id,
+                            text=updated_text,
+                            reply_markup=join_button
+                        )
+                    except Exception as e:
+                        # If message editing fails, send a new message
+                        bot.send_message(chat_id, updated_text, reply_markup=join_button)
+                        logging.error(f"Failed to edit message: {e}")
                 else:
                     bot.answer_callback_query(call.id, f"You are already in {group.group_name}!")
-                    bot.send_message(call.message.chat.id, f"{user.username} is already in '{group.group_name}'!")
 
             else:
                 bot.answer_callback_query(call.id, "Group not found.")

@@ -5,12 +5,12 @@ FROM python:3.10.12
 WORKDIR /app
 
 # Copy all the files in the bot folder into the container
-COPY ./bot .
+ADD ./bot .
 
 # Copy the requirements file into the container
-COPY requirements.txt .
+ADD requirements.txt .
 
-COPY client.py .
+ADD client.py .
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r ./requirements.txt
