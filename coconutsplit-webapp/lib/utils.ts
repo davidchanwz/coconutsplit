@@ -1,6 +1,8 @@
 'use client';
 
 import { retrieveLaunchParams } from '@telegram-apps/sdk-react';
+import clsx, { ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export interface QueryParams {
   group_id?: string;
@@ -110,3 +112,7 @@ export async function sendNotificationToBot(data: any): Promise<boolean> {
     return false;
   }
 }
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+} 
