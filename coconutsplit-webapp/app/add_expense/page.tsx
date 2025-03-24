@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { parseQueryParams, getTelegramUserId, sendNotificationToBot } from "../../lib/utils";
+import {
+  parseQueryParams,
+  getTelegramUserId,
+  sendNotificationToBot,
+} from "../../lib/utils";
 import { SupabaseService, User } from "../../lib/supabase";
 import { init, backButton, mainButton } from "@telegram-apps/sdk";
 import Link from "next/link";
+
 
 interface ExpenseSplit {
   user_id: string;
@@ -128,24 +133,24 @@ export default function AddExpense() {
       const amountValue = parseFloat(amount);
       if (!isNaN(amountValue)) {
         const newSplits: { [key: string]: string } = {};
-        
+
         // Calculate fair individual amount
         const fairAmount = amountValue / members.length;
-        
+
         // Convert to cents to avoid floating point issues
         const totalCents = Math.round(amountValue * 100);
         const fairCents = Math.floor(fairAmount * 100);
         const baseCentsPerPerson = fairCents;
-        
+
         // Calculate how many cents to distribute
         const allocatedCents = baseCentsPerPerson * members.length;
         const remainingCents = totalCents - allocatedCents;
-        
+
         // First give everyone the base amount
-        members.forEach(member => {
+        members.forEach((member) => {
           newSplits[member.uuid] = (baseCentsPerPerson / 100).toFixed(2);
         });
-        
+
         // Distribute remaining cents randomly
         if (remainingCents > 0) {
           // Create array of indices and shuffle it
@@ -154,7 +159,7 @@ export default function AddExpense() {
             const j = Math.floor(Math.random() * (i + 1));
             [indices[i], indices[j]] = [indices[j], indices[i]];
           }
-          
+
           // Distribute each remaining cent
           for (let i = 0; i < remainingCents; i++) {
             const memberIdx = indices[i % indices.length];
@@ -163,7 +168,7 @@ export default function AddExpense() {
             newSplits[member.uuid] = ((currentCents + 1) / 100).toFixed(2);
           }
         }
-        
+
         setSplits(newSplits);
       }
     }
@@ -177,24 +182,24 @@ export default function AddExpense() {
       const amountValue = parseFloat(amount);
       if (!isNaN(amountValue)) {
         const newSplits: { [key: string]: string } = {};
-        
+
         // Calculate fair individual amount
         const fairAmount = amountValue / members.length;
-        
+
         // Convert to cents to avoid floating point issues
         const totalCents = Math.round(amountValue * 100);
         const fairCents = Math.floor(fairAmount * 100);
         const baseCentsPerPerson = fairCents;
-        
+
         // Calculate how many cents to distribute
         const allocatedCents = baseCentsPerPerson * members.length;
         const remainingCents = totalCents - allocatedCents;
-        
+
         // First give everyone the base amount
-        members.forEach(member => {
+        members.forEach((member) => {
           newSplits[member.uuid] = (baseCentsPerPerson / 100).toFixed(2);
         });
-        
+
         // Distribute remaining cents randomly
         if (remainingCents > 0) {
           // Create array of indices and shuffle it
@@ -203,7 +208,7 @@ export default function AddExpense() {
             const j = Math.floor(Math.random() * (i + 1));
             [indices[i], indices[j]] = [indices[j], indices[i]];
           }
-          
+
           // Distribute each remaining cent
           for (let i = 0; i < remainingCents; i++) {
             const memberIdx = indices[i % indices.length];
@@ -212,7 +217,7 @@ export default function AddExpense() {
             newSplits[member.uuid] = ((currentCents + 1) / 100).toFixed(2);
           }
         }
-        
+
         setSplits(newSplits);
       }
     }
@@ -296,10 +301,10 @@ export default function AddExpense() {
 
       // Find the payer's username
       const payer = members.find((m) => m.uuid === paidBy);
-      
+
       // Get the chat ID from the group ID
       const chatId = await SupabaseService.getGroupChatId(groupId);
-      
+
       if (chatId) {
         // Send notification to the bot server API
         const notificationData = {
@@ -318,36 +323,36 @@ export default function AddExpense() {
               };
             }),
         };
-        
-        const apiUrl = process.env.NEXT_PUBLIC_BOT_API_URL || '';
-        const apiKey = process.env.NEXT_PUBLIC_BOT_API_KEY || '';
-        
+
+        const apiUrl = process.env.NEXT_PUBLIC_BOT_API_URL || "";
+        const apiKey = process.env.NEXT_PUBLIC_BOT_API_KEY || "";
+
         try {
           // Make direct API call with POST method
           const response = await fetch(`${apiUrl}/api/notify`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              'X-API-Key': apiKey,
+              "Content-Type": "application/json",
+              "X-API-Key": apiKey,
             },
             body: JSON.stringify(notificationData),
-            mode: 'cors',
-            credentials: 'omit'
+            mode: "cors",
+            credentials: "omit",
           });
-          
+
           if (!response.ok) {
-            console.warn('Notification failed, but expense was saved');
+            console.warn("Notification failed, but expense was saved");
           }
         } catch (notifyErr) {
           // Continue even if notification fails
-          console.warn('Failed to send notification, but expense was saved');
+          console.warn("Failed to send notification, but expense was saved");
         }
       }
-      
+
       // Redirect regardless of notification success
       window.location.href = `/?group_id=${groupId}`;
     } catch (err: any) {
-      console.error('Error in handleSubmit:', err);
+      console.error("Error in handleSubmit:", err);
       setError(err.message || "Failed to add expense");
       setSubmitting(false);
     }
@@ -480,7 +485,6 @@ export default function AddExpense() {
                 Custom
               </button>
             </div>
-
           </div>
 
           <div className="space-y-4">
