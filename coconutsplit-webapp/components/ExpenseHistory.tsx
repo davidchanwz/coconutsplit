@@ -23,7 +23,7 @@ export function ExpenseHistory({
 
   return (
     <>
-      <div className="flex items-center justify-center my-3">
+      <div className="flex items-left my-3 pl-4">
         <span className="text-stone-200 text-2xl margin-auto font-medium">
           History
         </span>

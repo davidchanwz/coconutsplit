@@ -221,8 +221,8 @@ export default function Home() {
 
   return (
     <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 bg-gray-900 min-h-screen">
-      <div className="mb-4 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-white">{groupName}</h1>
+      <div className="mb-4 sm:mb-8 pl-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Group: {groupName}</h1>
         {currentUser && (
           <div className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-base">
             Hello, {currentUser.username}

@@ -79,7 +79,8 @@ export default function SettleUp() {
 
   return (
     <main className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-white">Settle Up</h1>
+      <h1 className="text-3xl font-bold text-white">Settle Up</h1>
+      <div className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-base mb-8">Select the debts you want to settle</div>
 
       {localError && (
         <div className="mb-6 p-4 bg-red-900 border border-red-700 text-red-200 rounded">
@@ -115,7 +116,7 @@ export default function SettleUp() {
             : "bg-green-600 hover:bg-green-700"
             }`}
         >
-          {isSubmitting ? "Settling..." : "Settle Selected Debts"}
+          {isSubmitting ? "Settling..." : "Settle up"}
         </button>
       </div>
     </main>
