@@ -83,6 +83,7 @@ def register_group_handlers(bot):
         "/create_group - Create a new group\n"
         "/delete_group - Delete the existing group\n"
         "/join_group - Join the existing group\n"
+        "/toggle_reminders - Receive daily reminders for debt payments\n"
         # "/view_users - View all users in the group\n\n"
 
         # "💸 *Expense Management Commands:*\n"
