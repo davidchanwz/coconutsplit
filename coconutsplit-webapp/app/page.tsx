@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { init, backButton } from "@telegram-apps/sdk";
 import { SupabaseService, Expense, User, ExpenseSplit, SimplifiedDebt } from "../lib/supabase";
 import { parseQueryParams, getTelegramUserId } from "../lib/utils";
+import { calculateUserBalances, simplifyDebtsWithMembers } from "../lib/financial-utils";
 import Link from "next/link";
 import {
   Accordion,
@@ -45,6 +46,8 @@ export default function Home() {
   const [expenseSplits, setExpenseSplits] = useState<{
     [expenseId: string]: { splits: ExpenseSplit[]; loading: boolean };
   }>({});
+  const [shouldRefresh, setShouldRefresh] = useState<boolean>(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     try {
@@ -56,7 +59,7 @@ export default function Home() {
     } catch (error) {
       console.error("Failed to initialize Telegram SDK:", error);
     }
-  }, [])
+  }, []);
 
   // Format date for grouping in a timezone-safe way
   const formatDateForGrouping = (dateString: string): string => {
@@ -162,64 +165,106 @@ export default function Home() {
   }, [expenses, settlements]);
 
   useEffect(() => {
-    async function fetchData() {
-      if (!groupId) return;
-
-      try {
-        // Get the Telegram user ID using our utility function
-        const telegramUserId = getTelegramUserId();
-
-        if (!telegramUserId) {
-          setError("Unable to identify user from Telegram");
-          setLoading(false);
-          return;
-        }
-
-        // Load user data
-        const userData = await SupabaseService.getUserByTelegramId(
-          telegramUserId
-        );
-        if (!userData) {
-          setError("User not found. Please ensure you have joined the group.");
-          setLoading(false);
-          return;
-        }
-        setCurrentUser(userData);
-
-        // Load group data
-        const [expensesData, membersData, groupData, debtsData, settlementsData] = await Promise.all([
-          SupabaseService.getExpenses(groupId),
-          SupabaseService.getGroupMembers(groupId),
-          SupabaseService.getGroupDetails(groupId),
-          SupabaseService.getGroupDebts(groupId),
-          SupabaseService.getSettlements(groupId)
-        ]);
-
-        // Verify the user is a member of this group
-        const isMember = membersData.some(
-          (member) => member.uuid === userData.uuid
-        );
-        if (!isMember) {
-          setError("You are not a member of this group.");
-          setLoading(false);
-          return;
-        }
-
-        setExpenses(expensesData);
-        setSettlements(settlementsData);
-        setMembers(membersData);
-        setGroupName(groupData?.group_name || "Group Expenses");
-        setSimplifiedDebts(debtsData);
-      } catch (err) {
-        setError("Failed to load group data");
-        console.error(err);
-      } finally {
-        setLoading(false);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setShouldRefresh(true);
       }
-    }
+    };
 
-    fetchData();
+    const handleFocus = () => {
+      setShouldRefresh(true);
+    };
+
+    // Add event listeners for page visibility and focus
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    // Set up polling interval for data refresh (every 30 seconds)
+    pollingIntervalRef.current = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        setShouldRefresh(true);
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => {
+      // Clean up event listeners and interval
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const fetchGroupData = async () => {
+    if (!groupId) return;
+
+    try {
+      setLoading(true);
+
+      // Get the Telegram user ID using our utility function
+      const telegramUserId = getTelegramUserId();
+
+      if (!telegramUserId) {
+        setError("Unable to identify user from Telegram");
+        setLoading(false);
+        return;
+      }
+
+      // Load user data
+      const userData = await SupabaseService.getUserByTelegramId(telegramUserId);
+      if (!userData) {
+        setError("User not found. Please ensure you have joined the group.");
+        setLoading(false);
+        return;
+      }
+      setCurrentUser(userData);
+
+      // Load group data
+      const [expensesData, membersData, groupData, rawDebtsData, settlementsData] = await Promise.all([
+        SupabaseService.getExpenses(groupId),
+        SupabaseService.getGroupMembers(groupId),
+        SupabaseService.getGroupDetails(groupId),
+        SupabaseService.getGroupDebts(groupId),
+        SupabaseService.getSettlements(groupId)
+      ]);
+
+      // Verify the user is a member of this group
+      const isMember = membersData.some((member) => member.uuid === userData.uuid);
+      if (!isMember) {
+        setError("You are not a member of this group.");
+        setLoading(false);
+        return;
+      }
+
+      // Calculate balances and simplify debts using the utility functions
+      const balances = calculateUserBalances(rawDebtsData);
+      const simplifiedDebtsData = simplifyDebtsWithMembers(balances, membersData);
+
+      setExpenses(expensesData);
+      setSettlements(settlementsData);
+      setMembers(membersData);
+      setGroupName(groupData?.group_name || "Group Expenses");
+      setSimplifiedDebts(simplifiedDebtsData);
+    } catch (err) {
+      setError("Failed to load group data");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchGroupData();
   }, [groupId]);
+
+  useEffect(() => {
+    if (shouldRefresh) {
+      fetchGroupData().then(() => {
+        setShouldRefresh(false);
+      });
+    }
+  }, [shouldRefresh]);
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!groupId || isDeleting) return;
@@ -567,11 +612,6 @@ export default function Home() {
           </div>
         )}
       </div>
-
-      {expenses.length === 0 && (
-        <div className="text-center text-gray-400 mt-8 mb-16">
-        </div>
-      )}
 
       {/* Action buttons at the bottom of the page */}
       <div className="fixed bottom-0 left-0 right-0">
