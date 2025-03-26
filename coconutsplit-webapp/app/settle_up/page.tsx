@@ -11,7 +11,7 @@ import Link from "next/link";
 import { LoadingSpinner } from "../../components/LoadingSpinner";
 import { ErrorDisplay } from "../../components/ErrorDisplay";
 import { DebtList } from "../../components/DebtList";
-import { backButton } from '@telegram-apps/sdk-react';
+import { backButton } from "@telegram-apps/sdk-react";
 import { useGroupData } from "../../hooks/useGroupData";
 
 export default function SettleUp() {
@@ -81,7 +81,7 @@ export default function SettleUp() {
 
         await sendNotificationToBot(notificationData).catch(console.warn);
       }
-
+      backButton.hide();
       window.location.href = `/?group_id=${groupId}`;
     } catch (err) {
       console.error("Error in handleSettleUp:", err);
