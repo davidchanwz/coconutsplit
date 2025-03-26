@@ -34,7 +34,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
             
             group_members_dict = Group.fetch_group_members_dict(group)
@@ -75,7 +75,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
             
             group_members_dict = Group.fetch_group_members_dict(group)
@@ -199,7 +199,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
             
             group.delete_latest_expense()
@@ -226,7 +226,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
             
             # Ask user to specify a username
@@ -327,7 +327,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
 
             # Fetch expenses for the group (sorted by created_at automatically)
@@ -387,7 +387,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
 
             # Fetch all debts for the group
@@ -423,7 +423,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
             
             # Fetch all debts for the group
@@ -510,7 +510,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
 
             # Fetch all settlements for the group
@@ -554,7 +554,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             if group is None:
-                bot.send_message(chat_id, "No group associated with this chat.")
+                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
                 return
             
             group.delete_latest_settlement()
