@@ -37,7 +37,6 @@ export default function AddExpense() {
       try {
         init();
         backButton.mount();
-        mainButton.mount();
 
         if (backButton.show.isAvailable()) {
           backButton.show();
@@ -50,6 +49,7 @@ export default function AddExpense() {
 
         return () => {
           backButton.hide();
+          backButton.unmount();
         };
       } catch (error) {
         console.error("Failed to initialize Telegram SDK:", error);
@@ -432,6 +432,7 @@ export default function AddExpense() {
                 placeholder="0.00"
                 step="0.01"
                 min="0"
+                inputMode="decimal"
                 required
               />
             </div>
@@ -527,6 +528,7 @@ export default function AddExpense() {
                       placeholder="0.00"
                       step="0.01"
                       min="0"
+                      inputMode="decimal"
                       disabled={splitMode === "equal"}
                     />
                   </div>
