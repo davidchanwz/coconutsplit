@@ -1,16 +1,5 @@
-import { User } from "../lib/types";
+import { DebtListProps  } from "../lib/types";
 import { DebtItem } from "./DebtItem";
-
-interface DebtListProps {
-    debts: Array<{
-        from: User;
-        to: User;
-        amount: number;
-    }>;
-    selectedDebts: { [key: string]: boolean };
-    currentUser: User | null;
-    onToggleDebt: (debtId: string) => void;
-}
 
 export const DebtList = ({ debts, selectedDebts, currentUser, onToggleDebt }: DebtListProps) => (
     <div className="mb-8">

@@ -1,14 +1,4 @@
-import { User } from "../lib/types";
-
-interface SplitSectionProps {
-    members: User[];
-    splits: { [key: string]: string };
-    splitMode: "equal" | "custom";
-    setSplitMode: (mode: "equal" | "custom") => void;
-    handleSplitChange: (userId: string, value: string) => void;
-    splitsTotal: number;
-    amountValue: number;
-}
+import { SplitSectionProps } from "../lib/types";
 
 export function SplitSection({
     members,

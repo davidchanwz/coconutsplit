@@ -1,15 +1,4 @@
-import { User } from "../lib/types";
-
-interface ExpenseFormProps {
-    description: string;
-    setDescription: (value: string) => void;
-    amount: string;
-    setAmount: (value: string) => void;
-    paidBy: string;
-    setPaidBy: (value: string) => void;
-    members: User[];
-    currentUser: User | null;
-}
+import { ExpenseFormProps } from "../lib/types";
 
 export function ExpenseForm({
     description,

@@ -1,6 +1,4 @@
-interface ErrorDisplayProps {
-    message: string;
-}
+import { ErrorDisplayProps } from 'lib/types';
 
 export const ErrorDisplay = ({ message }: ErrorDisplayProps) => (
     <div className="min-h-screen flex items-center justify-center bg-gray-900">

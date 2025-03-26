@@ -97,3 +97,65 @@ export interface ExpenseHistoryProps {
     onDeleteExpense: (expenseId: string) => void;
     isDeleting: string | null;
 }
+
+export interface ExpenseFormProps {
+  description: string;
+  setDescription: (value: string) => void;
+  amount: string;
+  setAmount: (value: string) => void;
+  paidBy: string;
+  setPaidBy: (value: string) => void;
+  members: User[];
+  currentUser: User | null;
+}
+
+export interface SettlementItemProps {
+    settlement: Settlement;
+    members: User[];
+}
+
+export interface SplitSectionProps {
+  members: User[];
+  splits: { [key: string]: string };
+  splitMode: "equal" | "custom";
+  setSplitMode: (mode: "equal" | "custom") => void;
+  handleSplitChange: (userId: string, value: string) => void;
+  splitsTotal: number;
+  amountValue: number;
+}
+
+export interface DateSeparatorProps {
+  date: string;
+}
+
+export interface DebtItemProps {
+  debt: {
+      from: User;
+      to: User;
+      amount: number;
+  };
+  index: number;
+  isSelected: boolean;
+  onToggle: (debtId: string) => void;
+  currentUser: User | null;
+}
+
+export interface DebtListProps {
+  debts: Array<{
+      from: User;
+      to: User;
+      amount: number;
+  }>;
+  selectedDebts: { [key: string]: boolean };
+  currentUser: User | null;
+  onToggleDebt: (debtId: string) => void;
+}
+
+// Interface to track user balances
+export interface UserBalance {
+  [userId: string]: number;
+}
+
+export interface ErrorDisplayProps {
+  message: string;
+}

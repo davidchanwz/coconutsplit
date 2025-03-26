@@ -1,16 +1,4 @@
-import { User } from "../lib/types";
-
-interface DebtItemProps {
-    debt: {
-        from: User;
-        to: User;
-        amount: number;
-    };
-    index: number;
-    isSelected: boolean;
-    onToggle: (debtId: string) => void;
-    currentUser: User | null;
-}
+import { DebtItemProps } from "../lib/types";
 
 export const DebtItem = ({ debt, index, isSelected, onToggle, currentUser }: DebtItemProps) => (
     <div className="p-4 bg-gray-800 border border-gray-700 rounded-md flex items-center">

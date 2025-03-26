@@ -1,10 +1,4 @@
-import { User } from "../lib/types";
-import { Settlement } from "../lib/types";
-
-interface SettlementItemProps {
-    settlement: Settlement;
-    members: User[];
-}
+import { SettlementItemProps } from "../lib/types";
 
 export function SettlementItem({ settlement, members }: SettlementItemProps) {
     const fromUser = members.find((m) => m.uuid === settlement.from_user);

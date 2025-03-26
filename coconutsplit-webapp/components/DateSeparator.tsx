@@ -1,6 +1,4 @@
-interface DateSeparatorProps {
-    date: string;
-}
+import { DateSeparatorProps } from "@/lib/types";
 
 export function DateSeparator({ date }: DateSeparatorProps) {
     return (
