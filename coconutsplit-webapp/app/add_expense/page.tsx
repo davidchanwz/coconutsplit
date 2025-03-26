@@ -54,7 +54,6 @@ export default function AddExpense() {
 
   useEffect(() => {
     try {
-      console.log("is backbutton avail?", backButton.show.isAvailable());
       if (backButton.show.isAvailable()) {
         backButton.show();
         backButton.onClick(() => {
