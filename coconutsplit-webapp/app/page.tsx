@@ -1,216 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { init, backButton } from "@telegram-apps/sdk";
-import { SupabaseService, Expense, User, ExpenseSplit, SimplifiedDebt } from "../lib/supabase";
-import { parseQueryParams, getTelegramUserId } from "../lib/utils";
-import { calculateUserBalances, simplifyDebtsWithMembers } from "../lib/financial-utils";
+import { useState, useEffect } from "react";
+import { SupabaseService, ExpenseSplit } from "../lib/supabase";
+import { parseQueryParams } from "../lib/utils";
 import { OutstandingDebts } from "@/components/OutstandingDebts";
 import { ExpenseHistory } from "@/components/ExpenseHistory";
-
+import { useGroupData } from "@/hooks/useGroupData";
+import { TimelineItem, createTimelineItems } from "@/lib/timeline";
 import Link from "next/link";
-
-// Define Settlement interface within page
-interface Settlement {
-  settlement_id: string;
-  from_user: string;
-  to_user: string;
-  amount: number;
-  created_at: string;
-  group_id: string;
-}
-
-// Interface for combined timeline items
-interface TimelineItem {
-  type: 'expense' | 'settlement' | 'date-separator';
-  data: Expense | Settlement | string;
-  created_at: string;
-}
-
 
 export default function Home() {
   const params = parseQueryParams();
   const groupId = params.group_id;
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
-  const [members, setMembers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [groupName, setGroupName] = useState<string>("");
-
-  const [simplifiedDebts, setSimplifiedDebts] = useState<SimplifiedDebt[]>([]);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [expenseSplits, setExpenseSplits] = useState<{
     [expenseId: string]: { splits: ExpenseSplit[]; loading: boolean };
   }>({});
 
-  // Format date for grouping in a timezone-safe way
-  const formatDateForGrouping = (dateString: string): string => {
-    // Parse the date without timezone bias
-    const date = new Date(dateString);
-    // Get year, month, day components
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    // Return YYYY-MM-DD format
-    return `${year}-${month}-${day}`;
-  };
+  const {
+    expenses,
+    setExpenses,
+    settlements,
+    members,
+    loading,
+    error,
+    currentUser,
+    groupName,
+    simplifiedDebts
+  } = useGroupData(groupId);
 
-  // Format date for display in a timezone-safe way
-  const formatDateForDisplay = (dateString: string): string => {
-    const date = new Date(dateString);
-    const today = new Date();
-    
-    // Compare only the date parts, ignoring time
-    const isToday = 
-      date.getFullYear() === today.getFullYear() && 
-      date.getMonth() === today.getMonth() && 
-      date.getDate() === today.getDate();
-    
-    // Create yesterday date
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    
-    const isYesterday = 
-      date.getFullYear() === yesterday.getFullYear() && 
-      date.getMonth() === yesterday.getMonth() && 
-      date.getDate() === yesterday.getDate();
-    
-    // Return appropriate string based on comparison
-    if (isToday) {
-      return "Today";
-    } else if (isYesterday) {
-      return "Yesterday";
-    } else {
-      // Use more explicit formatting to avoid timezone issues
-      const options: Intl.DateTimeFormatOptions = {
-        weekday: 'long',
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric'
-      };
-      return new Date(date).toLocaleDateString(undefined, options);
-    }
-  };
-
-  // Combine expenses and settlements into a single timeline when either changes
   useEffect(() => {
-    if (expenses.length || settlements.length) {
-      // Debug log for troubleshooting
-      console.log("Processing timeline items with expenses:", expenses.length, "settlements:", settlements.length);
-      
-      // First, create all regular timeline items (expenses and settlements)
-      const regularItems: TimelineItem[] = [
-        ...expenses.map(expense => ({
-          type: 'expense' as const,
-          data: expense,
-          created_at: expense.created_at
-        })),
-        ...settlements.map(settlement => ({
-          type: 'settlement' as const,
-          data: settlement,
-          created_at: settlement.created_at
-        }))
-      ];
-      
-      // Sort by created_at in descending order (newest first)
-      regularItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
-      // Store already seen date strings to prevent duplicates
-      const processedDates = new Set<string>();
-      const items: TimelineItem[] = [];
-      
-      regularItems.forEach(item => {
-        const dateGroup = formatDateForGrouping(item.created_at);
-        
-        // Only add date separator if we haven't seen this date yet
-        if (!processedDates.has(dateGroup)) {
-          processedDates.add(dateGroup);
-          
-          const displayDate = formatDateForDisplay(item.created_at);
-          console.log(`Adding date separator for ${dateGroup} (displays as: ${displayDate})`);
-          
-          items.push({
-            type: 'date-separator',
-            data: displayDate,
-            created_at: item.created_at
-          });
-
-        }
-        
-        // Always add the item itself
-        items.push(item);
-      });
-      
-      setTimelineItems(items);
-    } else {
-      setTimelineItems([]);
-    }
+    setTimelineItems(createTimelineItems(expenses, settlements));
   }, [expenses, settlements]);
-
-  const fetchGroupData = async () => {
-    if (!groupId) return;
-
-    try {
-      setLoading(true);
-
-      // Get the Telegram user ID using our utility function
-      const telegramUserId = getTelegramUserId();
-
-      if (!telegramUserId) {
-        setError("Unable to identify user from Telegram");
-        setLoading(false);
-        return;
-      }
-
-      // Load user data
-      const userData = await SupabaseService.getUserByTelegramId(telegramUserId);
-      if (!userData) {
-        setError("User not found. Please ensure you have joined the group.");
-        setLoading(false);
-        return;
-      }
-      setCurrentUser(userData);
-
-      // Load group data
-      const [expensesData, membersData, groupData, rawDebtsData, settlementsData] = await Promise.all([
-        SupabaseService.getExpenses(groupId),
-        SupabaseService.getGroupMembers(groupId),
-        SupabaseService.getGroupDetails(groupId),
-        SupabaseService.getGroupDebts(groupId),
-        SupabaseService.getSettlements(groupId)
-      ]);
-
-      // Verify the user is a member of this group
-      const isMember = membersData.some((member) => member.uuid === userData.uuid);
-      if (!isMember) {
-        setError("You are not a member of this group.");
-        setLoading(false);
-        return;
-      }
-
-      // Calculate balances and simplify debts using the utility functions
-      const balances = calculateUserBalances(rawDebtsData);
-      const simplifiedDebtsData = simplifyDebtsWithMembers(balances, membersData);
-
-      setExpenses(expensesData);
-      setSettlements(settlementsData);
-      setMembers(membersData);
-      setGroupName(groupData?.group_name || "Group Expenses");
-      setSimplifiedDebts(simplifiedDebtsData);
-    } catch (err) {
-      setError("Failed to load group data");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGroupData();
-  }, [groupId]);
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!groupId || isDeleting) return;
@@ -272,7 +95,7 @@ export default function Home() {
         }
       }
     } catch (err) {
-      setError("Failed to delete expense");
+      setDeleteError("Failed to delete expense");
       console.error(err);
     } finally {
       setIsDeleting(null);
@@ -288,10 +111,10 @@ export default function Home() {
           ...prev,
           [expenseId]: { splits: [], loading: true }
         }));
-        
+
         // Fetch the expense splits
         const splits = await SupabaseService.getExpenseSplits(expenseId);
-        
+
         // Store the fetched splits
         setExpenseSplits(prev => ({
           ...prev,
@@ -344,7 +167,7 @@ export default function Home() {
       <OutstandingDebts debts={simplifiedDebts} />
 
       {/* Use the ExpenseHistory component */}
-      <ExpenseHistory 
+      <ExpenseHistory
         timelineItems={timelineItems}
         members={members}
         expenseSplits={expenseSplits}

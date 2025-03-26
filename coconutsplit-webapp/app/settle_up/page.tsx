@@ -6,6 +6,9 @@ import { parseQueryParams, getTelegramUserId, sendNotificationToBot } from "../.
 import { calculateUserBalances, simplifyDebtsWithMembers } from "../../lib/financial-utils";
 import Link from "next/link";
 import { init, backButton } from "@telegram-apps/sdk";
+import { LoadingSpinner } from "../../components/settle-up/LoadingSpinner";
+import { ErrorDisplay } from "../../components/settle-up/ErrorDisplay";
+import { DebtList } from "../../components/settle-up/DebtList";
 
 interface SimplifiedDebt {
   from: User;
@@ -45,7 +48,7 @@ export default function SettleUp() {
         return () => {
           backButton.hide();
         };
-      } catch (error) {}
+      } catch (error) { }
     };
 
     const cleanup = initTelegramBackButton();
@@ -121,7 +124,7 @@ export default function SettleUp() {
         // Calculate balances and simplify debts using the utility functions
         const balances = calculateUserBalances(debtsData);
         const simplifiedDebts = simplifyDebtsWithMembers(balances, membersData);
-        
+
         // Filter debts to only include those involving the current user
         const userDebts = simplifiedDebts.filter(
           debt => debt.from.uuid === userData.uuid || debt.to.uuid === userData.uuid
@@ -164,10 +167,10 @@ export default function SettleUp() {
 
       // Call API to settle the selected debts
       await SupabaseService.settleDebts(groupId, debtsToSettle);
-      
+
       // Get the chat ID from the group ID
       const chatId = await SupabaseService.getGroupChatId(groupId);
-      
+
       if (chatId) {
         // Send notification to the bot server API
         const notificationData = {
@@ -179,7 +182,7 @@ export default function SettleUp() {
             amount: debt.amount.toFixed(2),
           })),
         };
-        
+
         try {
           // Use the utility function to send the notification
           await sendNotificationToBot(notificationData);
@@ -198,19 +201,11 @@ export default function SettleUp() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-red-400">{error}</div>
-      </div>
-    );
+    return <ErrorDisplay message={error} />;
   }
 
   return (
@@ -223,50 +218,12 @@ export default function SettleUp() {
         </div>
       )}
 
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-white">
-          Your Outstanding Debts
-        </h2>
-
-        {!debts || debts.length === 0 ? (
-          <div className="p-4 bg-gray-800 border border-gray-700 rounded-md text-gray-300">
-            You don't have any outstanding debts.
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {debts.map((debt, index) => (
-              <div
-                key={`debt-${index}`}
-                className="p-4 bg-gray-800 border border-gray-700 rounded-md flex items-center"
-              >
-                <input
-                  type="checkbox"
-                  id={`debt-${index}`}
-                  className="mr-4 h-5 w-5 accent-blue-500"
-                  checked={selectedDebts[`debt-${index}`] || false}
-                  onChange={() => toggleDebtSelection(`debt-${index}`)}
-                />
-                <label htmlFor={`debt-${index}`} className="flex-1 text-white">
-                  <span className="font-semibold">
-                    {currentUser && debt.from.uuid === currentUser.uuid 
-                      ? "You" 
-                      : debt.from.username}
-                  </span>{" "}
-                  owes{" "}
-                  <span className="font-semibold">
-                    {currentUser && debt.to.uuid === currentUser.uuid
-                      ? "You"
-                      : debt.to.username}
-                  </span>{" "}
-                  <span className="text-green-400">
-                    ${debt.amount.toFixed(2)}
-                  </span>
-                </label>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <DebtList
+        debts={debts}
+        selectedDebts={selectedDebts}
+        currentUser={currentUser}
+        onToggleDebt={toggleDebtSelection}
+      />
 
       <div className="flex justify-between gap-4">
         <Link
@@ -282,13 +239,12 @@ export default function SettleUp() {
             debts.length === 0 ||
             Object.values(selectedDebts).filter(Boolean).length === 0
           }
-          className={`px-4 py-3 rounded-md text-white text-center flex-1 ${
-            isSubmitting ||
-            debts.length === 0 ||
-            Object.values(selectedDebts).filter(Boolean).length === 0
+          className={`px-4 py-3 rounded-md text-white text-center flex-1 ${isSubmitting ||
+              debts.length === 0 ||
+              Object.values(selectedDebts).filter(Boolean).length === 0
               ? "bg-green-500 opacity-50 cursor-not-allowed"
               : "bg-green-600 hover:bg-green-700"
-          }`}
+            }`}
         >
           {isSubmitting ? "Settling..." : "Settle Selected Debts"}
         </button>
