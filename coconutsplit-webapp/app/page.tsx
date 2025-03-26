@@ -324,18 +324,18 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">{groupName}</h1>
+    <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 bg-gray-900 min-h-screen">
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">{groupName}</h1>
         {currentUser && (
-          <div className="text-gray-300 mt-2">
+          <div className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-base">
             Hello, {currentUser.username}
           </div>
         )}
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-900 border border-red-700 text-red-200 rounded">
+        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-900 border border-red-700 text-red-200 rounded text-sm sm:text-base">
           {error}
         </div>
       )}
@@ -355,19 +355,19 @@ export default function Home() {
 
       {/* Action buttons at the bottom of the page */}
       <div className="fixed bottom-0 left-0 right-0">
-        <div className="bg-gray-800/80 backdrop-blur-sm shadow-lg py-4 px-4">
-          <div className="max-w-screen-lg mx-auto flex gap-4">
+        <div className="bg-gray-800/80 backdrop-blur-sm shadow-lg py-3 sm:py-4 px-2 sm:px-4">
+          <div className="max-w-screen-lg mx-auto flex gap-2 sm:gap-4">
             <Link
               href={
                 groupId ? `/add_expense?group_id=${groupId}` : "/add_expense"
               }
-              className="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-center font-medium"
+              className="flex-1 px-2 sm:px-4 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md transition-colors text-center font-medium text-sm sm:text-base"
             >
               Add Expense
             </Link>
             <Link
               href={groupId ? `/settle_up?group_id=${groupId}` : "/settle_up"}
-              className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors text-center font-medium"
+              className="flex-1 px-2 sm:px-4 py-2 sm:py-3 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-md transition-colors text-center font-medium text-sm sm:text-base"
             >
               Settle Up
             </Link>

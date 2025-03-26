@@ -35,10 +35,7 @@ export function OutstandingDebts({ debts }: OutstandingDebtsProps) {
         </div>
       </div>
       
-      {/* Divider */}
-      <div className="flex items-center justify-center my-6">
-        <span className="text-stone-200 text-2xl margin-auto font-medium">EXPENSE HISTORY</span>
-      </div>
+      
     </div>
   );
 }
