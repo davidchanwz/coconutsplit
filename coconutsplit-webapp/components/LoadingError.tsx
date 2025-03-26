@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LoadingErrorProps } from '../../lib/types';
+import { LoadingErrorProps } from '../lib/types';
 
 export function LoadingError({ loading, error, submitting, groupId }: LoadingErrorProps) {
     if (loading) {

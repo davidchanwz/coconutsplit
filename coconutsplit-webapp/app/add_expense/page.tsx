@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import { ExpenseForm } from "../components/ExpenseForm";
-import { SplitSection } from "../components/SplitSection";
-import { LoadingError } from "../components/LoadingError";
+import { ExpenseForm } from "../../components/ExpenseForm";
+import { SplitSection } from "../../components/SplitSection";
+import { LoadingError } from "../../components/LoadingError";
 import { parseQueryParams } from "../../lib/utils";
 import { SupabaseService } from "../../lib/supabase";
 import { init, backButton } from "@telegram-apps/sdk";

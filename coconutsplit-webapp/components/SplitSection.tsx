@@ -1,4 +1,4 @@
-import { User } from "../../lib/types";
+import { User } from "../lib/types";
 
 interface SplitSectionProps {
     members: User[];

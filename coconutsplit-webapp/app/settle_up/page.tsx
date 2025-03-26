@@ -6,9 +6,9 @@ import { parseQueryParams, getTelegramUserId, sendNotificationToBot } from "../.
 import { calculateUserBalances, simplifyDebtsWithMembers } from "../../lib/financial-utils";
 import Link from "next/link";
 import { init, backButton } from "@telegram-apps/sdk";
-import { LoadingSpinner } from "../../components/settle-up/LoadingSpinner";
-import { ErrorDisplay } from "../../components/settle-up/ErrorDisplay";
-import { DebtList } from "../../components/settle-up/DebtList";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
+import { ErrorDisplay } from "../../components/ErrorDisplay";
+import { DebtList } from "../../components/DebtList";
 import { User, SimplifiedDebt } from "../../lib/types";
 
 export default function SettleUp() {
@@ -235,10 +235,10 @@ export default function SettleUp() {
             Object.values(selectedDebts).filter(Boolean).length === 0
           }
           className={`px-4 py-3 rounded-md text-white text-center flex-1 ${isSubmitting ||
-              debts.length === 0 ||
-              Object.values(selectedDebts).filter(Boolean).length === 0
-              ? "bg-green-500 opacity-50 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700"
+            debts.length === 0 ||
+            Object.values(selectedDebts).filter(Boolean).length === 0
+            ? "bg-green-500 opacity-50 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
             }`}
         >
           {isSubmitting ? "Settling..." : "Settle Selected Debts"}
