@@ -10,6 +10,7 @@ export function ExpenseHistory({
   expenseSplits,
   onAccordionChange,
   onDeleteExpense,
+  onDeleteSettlement,
   isDeleting,
 }: ExpenseHistoryProps) {
   if (timelineItems.length === 0) {
@@ -49,6 +50,8 @@ export function ExpenseHistory({
                 key={`settlement-${(item.data as Settlement).settlement_id}`}
                 settlement={item.data as Settlement}
                 members={members}
+                isDeleting={isDeleting}
+                onDeleteSettlement={onDeleteSettlement}
               />
             );
           }

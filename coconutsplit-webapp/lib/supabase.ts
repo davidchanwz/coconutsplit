@@ -219,6 +219,48 @@ export class SupabaseService {
     }
   }
 
+  static async deleteSettlement(settlementId: string, groupId: string): Promise<void> {
+    // First, get the settlement details before deleting
+    const { data: settlement, error: fetchError } = await supabase
+      .from('settlements')
+      .select('*')
+      .eq('settlement_id', settlementId)
+      .eq('group_id', groupId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!settlement) throw new Error('Settlement not found');
+
+    // Delete the settlement
+    const { error: deleteError } = await supabase
+      .from('settlements')
+      .delete()
+      .eq('settlement_id', settlementId);
+    
+    if (deleteError) throw deleteError;
+
+    // Update the debts
+    const { error: debtsError } = await supabase
+      .rpc("bulk_update_debts", {
+        debt_updates: [
+          {
+            group_id: groupId,
+            user_id: settlement.from_user,
+            opp_user_id: settlement.to_user,
+            increment_value: settlement.amount
+          },
+          {
+            group_id: groupId,
+            user_id: settlement.to_user,
+            opp_user_id: settlement.from_user,
+            increment_value: -settlement.amount
+          }
+        ]
+      });
+    
+    if (debtsError) throw debtsError;
+  }
+
   static async getUser(userId: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('users')

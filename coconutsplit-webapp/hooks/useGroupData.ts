@@ -13,6 +13,7 @@ export function useGroupData(groupId: string | undefined) {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [groupName, setGroupName] = useState<string>("");
     const [simplifiedDebts, setSimplifiedDebts] = useState<SimplifiedDebt[]>([]);
+     const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
     useEffect(() => {
         if (!groupId) return;
@@ -60,7 +61,7 @@ export function useGroupData(groupId: string | undefined) {
         };
 
         fetchData();
-    }, [groupId]);
+    }, [groupId, isDeleting]);
 
     return {
         expenses,
@@ -72,6 +73,8 @@ export function useGroupData(groupId: string | undefined) {
         error,
         currentUser,
         groupName,
-        simplifiedDebts
+        simplifiedDebts,
+        isDeleting,
+        setIsDeleting
     };
 }

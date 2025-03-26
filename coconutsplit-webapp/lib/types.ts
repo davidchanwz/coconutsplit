@@ -95,6 +95,7 @@ export interface ExpenseHistoryProps {
     };
     onAccordionChange: (value: string, expenseId: string) => void;
     onDeleteExpense: (expenseId: string) => void;
+    onDeleteSettlement: (settlementId: string) => void;
     isDeleting: string | null;
 }
 
@@ -112,6 +113,8 @@ export interface ExpenseFormProps {
 export interface SettlementItemProps {
     settlement: Settlement;
     members: User[];
+    onDeleteSettlement: (settlementId: string) => void;
+    isDeleting: string | null;
 }
 
 export interface SplitSectionProps {
@@ -158,4 +161,13 @@ export interface UserBalance {
 
 export interface ErrorDisplayProps {
   message: string;
+}
+
+export interface ExpenseItemProps {
+  expense: Expense;
+  members: User[];
+  splits: { splits: ExpenseSplit[]; loading: boolean };
+  onAccordionChange: (value: string, expenseId: string) => void;
+  onDeleteExpense: (expenseId: string) => void;
+  isDeleting: string | null;
 }

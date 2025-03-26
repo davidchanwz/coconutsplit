@@ -14,7 +14,6 @@ export default function Home() {
   const params = parseQueryParams();
   const groupId = params.group_id;
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [expenseSplits, setExpenseSplits] = useState<{
     [expenseId: string]: { splits: ExpenseSplit[]; loading: boolean };
@@ -24,17 +23,90 @@ export default function Home() {
     expenses,
     setExpenses,
     settlements,
+    setSettlements,
     members,
     loading,
     error,
     currentUser,
     groupName,
-    simplifiedDebts
+    simplifiedDebts,
+    isDeleting,
+    setIsDeleting
   } = useGroupData(groupId);
 
   useEffect(() => {
     setTimelineItems(createTimelineItems(expenses, settlements));
   }, [expenses, settlements]);
+
+  const handleDeleteSettlement = async (settlementId: string) => {
+    if (!groupId || isDeleting) return;
+  
+    try {
+      setIsDeleting(settlementId);
+  
+      // Find the settlement that's being deleted to include in notification
+      const settlementToDelete = settlements.find(
+        (settlement) => settlement.settlement_id === settlementId
+      );
+  
+      await SupabaseService.deleteSettlement(settlementId, groupId);
+  
+      // Update the settlements list after deletion
+      setSettlements((prev) =>
+        prev.filter((settlement) => settlement.settlement_id !== settlementId)
+      );
+  
+      // Send notification to the bot about the deleted settlement
+      if (settlementToDelete) {
+        try {
+          // Get the chat ID from the group ID
+          const chatId = await SupabaseService.getGroupChatId(groupId);
+  
+          if (chatId) {
+            // Find the involved users' usernames
+            const fromUser = members.find(
+              (m) => m.uuid === settlementToDelete.from_user
+            );
+            const toUser = members.find(
+              (m) => m.uuid === settlementToDelete.to_user
+            );
+  
+            // Send notification to the bot server API
+            const notificationData = {
+              chat_id: chatId,
+              action: "delete_settlement",
+              amount: settlementToDelete.amount.toFixed(2),
+              from_user: fromUser?.username || "Unknown",
+              to_user: toUser?.username || "Unknown",
+            };
+  
+            const apiUrl = process.env.NEXT_PUBLIC_BOT_API_URL || "";
+            const apiKey = process.env.NEXT_PUBLIC_BOT_API_KEY || "";
+  
+            // Make direct API call with POST method
+            await fetch(`${apiUrl}/api/notify`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-API-Key": apiKey,
+              },
+              body: JSON.stringify(notificationData),
+              mode: "cors",
+              credentials: "omit",
+            });
+          }
+        } catch (notifyErr) {
+          // Continue even if notification fails
+          console.warn("Failed to send delete notification:", notifyErr);
+        }
+      }
+    } catch (err) {
+      setDeleteError("Failed to delete settlement");
+      console.error(err);
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!groupId || isDeleting) return;
@@ -174,6 +246,7 @@ export default function Home() {
         expenseSplits={expenseSplits}
         onAccordionChange={handleAccordionChange}
         onDeleteExpense={handleDeleteExpense}
+        onDeleteSettlement={handleDeleteSettlement}
         isDeleting={isDeleting}
       />
 

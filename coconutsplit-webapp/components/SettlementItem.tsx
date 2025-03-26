@@ -1,6 +1,17 @@
 import { SettlementItemProps } from "../lib/types";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-export function SettlementItem({ settlement, members }: SettlementItemProps) {
+export function SettlementItem({ settlement, members, isDeleting, onDeleteSettlement }: SettlementItemProps) {
     const fromUser = members.find((m) => m.uuid === settlement.from_user);
     const toUser = members.find((m) => m.uuid === settlement.to_user);
 
@@ -26,9 +37,60 @@ export function SettlementItem({ settlement, members }: SettlementItemProps) {
                 <div className="flex-grow">
                     <div className="flex justify-between">
                         <h3 className="font-medium text-sm sm:text-base text-white">Settlement</h3>
-                        <span className="text-green-400 font-bold text-sm sm:text-base">
-                            ${settlement.amount.toFixed(2)}
-                        </span>
+                        <div className="flex items-center">
+                            <span className="text-green-400 font-bold text-sm sm:text-base mr-2">
+                                ${settlement.amount.toFixed(2)}
+                            </span>
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <button
+                                        disabled={isDeleting === settlement.settlement_id}
+                                        className={`p-2 rounded-full text-red-400 hover:text-red-300 hover:bg-gray-700 focus:outline-none transition-colors ${
+                                            isDeleting === settlement.settlement_id ? "opacity-0 cursor-wait" : ""
+                                        }`}
+                                        title="Delete settlement"
+                                    >
+                                        {isDeleting === settlement.settlement_id ? (
+                                            <span className="block h-5 w-5 animate-spin rounded-full border-2 border-t-red-400"></span>
+                                        ) : (
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                className="h-5 w-5"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    strokeWidth={2}
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                                />
+                                            </svg>
+                                        )}
+                                    </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="w-[95vw] max-w-[425px] rounded-lg p-4 md:w-full">
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle className="text-black">Delete Settlement</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            Are you sure you want to delete this settlement?
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel className="bg-white text-black hover:bg-gray-300 focus:ring-red-600">
+                                            Cancel
+                                        </AlertDialogCancel>
+                                        <AlertDialogAction
+                                            onClick={() => onDeleteSettlement(settlement.settlement_id)}
+                                            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                        >
+                                            Delete
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
                     </div>
                     <p className="text-xs sm:text-sm text-gray-300">
                         <span className="font-medium">{fromUser?.username || "Unknown"}</span> paid{" "}

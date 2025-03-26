@@ -1,5 +1,5 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Expense, ExpenseSplit, User } from "../lib/types";
+import { ExpenseItemProps } from "../lib/types";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -11,15 +11,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog";
-
-interface ExpenseItemProps {
-    expense: Expense;
-    members: User[];
-    splits: { splits: ExpenseSplit[]; loading: boolean };
-    onAccordionChange: (value: string, expenseId: string) => void;
-    onDeleteExpense: (expenseId: string) => void;
-    isDeleting: string | null;
-}
 
 export function ExpenseItem({ expense, members, splits = { splits: [], loading: false }, onAccordionChange, onDeleteExpense, isDeleting }: ExpenseItemProps) {
     const paidBy = members.find((m) => m.uuid === expense.paid_by);
