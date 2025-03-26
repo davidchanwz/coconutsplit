@@ -11,6 +11,7 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { formatNumber } from "../lib/utils";
 
 export function ExpenseItem({ expense, members, splits = { splits: [], loading: false }, onAccordionChange, onDeleteExpense, isDeleting }: ExpenseItemProps) {
     const paidBy = members.find((m) => m.uuid === expense.paid_by);
@@ -56,7 +57,7 @@ export function ExpenseItem({ expense, members, splits = { splits: [], loading: 
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-blue-400 font-bold text-sm sm:text-base">
-                                            ${expense.amount.toFixed(2)}
+                                            ${formatNumber(expense.amount)}
                                         </span>
                                         <AlertDialog>
                                             <AlertDialogTrigger asChild>
@@ -134,7 +135,7 @@ export function ExpenseItem({ expense, members, splits = { splits: [], loading: 
                                                 className="flex justify-between py-1 border-b border-gray-700"
                                             >
                                                 <span>{user?.username || "Unknown User"}</span>
-                                                <span className="font-medium">${split.amount.toFixed(2)}</span>
+                                                <span className="font-medium">${formatNumber(split.amount)}</span>
                                             </div>
                                         );
                                     })}
@@ -147,7 +148,7 @@ export function ExpenseItem({ expense, members, splits = { splits: [], loading: 
                                                     <span className="font-medium text-blue-400">
                                                         {paidBy?.username || "Unknown User"} (payer)
                                                     </span>
-                                                    <span className="font-medium">${payerAmount.toFixed(2)}</span>
+                                                    <span className="font-medium">${formatNumber(payerAmount)}</span>
                                                 </div>
                                             );
                                         }
@@ -155,7 +156,7 @@ export function ExpenseItem({ expense, members, splits = { splits: [], loading: 
                                     })()}
                                     <div className="flex justify-between py-1 sm:py-2 border-t border-gray-600 mt-1 sm:mt-2 font-bold">
                                         <span>Total</span>
-                                        <span>${expense.amount.toFixed(2)}</span>
+                                        <span>${formatNumber(expense.amount)}</span>
                                     </div>
                                 </div>
                             ) : (

@@ -251,8 +251,8 @@ export default function Home() {
       />
 
       {/* Action buttons at the bottom of the page */}
-      <div className="fixed bottom-0 left-0 right-0">
-        <div className="bg-gray-800/80 backdrop-blur-sm shadow-lg py-3 sm:py-4 px-2 sm:px-4">
+      <div className="fixed bottom-0 left-0 right-0 pb-5 bg-gray-800/80">
+        <div className=" backdrop-blur-sm shadow-lg py-3 sm:py-4 px-2 sm:px-4">
           <div className="max-w-screen-lg mx-auto flex gap-2 sm:gap-4">
             <Link
               href={
