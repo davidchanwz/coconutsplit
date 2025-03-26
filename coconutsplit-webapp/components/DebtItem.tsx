@@ -1,4 +1,5 @@
 import { DebtItemProps } from "../lib/types";
+import { formatNumber } from "../lib/utils";
 
 export const DebtItem = ({ debt, index, isSelected, onToggle, currentUser }: DebtItemProps) => (
     <div className="p-4 bg-gray-800 border border-gray-700 rounded-md flex items-center">
@@ -17,7 +18,7 @@ export const DebtItem = ({ debt, index, isSelected, onToggle, currentUser }: Deb
             <span className="font-semibold">
                 {currentUser && debt.to.uuid === currentUser.uuid ? "You" : debt.to.username}
             </span>{" "}
-            <span className="text-green-400">${debt.amount.toFixed(2)}</span>
+            <span className="text-green-400">${formatNumber(debt.amount)}</span>
         </label>
     </div>
 );

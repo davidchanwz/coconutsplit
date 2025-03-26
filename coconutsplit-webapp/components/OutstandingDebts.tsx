@@ -1,5 +1,6 @@
 import React from 'react';
 import { SimplifiedDebt } from '../lib/types';
+import { formatNumber } from '../lib/utils';
 
 interface OutstandingDebtsProps {
   debts: SimplifiedDebt[];
@@ -29,13 +30,13 @@ export function OutstandingDebts({ debts }: OutstandingDebtsProps) {
                 <span className="text-gray-500">owes</span>{" "}
                 <span className="font-medium">{debt.to.username}</span>
               </span>
-              <span className="text-green-400 font-medium">${debt.amount.toFixed(2)}</span>
+              <span className="text-green-400 font-medium">${formatNumber(debt.amount)}</span>
             </div>
           ))}
         </div>
       </div>
-      
-      
+
+
     </div>
   );
 }
