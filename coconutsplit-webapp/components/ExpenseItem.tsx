@@ -1,5 +1,16 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Expense, ExpenseSplit, User } from "../lib/types";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog";
 
 interface ExpenseItemProps {
     expense: Expense;
@@ -41,35 +52,61 @@ export function ExpenseItem({ expense, members, splits = { splits: [], loading: 
                                     </p>
                                 </div>
                             </div>
-                            <button
+                            <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
                                 onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDeleteExpense(expense.expense_id);
+                                  e.stopPropagation();
                                 }}
                                 disabled={isDeleting === expense.expense_id}
-                                className={`p-1 sm:p-2 rounded-full text-red-400 hover:text-red-300 hover:bg-gray-700 focus:outline-none transition-colors ${isDeleting === expense.expense_id ? "opacity-50 cursor-wait" : ""
-                                    }`}
+                                className={`p-2 rounded-full text-red-400 hover:text-red-300 hover:bg-gray-700 focus:outline-none transition-colors ${
+                                  isDeleting === expense.expense_id
+                                    ? "opacity-0 cursor-wait"
+                                    : ""
+                                }`}
                                 title="Delete expense"
-                            >
+                              >
                                 {isDeleting === expense.expense_id ? (
-                                    <span className="block h-4 sm:h-5 w-4 sm:w-5 animate-spin rounded-full border-2 border-t-red-400"></span>
+                                  <span className="block h-5 w-5 animate-spin rounded-full border-2 border-t-red-400"></span>
                                 ) : (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-4 sm:h-5 w-4 sm:w-5"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                        />
-                                    </svg>
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="h-5 w-5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
                                 )}
-                            </button>
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="w-[95vw] max-w-[425px] rounded-lg p-4 md:w-full">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-black">Delete Expense</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this expense?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-white text-black hover:bg-gray-300 focus:ring-red-600">Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDeleteExpense(expense.expense_id);
+                                  }}
+                                  className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </AccordionTrigger>
                     </div>
                     <AccordionContent>

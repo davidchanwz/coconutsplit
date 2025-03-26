@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-slot": "^1.1.2",
     "@supabase/supabase-js": "^2.49.1",
     "@telegram-apps/sdk": "^3.5.1",
     "@telegram-apps/sdk-react": "^3.1.2",
