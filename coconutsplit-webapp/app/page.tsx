@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { init, backButton } from "@telegram-apps/sdk";
 import { SupabaseService, Expense, User, ExpenseSplit, SimplifiedDebt } from "../lib/supabase";
 import { parseQueryParams, getTelegramUserId } from "../lib/utils";
 import { calculateUserBalances, simplifyDebtsWithMembers } from "../lib/financial-utils";
+import { OutstandingDebts } from "@/components/OutstandingDebts";
+import { ExpenseHistory } from "@/components/ExpenseHistory";
 
 import Link from "next/link";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 // Define Settlement interface within page
 interface Settlement {
@@ -49,22 +45,6 @@ export default function Home() {
   const [expenseSplits, setExpenseSplits] = useState<{
     [expenseId: string]: { splits: ExpenseSplit[]; loading: boolean };
   }>({});
-  const [shouldRefresh, setShouldRefresh] = useState<boolean>(false);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-
-  // useEffect(() => {
-  //   try {
-  //     init();
-  //     backButton.mount();
-  //     if (backButton.hide.isAvailable()) {
-  //       backButton.hide();
-  //     }
-  //     backButton.unmount();
-  //   } catch (error) {
-  //     console.error("Failed to initialize Telegram SDK:", error);
-  //   }
-  // }, []);
 
   // Format date for grouping in a timezone-safe way
   const formatDateForGrouping = (dateString: string): string => {
@@ -170,39 +150,6 @@ export default function Home() {
     }
   }, [expenses, settlements]);
 
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        setShouldRefresh(true);
-      }
-    };
-
-    const handleFocus = () => {
-      setShouldRefresh(true);
-    };
-
-    // Add event listeners for page visibility and focus
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    // Set up polling interval for data refresh (every 30 seconds)
-    pollingIntervalRef.current = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        setShouldRefresh(true);
-      }
-    }, 30000); // Check every 30 seconds
-
-    return () => {
-      // Clean up event listeners and interval
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, []);
-
   const fetchGroupData = async () => {
     if (!groupId) return;
 
@@ -264,14 +211,6 @@ export default function Home() {
   useEffect(() => {
     fetchGroupData();
   }, [groupId]);
-
-  useEffect(() => {
-    if (shouldRefresh) {
-      fetchGroupData().then(() => {
-        setShouldRefresh(false);
-      });
-    }
-  }, [shouldRefresh]);
 
   const handleDeleteExpense = async (expenseId: string) => {
     if (!groupId || isDeleting) return;
@@ -401,225 +340,18 @@ export default function Home() {
         </div>
       )}
 
+      {/* Use the OutstandingDebts component */}
+      <OutstandingDebts debts={simplifiedDebts} />
 
-      {/* Debts summary section */}
-      {simplifiedDebts.length > 0 && (
-        <div className="mb-8">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg overflow-hidden border-l-4 border-green-500">
-            <div className="px-4 py-3 bg-gray-800/80">
-              <h2 className="text-sm font-semibold text-white flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
-                Outstanding Debts
-              </h2>
-            </div>
-            <div className="px-4 py-2 divide-y divide-gray-700/50">
-              {simplifiedDebts.map((debt, index) => (
-                <div key={`summary-debt-${index}`} className="flex justify-between text-xs py-1.5">
-                  <span className="text-gray-300">
-                    <span className="font-medium">{debt.from.username}</span>{" "}
-                    <span className="text-gray-500">owes</span>{" "}
-                    <span className="font-medium">{debt.to.username}</span>
-                  </span>
-                  <span className="text-green-400 font-medium">${debt.amount.toFixed(2)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          {/* Divider */}
-          <div className="flex items-center justify-center my-6">
-            <span className="text-stone-200 text-2xl margin-auto font-medium">EXPENSE HISTORY</span>
-          </div>
-        </div>
-      )}
-
-      <div className="grid gap-6 mb-8">
-        {timelineItems.length > 0 ? (
-          timelineItems.map((item, index) => {
-            if (item.type === 'date-separator') {
-              return (
-                <div 
-                  key={`date-${index}`} 
-                  className="flex items-center my-4 first:mt-0"
-                >
-                  <div className="flex-grow border-t border-gray-700 mr-4"></div>
-                  <span className="text-gray-400 text-sm font-medium px-3 py-1 bg-gray-800 rounded-full">
-                    {item.data as string}
-                  </span>
-                  <div className="flex-grow border-t border-gray-700 ml-4"></div>
-                </div>
-              );
-            } else if (item.type === 'expense') {
-              const expense = item.data as Expense;
-              const paidBy = members.find((m) => m.uuid === expense.paid_by);
-              return (
-                <div
-                  key={`expense-${expense.expense_id}`}
-                  className="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow"
-                >
-                  <Accordion 
-                    type="single" 
-                    collapsible
-                    onValueChange={(value) => handleAccordionChange(value, expense.expense_id)}
-                  >
-                    <AccordionItem value="item-1" className="">
-                      <div className="flex-1 items-start mb-4">
-                        <AccordionTrigger className="flex-1 p-0 pr-4">
-                          <div className="flex justify-between w-full items-start">
-                            <div>
-                              <h2 className="text-xl font-semibold text-white">
-                                {expense.description}
-                              </h2>
-                              <p className="text-gray-300">
-                                Paid by {paidBy?.username || "Unknown User"}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-2xl font-bold text-white">
-                                ${expense.amount.toFixed(2)}
-                              </p>
-                              <p className="text-sm text-gray-400">
-                                {new Date(expense.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteExpense(expense.expense_id);
-                            }}
-                            disabled={isDeleting === expense.expense_id}
-                            className={`p-2 rounded-full text-red-400 hover:text-red-300 hover:bg-gray-700 focus:outline-none transition-colors ${
-                              isDeleting === expense.expense_id
-                                ? "opacity-50 cursor-wait"
-                                : ""
-                            }`}
-                            title="Delete expense"
-                          >
-                            {isDeleting === expense.expense_id ? (
-                              <span className="block h-5 w-5 animate-spin rounded-full border-2 border-t-red-400"></span>
-                            ) : (
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            )}
-                          </button>
-                        </AccordionTrigger>
-                      </div>
-                      <AccordionContent>
-                        <div className="pt-4 pb-2 text-gray-300">
-                          <h3 className="text-lg font-semibold mb-2 text-white">Expense Breakdown</h3>
-                          {expenseSplits[expense.expense_id]?.loading ? (
-                            <div className="flex justify-center py-4">
-                              <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-400"></div>
-                            </div>
-                          ) : expenseSplits[expense.expense_id]?.splits.length ? (
-                            <div className="space-y-2">
-                              {/* Display other users' splits first */}
-                              {expenseSplits[expense.expense_id].splits.map((split) => {
-                                const user = members.find((m) => m.uuid === split.user_id);
-                                return (
-                                  <div key={`${split.expense_id}-${split.user_id}`} className="flex justify-between py-1 border-b border-gray-700">
-                                    <span>{user?.username || "Unknown User"}</span>
-                                    <span className="font-medium">${split.amount.toFixed(2)}</span>
-                                  </div>
-                                );
-                              })}
-                              
-                              {/* Calculate and display payer's share */}
-                              {(() => {
-                                // Calculate the sum of all splits
-                                const splitsTotal = expenseSplits[expense.expense_id].splits.reduce(
-                                  (sum, split) => sum + split.amount, 
-                                  0
-                                );
-                                
-                                // Calculate how much the payer contributed (total - sum of splits)
-                                const payerAmount = Math.max(0, +(expense.amount - splitsTotal).toFixed(2));
-                                
-                                // Only show the payer's row if they contributed something or if they're not in the splits
-                                if (payerAmount > 0 || !expenseSplits[expense.expense_id].splits.some(s => s.user_id === expense.paid_by)) {
-                                  return (
-                                    <div className="flex justify-between py-1 border-b border-gray-700">
-                                      <span className="font-medium text-blue-400">
-                                        {paidBy?.username || "Unknown User"} (payer)
-                                      </span>
-                                      <span className="font-medium">${payerAmount.toFixed(2)}</span>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              })()}
-                              
-                              {/* Display total row */}
-                              <div className="flex justify-between py-2 border-t border-gray-600 mt-2 font-bold">
-                                <span>Total</span>
-                                <span>${expense.amount.toFixed(2)}</span>
-                              </div>
-                            </div>
-                          ) : (
-                            <p className="text-gray-400">No split information available.</p>
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </div>
-              );
-            } else {
-              // This is a settlement
-              const settlement = item.data as Settlement;
-              const fromUser = members.find((m) => m.uuid === settlement.from_user);
-              const toUser = members.find((m) => m.uuid === settlement.to_user);
-              
-              return (
-                <div
-                  key={`settlement-${settlement.settlement_id}`}
-                  className="bg-gray-800 border-l-4 border-green-500 p-4 rounded-lg shadow"
-                >
-                  <div className="flex items-center">
-                    <div className="bg-green-500/20 p-2 rounded-full mr-4">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div className="flex-grow">
-                      <div className="flex justify-between">
-                        <h3 className="font-medium text-white">Settlement</h3>
-                        <span className="text-green-400 font-bold">${settlement.amount.toFixed(2)}</span>
-                      </div>
-                      <p className="text-sm text-gray-300">
-                        <span className="font-medium">{fromUser?.username || "Unknown"}</span> paid{" "}
-                        <span className="font-medium">{toUser?.username || "Unknown"}</span>
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        {new Date(settlement.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-          })
-        ) : (
-          <div className="text-center text-gray-400 mt-8 mb-16">
-            No expenses or settlements recorded yet.
-          </div>
-        )}
-      </div>
+      {/* Use the ExpenseHistory component */}
+      <ExpenseHistory 
+        timelineItems={timelineItems}
+        members={members}
+        expenseSplits={expenseSplits}
+        onAccordionChange={handleAccordionChange}
+        onDeleteExpense={handleDeleteExpense}
+        isDeleting={isDeleting}
+      />
 
       {/* Action buttons at the bottom of the page */}
       <div className="fixed bottom-0 left-0 right-0">

@@ -121,9 +121,14 @@ export default function SettleUp() {
         // Calculate balances and simplify debts using the utility functions
         const balances = calculateUserBalances(debtsData);
         const simplifiedDebts = simplifyDebtsWithMembers(balances, membersData);
+        
+        // Filter debts to only include those involving the current user
+        const userDebts = simplifiedDebts.filter(
+          debt => debt.from.uuid === userData.uuid || debt.to.uuid === userData.uuid
+        );
 
-        // Update state with simplified debts
-        setDebts(simplifiedDebts);
+        // Update state with filtered debts
+        setDebts(userDebts);
       } catch (err) {
         setError("Failed to load data");
       } finally {
@@ -220,12 +225,12 @@ export default function SettleUp() {
 
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4 text-white">
-          Outstanding Debts
+          Your Outstanding Debts
         </h2>
 
         {!debts || debts.length === 0 ? (
           <div className="p-4 bg-gray-800 border border-gray-700 rounded-md text-gray-300">
-            No outstanding debts found.
+            You don't have any outstanding debts.
           </div>
         ) : (
           <div className="space-y-4">
@@ -242,7 +247,11 @@ export default function SettleUp() {
                   onChange={() => toggleDebtSelection(`debt-${index}`)}
                 />
                 <label htmlFor={`debt-${index}`} className="flex-1 text-white">
-                  <span className="font-semibold">{debt.from.username}</span>{" "}
+                  <span className="font-semibold">
+                    {currentUser && debt.from.uuid === currentUser.uuid 
+                      ? "You" 
+                      : debt.from.username}
+                  </span>{" "}
                   owes{" "}
                   <span className="font-semibold">
                     {currentUser && debt.to.uuid === currentUser.uuid

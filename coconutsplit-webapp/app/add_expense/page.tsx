@@ -432,6 +432,7 @@ export default function AddExpense() {
                 placeholder="0.00"
                 step="0.01"
                 min="0"
+                inputMode="decimal"
                 required
               />
             </div>
@@ -527,6 +528,7 @@ export default function AddExpense() {
                       placeholder="0.00"
                       step="0.01"
                       min="0"
+                      inputMode="decimal"
                       disabled={splitMode === "equal"}
                     />
                   </div>
