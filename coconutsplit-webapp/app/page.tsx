@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SupabaseService, ExpenseSplit } from "../lib/supabase";
+import { SupabaseService } from "../lib/supabase";
 import { parseQueryParams } from "../lib/utils";
 import { OutstandingDebts } from "@/components/OutstandingDebts";
 import { ExpenseHistory } from "@/components/ExpenseHistory";
 import { useGroupData } from "@/hooks/useGroupData";
-import { TimelineItem, createTimelineItems } from "@/lib/timeline";
+import { createTimelineItems } from "@/lib/timeline";
+import { ExpenseSplit, TimelineItem } from "@/lib/types";
 import Link from "next/link";
 
 export default function Home() {

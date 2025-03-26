@@ -1,5 +1,5 @@
 import React from 'react';
-import { SimplifiedDebt } from '../lib/supabase';
+import { SimplifiedDebt } from '../lib/types';
 
 interface OutstandingDebtsProps {
   debts: SimplifiedDebt[];

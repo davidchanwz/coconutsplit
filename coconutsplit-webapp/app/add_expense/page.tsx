@@ -9,7 +9,7 @@ import { SupabaseService } from "../../lib/supabase";
 import { init, backButton } from "@telegram-apps/sdk";
 import Link from "next/link";
 import { useExpense } from "../../hooks/useExpense";
-import { ExpenseSplit } from "../../lib/types";
+import { ExpenseSplitNoExpenseID } from "../../lib/types";
 
 export default function AddExpense() {
   const params = parseQueryParams();
@@ -119,7 +119,7 @@ export default function AddExpense() {
       };
 
       // Create expense splits
-      const expenseSplits: ExpenseSplit[] = [];
+      const expenseSplits: ExpenseSplitNoExpenseID[] = [];
       for (const [userId, amountStr] of Object.entries(splits)) {
         const splitAmount = parseFloat(amountStr || "0");
         if (!isNaN(splitAmount) && splitAmount > 0) {

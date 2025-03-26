@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { User, SupabaseService } from '../lib/supabase';
+import { SupabaseService } from '../lib/supabase';
 import { calculateEqualSplits, getTelegramUserId } from '../lib/utils';
-import { ExpenseSplit } from '../lib/types';
+import { User } from '../lib/types';
 
 export function useExpense(groupId: string) {
     const [description, setDescription] = useState("");

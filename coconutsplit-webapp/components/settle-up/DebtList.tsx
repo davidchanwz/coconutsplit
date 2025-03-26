@@ -1,4 +1,4 @@
-import { User } from "../../lib/supabase";
+import { User } from "../../lib/types";
 import { DebtItem } from "./DebtItem";
 
 interface DebtListProps {

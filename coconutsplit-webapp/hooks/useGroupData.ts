@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { SupabaseService, User, Expense, ExpenseSplit, SimplifiedDebt } from '../lib/supabase';
+import { SupabaseService } from '../lib/supabase';
 import { getTelegramUserId } from '../lib/utils';
 import { calculateUserBalances, simplifyDebtsWithMembers } from '../lib/financial-utils';
-import { Settlement } from '../lib/timeline';
+import { Expense, Settlement, SimplifiedDebt, User } from '../lib/types';
 
 export function useGroupData(groupId: string | undefined) {
     const [expenses, setExpenses] = useState<Expense[]>([]);

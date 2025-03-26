@@ -5,7 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Expense, ExpenseSplit, User } from "../lib/supabase";
+import { Expense, ExpenseSplit, User } from "../lib/types";
 
 // Define Settlement interface for the component
 interface Settlement {

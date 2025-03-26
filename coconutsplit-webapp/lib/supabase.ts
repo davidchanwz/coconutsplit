@@ -1,59 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import { Expense, ExpenseSplit, Group, Settlement, User, DebtUpdate, SimplifiedDebt } from './types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export interface Group {
-  group_id: string;
-  group_name: string;
-  created_at: string;
-}
-
-export interface User {
-  uuid: string;
-  username: string;
-  telegram_id: string;
-  created_at: string;
-}
-
-export interface Expense {
-  expense_id: string;
-  group_id: string;
-  paid_by: string;
-  description: string;
-  amount: number;
-  created_at: string;
-}
-
-export interface ExpenseSplit {
-  expense_id: string;
-  user_id: string;
-  amount: number;
-}
-
-export interface Settlement {
-  settlement_id: string;
-  group_id: string;
-  from_user: string;
-  to_user: string;
-  amount: number;
-  created_at: string;
-}
-
-export interface DebtUpdate {
-  group_id: string;
-  user_id: string;
-  opp_user_id: string;
-  increment_value: number;
-}
-
-export interface SimplifiedDebt {
-  from: User;
-  to: User;
-  amount: number;
-}
 
 export class SupabaseService {
   /**

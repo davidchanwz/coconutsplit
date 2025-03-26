@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SupabaseService, User } from "../../lib/supabase";
+import { SupabaseService } from "../../lib/supabase";
 import { parseQueryParams, getTelegramUserId, sendNotificationToBot } from "../../lib/utils";
 import { calculateUserBalances, simplifyDebtsWithMembers } from "../../lib/financial-utils";
 import Link from "next/link";
@@ -9,12 +9,7 @@ import { init, backButton } from "@telegram-apps/sdk";
 import { LoadingSpinner } from "../../components/settle-up/LoadingSpinner";
 import { ErrorDisplay } from "../../components/settle-up/ErrorDisplay";
 import { DebtList } from "../../components/settle-up/DebtList";
-
-interface SimplifiedDebt {
-  from: User;
-  to: User;
-  amount: number;
-}
+import { User, SimplifiedDebt } from "../../lib/types";
 
 export default function SettleUp() {
   const params = parseQueryParams();

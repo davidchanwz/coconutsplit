@@ -1,4 +1,4 @@
-import { User, SimplifiedDebt } from './supabase';
+import { User, SimplifiedDebt } from './types';
 
 // Interface to track user balances
 export interface UserBalance {

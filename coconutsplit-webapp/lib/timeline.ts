@@ -1,20 +1,6 @@
-import { Expense } from "./supabase";
+import { Expense } from "./types";
 import { formatDateForGrouping, formatDateForDisplay } from "./date-utils";
-
-export interface Settlement {
-    settlement_id: string;
-    from_user: string;
-    to_user: string;
-    amount: number;
-    created_at: string;
-    group_id: string;
-}
-
-export interface TimelineItem {
-    type: 'expense' | 'settlement' | 'date-separator';
-    data: Expense | Settlement | string;
-    created_at: string;
-}
+import { Settlement, TimelineItem } from "./types";
 
 export function createTimelineItems(expenses: Expense[], settlements: Settlement[]): TimelineItem[] {
     if (!expenses.length && !settlements.length) return [];
