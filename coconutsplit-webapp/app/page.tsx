@@ -5,6 +5,7 @@ import { init, backButton } from "@telegram-apps/sdk";
 import { SupabaseService, Expense, User, ExpenseSplit, SimplifiedDebt } from "../lib/supabase";
 import { parseQueryParams, getTelegramUserId } from "../lib/utils";
 import { calculateUserBalances, simplifyDebtsWithMembers } from "../lib/financial-utils";
+
 import Link from "next/link";
 import {
   Accordion,
@@ -30,6 +31,7 @@ interface TimelineItem {
   created_at: string;
 }
 
+
 export default function Home() {
   const params = parseQueryParams();
   const groupId = params.group_id;
@@ -42,12 +44,14 @@ export default function Home() {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [groupName, setGroupName] = useState<string>("");
+
   const [simplifiedDebts, setSimplifiedDebts] = useState<SimplifiedDebt[]>([]);
   const [expenseSplits, setExpenseSplits] = useState<{
     [expenseId: string]: { splits: ExpenseSplit[]; loading: boolean };
   }>({});
   const [shouldRefresh, setShouldRefresh] = useState<boolean>(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
 
   useEffect(() => {
     try {
@@ -153,6 +157,7 @@ export default function Home() {
             data: displayDate,
             created_at: item.created_at
           });
+
         }
         
         // Always add the item itself
@@ -164,6 +169,7 @@ export default function Home() {
       setTimelineItems([]);
     }
   }, [expenses, settlements]);
+
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -394,6 +400,7 @@ export default function Home() {
           {error}
         </div>
       )}
+
 
       {/* Debts summary section */}
       {simplifiedDebts.length > 0 && (
