@@ -133,3 +133,14 @@ export function calculateEqualSplits(amount: number, numberOfPeople: number): nu
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function formatNumber(num: number): string {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+export function calculateSplitTotal(splits: Record<string, string>): number {
+  return Object.values(splits).reduce((sum, value) => {
+    const num = parseFloat(value || "0");
+    return sum + (isNaN(num) ? 0 : num);
+  }, 0);
+}

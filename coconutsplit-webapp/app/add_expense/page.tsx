@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { ExpenseForm } from "../../components/ExpenseForm";
 import { SplitSection } from "../../components/SplitSection";
 import { LoadingError } from "../../components/LoadingError";
-import { parseQueryParams } from "../../lib/utils";
+import { parseQueryParams, formatNumber, calculateSplitTotal } from "../../lib/utils";
 import { SupabaseService } from "../../lib/supabase";
 import { init, backButton } from "@telegram-apps/sdk";
 import Link from "next/link";
@@ -65,18 +65,34 @@ export default function AddExpense() {
     };
   }, [groupId]);
 
+  useEffect(() => {
+    if (members.length > 0 && amount && splitMode === 'equal') {
+      const amountValue = parseFloat(amount);
+      if (!isNaN(amountValue)) {
+        const equalShare = (amountValue / members.length).toFixed(2);
+        // Handle rounding issues by giving the remainder to the last member
+        const lastMemberExtra = (amountValue - (parseFloat(equalShare) * members.length)).toFixed(2);
+
+        const newSplits = members.reduce((acc, member, index) => {
+          if (index === members.length - 1) {
+            // Add any remainder to the last member's share
+            acc[member.uuid] = (parseFloat(equalShare) + parseFloat(lastMemberExtra)).toFixed(2);
+          } else {
+            acc[member.uuid] = equalShare;
+          }
+          return acc;
+        }, {} as Record<string, string>);
+
+        setSplits(newSplits);
+      }
+    }
+  }, [members, amount, splitMode]);
+
   const handleSplitChange = (userId: string, value: string) => {
     setSplits((prev) => ({
       ...prev,
       [userId]: value,
     }));
-  };
-
-  const calculateSplitTotal = (): number => {
-    return Object.values(splits).reduce((sum, value) => {
-      const num = parseFloat(value || "0");
-      return sum + (isNaN(num) ? 0 : num);
-    }, 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,13 +111,11 @@ export default function AddExpense() {
       return;
     }
 
-    // Validate splits total matches expense amount - improved precision check
-    const splitsTotal = calculateSplitTotal();
+    // Validate splits total matches expense amount
+    const splitsTotal = calculateSplitTotal(splits);
     if (Math.abs(splitsTotal - amountValue) > 0.01) {
       setError(
-        `Split total (${splitsTotal.toFixed(
-          2
-        )}) doesn't match expense amount (${amountValue.toFixed(2)})`
+        `Split total (${formatNumber(splitsTotal)}) doesn't match expense amount (${formatNumber(amountValue)})`
       );
       return;
     }
@@ -227,7 +241,7 @@ export default function AddExpense() {
           splitMode={splitMode}
           setSplitMode={handleSplitModeChange}
           handleSplitChange={handleSplitChange}
-          splitsTotal={calculateSplitTotal()}
+          splitsTotal={calculateSplitTotal(splits)}
           amountValue={parseFloat(amount || "0")}
         />
 
@@ -240,8 +254,8 @@ export default function AddExpense() {
           </Link>
           <button
             type="submit"
-            disabled={submitting || Math.abs(calculateSplitTotal() - parseFloat(amount || "0")) > 0.01}
-            className={`px-4 py-3 rounded-md text-white text-center flex-1 ${submitting || Math.abs(calculateSplitTotal() - parseFloat(amount || "0")) > 0.01
+            disabled={submitting || Math.abs(calculateSplitTotal(splits) - parseFloat(amount || "0")) > 0.01}
+            className={`px-4 py-3 rounded-md text-white text-center flex-1 ${submitting || Math.abs(calculateSplitTotal(splits) - parseFloat(amount || "0")) > 0.01
               ? "bg-blue-500 opacity-50 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700"
               }`}

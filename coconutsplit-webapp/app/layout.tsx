@@ -13,10 +13,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="bg-gray-900">
-      <body className="bg-gray-900 text-gray-100 min-h-screen w-full">
-        <div className="bg-gray-900 min-h-screen w-full">
+      <body className="bg-gray-900 text-gray-100 min-h-screen w-full pb-20">
           {children}
-        </div>
       </body>
     </html>
   );

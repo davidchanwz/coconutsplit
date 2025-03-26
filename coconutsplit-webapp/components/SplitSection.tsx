@@ -1,4 +1,6 @@
 import { SplitSectionProps } from "../lib/types";
+import { useEffect } from "react";
+import { formatNumber } from "../lib/utils";
 
 export function SplitSection({
     members,
@@ -12,6 +14,7 @@ export function SplitSection({
     const splitsDiff = Math.abs(splitsTotal - amountValue);
     const splitsMatch = splitsDiff <= 0.01;
     const needsMoreAmount = splitsTotal < amountValue;
+
 
     return (
         <div className="pt-4">
@@ -58,7 +61,7 @@ export function SplitSection({
                                     }}
                                     className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
                                 >
-                                    {needsMoreAmount ? "Add" : "Reduce"} ${splitsDiff.toFixed(2)}
+                                    {needsMoreAmount ? "Add" : "Reduce"} ${formatNumber(splitsDiff)}
                                 </button>
                             )}
                             <div className="relative w-32">
@@ -85,15 +88,15 @@ export function SplitSection({
             <div className="mt-4 p-3 bg-gray-800 border border-gray-700 rounded flex justify-between">
                 <span className="text-white">Total split</span>
                 <span className={`font-semibold ${splitsMatch ? "text-green-400" : "text-red-400"}`}>
-                    ${splitsTotal.toFixed(2)}
+                    ${formatNumber(splitsTotal)}
                 </span>
             </div>
 
             {!splitsMatch && (
                 <div className="mt-2 text-red-400 text-sm">
                     {splitsTotal > amountValue
-                        ? `The split amount is ${splitsDiff.toFixed(2)} more than the expense total`
-                        : `The split amount is ${splitsDiff.toFixed(2)} less than the expense total`}
+                        ? `The split amount is $${formatNumber(splitsDiff)} more than the expense total`
+                        : `The split amount is $${formatNumber(splitsDiff)} less than the expense total`}
                 </div>
             )}
         </div>
