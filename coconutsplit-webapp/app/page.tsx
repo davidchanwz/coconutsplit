@@ -56,6 +56,7 @@ export default function Home() {
       if (backButton.hide.isAvailable()) {
         backButton.hide();
       }
+      backButton.unmount();
     } catch (error) {
       console.error("Failed to initialize Telegram SDK:", error);
     }

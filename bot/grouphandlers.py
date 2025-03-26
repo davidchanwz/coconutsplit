@@ -75,24 +75,25 @@ def register_group_handlers(bot):
     def send_help(message):
         help_message = (
         "📚 *General Commands:*\n"
-        "/start - Start the bot\n"
+        # "/start - Start the bot\n"
+        "/split - Main command to run after setting up the group\n"
         "/help - View the list of all available commands\n\n"
 
         "👥 *Group Management Commands:*\n"
         "/create_group - Create a new group\n"
         "/delete_group - Delete the existing group\n"
         "/join_group - Join the existing group\n"
-        "/view_users - View all users in the group\n\n"
+        # "/view_users - View all users in the group\n\n"
 
-        "💸 *Expense Management Commands:*\n"
-        "/add_expense - Add an expense paid by you\n"
-        "/show_expenses - View all expenses in the group\n"
-        "/upload_receipt - Upload a receipt to automatically extract and tag expenses\n\n"
+        # "💸 *Expense Management Commands:*\n"
+        # "/add_expense - Add an expense paid by you\n"
+        # "/show_expenses - View all expenses in the group\n"
+        # "/upload_receipt - Upload a receipt to automatically extract and tag expenses\n\n"
 
-        "🤝 *Debt Management Commands:*\n"
-        "/show_debts - View all debts and see who owes whom\n"
-        "/settle_debt - Settle a debt you owe\n"
-        "/show_settlements - View all debts that's been settled in the group\n\n"
+        # "🤝 *Debt Management Commands:*\n"
+        # "/show_debts - View all debts and see who owes whom\n"
+        # "/settle_debt - Settle a debt you owe\n"
+        # "/show_settlements - View all debts that's been settled in the group\n\n"
 
         "If you have any questions or get stuck, use /help to view this message again!\n"
         "Happy splitting! 😊"
@@ -182,28 +183,28 @@ def register_group_handlers(bot):
     def join_group(message):
         try:
             chat_id = message.chat.id
-            user = User.fetch_from_db_by_user_id(message.from_user.id)
-
-            if not user:
-                user = User(user_id=message.from_user.id, username=message.from_user.username)
-                user.save_to_db()  # Save the user to the database if not already present
-
+            
+            # Fetch the group associated with the chat
             group = Group.fetch_from_db_by_chat(chat_id)
 
-            # Add the user to the group in the database
             if group:
-                if not group.check_user_in_group(user): 
-                    group.add_member(user)
-                    bot.send_message(message.chat.id, f"{user.username} has joined '{group.group_name}'!")
-                else:
-                    bot.send_message(message.chat.id, f"{user.username} is already in '{group.group_name}'!")
-
+                # Create an inline button for joining the group
+                join_button = types.InlineKeyboardMarkup()
+                join_button.add(types.InlineKeyboardButton(text="Join Group", callback_data=f"join_{group.group_id}"))
+                
+                # Get current members to display
+                members = group.fetch_all_members()
+                member_list = "\n".join([f"- {member.username}" for member in members]) if members else "No members yet"
+                
+                # Send message with join button
+                bot.send_message(message.chat.id, 
+                                f"Group: '{group.group_name}'\n\nMembers:\n{member_list}\n\nClick below to join this group:", 
+                                reply_markup=join_button)
             else:
-                bot.send_message(message.chat.id, "No group associated with this chat.")
+                bot.send_message(message.chat.id, "No group associated with this chat. Use /create_group to create one first.")
         
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
-
 
     @bot.callback_query_handler(func=lambda call: call.data.startswith('join_'))
     def handle_join_group(call):
