@@ -23,6 +23,11 @@ export function ExpenseForm({
                     onChange={(e) => setDescription(e.target.value)}
                     className="w-full p-3 bg-gray-800 border border-gray-700 rounded text-white"
                     placeholder="What was this expense for?"
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault(); // Prevent form submission
+                        }
+                    }}
                     required
                 />
             </div>
