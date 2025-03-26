@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ExpenseForm } from "../../components/ExpenseForm";
 import { SplitSection } from "../../components/SplitSection";
 import { LoadingError } from "../../components/LoadingError";
@@ -10,6 +10,7 @@ import { init, backButton } from "@telegram-apps/sdk";
 import Link from "next/link";
 import { useExpense } from "../../hooks/useExpense";
 import { ExpenseSplitNoExpenseID } from "../../lib/types";
+import { SelectParticipantsSection } from "../../components/SelectParticipantsSection";
 
 export default function AddExpense() {
   const params = parseQueryParams();
@@ -34,6 +35,16 @@ export default function AddExpense() {
     setSubmitting,
     handleSplitModeChange,
   } = useExpense(groupId);
+
+  // Add state for selected participants
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
+
+  // Initialize selected participants to all members when members load
+  useEffect(() => {
+    if (members.length > 0) {
+      setSelectedParticipants(members.map(member => member.uuid));
+    }
+  }, [members]);
 
   useEffect(() => {
     const initTelegramBackButton = async () => {
@@ -69,13 +80,17 @@ export default function AddExpense() {
     if (members.length > 0 && amount && splitMode === 'equal') {
       const amountValue = parseFloat(amount);
       if (!isNaN(amountValue)) {
-        const equalShare = (amountValue / members.length).toFixed(2);
+        // Only split among selected participants
+        const participantsCount = selectedParticipants.length || 1; // Avoid division by zero
+        const equalShare = (amountValue / participantsCount).toFixed(2);
         // Handle rounding issues by giving the remainder to the last member
-        const lastMemberExtra = (amountValue - (parseFloat(equalShare) * members.length)).toFixed(2);
+        const lastMemberExtra = (amountValue - (parseFloat(equalShare) * participantsCount)).toFixed(2);
 
         const newSplits = members.reduce((acc, member, index) => {
-          if (index === members.length - 1) {
-            // Add any remainder to the last member's share
+          if (!selectedParticipants.includes(member.uuid)) {
+            acc[member.uuid] = "0.00";
+          } else if (selectedParticipants.indexOf(member.uuid) === selectedParticipants.length - 1) {
+            // Add any remainder to the last selected member's share
             acc[member.uuid] = (parseFloat(equalShare) + parseFloat(lastMemberExtra)).toFixed(2);
           } else {
             acc[member.uuid] = equalShare;
@@ -86,7 +101,7 @@ export default function AddExpense() {
         setSplits(newSplits);
       }
     }
-  }, [members, amount, splitMode]);
+  }, [members, amount, splitMode, selectedParticipants]);
 
   const handleSplitChange = (userId: string, value: string) => {
     setSplits((prev) => ({
@@ -233,6 +248,12 @@ export default function AddExpense() {
           setPaidBy={setPaidBy}
           members={members}
           currentUser={currentUser}
+        />
+
+        <SelectParticipantsSection
+          members={members}
+          selectedParticipants={selectedParticipants}
+          setSelectedParticipants={setSelectedParticipants}
         />
 
         <SplitSection
