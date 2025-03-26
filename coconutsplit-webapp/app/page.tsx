@@ -53,18 +53,18 @@ export default function Home() {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
 
-  useEffect(() => {
-    try {
-      init();
-      backButton.mount();
-      if (backButton.hide.isAvailable()) {
-        backButton.hide();
-      }
-      backButton.unmount();
-    } catch (error) {
-      console.error("Failed to initialize Telegram SDK:", error);
-    }
-  }, []);
+  // useEffect(() => {
+  //   try {
+  //     init();
+  //     backButton.mount();
+  //     if (backButton.hide.isAvailable()) {
+  //       backButton.hide();
+  //     }
+  //     backButton.unmount();
+  //   } catch (error) {
+  //     console.error("Failed to initialize Telegram SDK:", error);
+  //   }
+  // }, []);
 
   // Format date for grouping in a timezone-safe way
   const formatDateForGrouping = (dateString: string): string => {
