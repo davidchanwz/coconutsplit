@@ -1,9 +1,4 @@
-import { User, SimplifiedDebt } from './supabase';
-
-// Interface to track user balances
-export interface UserBalance {
-  [userId: string]: number;
-}
+import { User, SimplifiedDebt, UserBalance } from './types';
 
 /**
  * Calculate user balances from a list of debts

@@ -1,59 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import { Expense, ExpenseSplit, Group, Settlement, User, DebtUpdate, SimplifiedDebt } from './types';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export interface Group {
-  group_id: string;
-  group_name: string;
-  created_at: string;
-}
-
-export interface User {
-  uuid: string;
-  username: string;
-  telegram_id: string;
-  created_at: string;
-}
-
-export interface Expense {
-  expense_id: string;
-  group_id: string;
-  paid_by: string;
-  description: string;
-  amount: number;
-  created_at: string;
-}
-
-export interface ExpenseSplit {
-  expense_id: string;
-  user_id: string;
-  amount: number;
-}
-
-export interface Settlement {
-  settlement_id: string;
-  group_id: string;
-  from_user: string;
-  to_user: string;
-  amount: number;
-  created_at: string;
-}
-
-export interface DebtUpdate {
-  group_id: string;
-  user_id: string;
-  opp_user_id: string;
-  increment_value: number;
-}
-
-export interface SimplifiedDebt {
-  from: User;
-  to: User;
-  amount: number;
-}
 
 export class SupabaseService {
   /**
@@ -268,6 +219,48 @@ export class SupabaseService {
     }
   }
 
+  static async deleteSettlement(settlementId: string, groupId: string): Promise<void> {
+    // First, get the settlement details before deleting
+    const { data: settlement, error: fetchError } = await supabase
+      .from('settlements')
+      .select('*')
+      .eq('settlement_id', settlementId)
+      .eq('group_id', groupId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!settlement) throw new Error('Settlement not found');
+
+    // Delete the settlement
+    const { error: deleteError } = await supabase
+      .from('settlements')
+      .delete()
+      .eq('settlement_id', settlementId);
+    
+    if (deleteError) throw deleteError;
+
+    // Update the debts
+    const { error: debtsError } = await supabase
+      .rpc("bulk_update_debts", {
+        debt_updates: [
+          {
+            group_id: groupId,
+            user_id: settlement.from_user,
+            opp_user_id: settlement.to_user,
+            increment_value: settlement.amount
+          },
+          {
+            group_id: groupId,
+            user_id: settlement.to_user,
+            opp_user_id: settlement.from_user,
+            increment_value: -settlement.amount
+          }
+        ]
+      });
+    
+    if (debtsError) throw debtsError;
+  }
+
   static async getUser(userId: string): Promise<User | null> {
     const { data, error } = await supabase
       .from('users')
@@ -382,9 +375,7 @@ export class SupabaseService {
    * @returns Chat ID or null if not found
    */
   static async getGroupChatId(groupId: string): Promise<number | null> {
-    try {
-      console.log('📊 Fetching chat ID for group:', groupId);
-      
+    try {      
       const { data, error } = await supabase
         .from('groups')
         .select('chat_id')
@@ -392,19 +383,15 @@ export class SupabaseService {
         .single();
         
       if (error) {
-        console.error('❌ Error fetching group chat ID:', error);
         return null;
       }
       
       if (!data || !data.chat_id) {
-        console.error('⚠️ No chat_id found for group:', groupId);
         return null;
       }
       
-      console.log('✅ Successfully retrieved chat_id:', data.chat_id);
       return data.chat_id;
     } catch (error) {
-      console.error('❌ Exception in getGroupChatId:', error);
       return null;
     }
   }

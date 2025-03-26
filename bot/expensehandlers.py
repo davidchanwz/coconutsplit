@@ -49,7 +49,7 @@ def register_expense_handlers(bot):
             # Create inline keyboard with Mini App button
             keyboard = InlineKeyboardMarkup()
             web_app_button = InlineKeyboardButton(
-                text="Add Expense",
+                text="Open CoconutSplit",
                 url=mini_app_url
             )
             keyboard.add(web_app_button)
