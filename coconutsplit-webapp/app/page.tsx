@@ -8,7 +8,7 @@ import { ExpenseHistory } from "@/components/ExpenseHistory";
 import { useGroupData } from "@/hooks/useGroupData";
 import { createTimelineItems } from "@/lib/timeline";
 import { ExpenseSplit, TimelineItem } from "@/lib/types";
-import { init, backButton } from "@telegram-apps/sdk-react";
+import { init, backButton } from '@telegram-apps/sdk-react';
 import Link from "next/link";
 
 export default function Home() {
@@ -37,8 +37,8 @@ export default function Home() {
 
   useEffect(() => {
     try {
-    init();
-    backButton.mount();
+      init();
+      backButton.mount();
     } catch (error) {
       console.error("Failed to initialize Telegram SDK:", error);
     }

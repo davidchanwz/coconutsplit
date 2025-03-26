@@ -10,7 +10,7 @@ import {
   calculateSplitTotal,
 } from "../../lib/utils";
 import { SupabaseService } from "../../lib/supabase";
-import { init, backButton } from "@telegram-apps/sdk";
+import { backButton } from '@telegram-apps/sdk-react';
 import Link from "next/link";
 import { useExpense } from "../../hooks/useExpense";
 import { ExpenseSplitNoExpenseID } from "../../lib/types";
@@ -54,6 +54,7 @@ export default function AddExpense() {
 
   useEffect(() => {
     try {
+      console.log("is backbutton avail?", backButton.show.isAvailable());
       if (backButton.show.isAvailable()) {
         backButton.show();
         backButton.onClick(() => {
