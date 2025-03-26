@@ -70,3 +70,30 @@ export interface TimelineItem {
     data: Expense | Settlement | string;
     created_at: string;
 }
+
+
+export interface Settlement {
+    settlement_id: string;
+    from_user: string;
+    to_user: string;
+    amount: number;
+    created_at: string;
+    group_id: string;
+}
+
+export interface TimelineItem {
+    type: "expense" | "settlement" | "date-separator";
+    data: Expense | Settlement | string;
+    created_at: string;
+}
+
+export interface ExpenseHistoryProps {
+    timelineItems: TimelineItem[];
+    members: User[];
+    expenseSplits: {
+        [expenseId: string]: { splits: ExpenseSplit[]; loading: boolean };
+    };
+    onAccordionChange: (value: string, expenseId: string) => void;
+    onDeleteExpense: (expenseId: string) => void;
+    isDeleting: string | null;
+}
