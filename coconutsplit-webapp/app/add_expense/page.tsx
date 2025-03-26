@@ -57,8 +57,8 @@ export default function AddExpense() {
       if (backButton.show.isAvailable()) {
         backButton.show();
         backButton.onClick(() => {
-          backButton.hide();
           window.location.href = `/?group_id=${groupId}`;
+          backButton.hide();
         });
       }
     } catch (error) {
