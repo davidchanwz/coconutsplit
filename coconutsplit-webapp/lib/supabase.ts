@@ -14,9 +14,7 @@ export class SupabaseService {
    * @throws Error if throwErrors is true and an error occurs
    */
   static async getGroupDetails(groupId: string, throwErrors: boolean = false): Promise<Group | null> {
-    try {
-      console.log('Fetching group details for:', groupId);
-      
+    try {      
       const { data, error } = await supabase
         .from('groups')
         .select('*')

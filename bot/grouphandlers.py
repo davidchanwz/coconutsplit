@@ -5,6 +5,7 @@ import requests
 from classes import Group, User, Expense, Settlement
 import uuid
 import logging
+from utils import is_group_chat
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -77,13 +78,16 @@ def register_group_handlers(bot):
         "📚 *General Commands:*\n"
         # "/start - Start the bot\n"
         "/split - Main command to run after setting up the group\n"
-        "/help - View the list of all available commands\n\n"
+        "/help - View the list of all available commands\n"
+        "/toggle_reminders - Receive daily reminders for debt payments\n\n"
+
 
         "👥 *Group Management Commands:*\n"
         "/create_group - Create a new group\n"
         "/delete_group - Delete the existing group\n"
-        "/join_group - Join the existing group\n"
-        "/toggle_reminders - Receive daily reminders for debt payments\n"
+        "/join_group - Join the existing group\n\n"
+        
+        
         # "/view_users - View all users in the group\n\n"
 
         # "💸 *Expense Management Commands:*\n"
@@ -105,6 +109,11 @@ def register_group_handlers(bot):
     def ask_group_name(message):
         try:
             """Step 1: Ask the user for the group name."""
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             
             # Check if a group already exists for this chat
@@ -171,6 +180,11 @@ def register_group_handlers(bot):
     def view_users(message):
         try:
             """List all users in the group associated with the current chat."""
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             
             # Fetch the group associated with the chat
@@ -195,6 +209,11 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['join_group'])
     def join_group(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             
             # Fetch the group associated with the chat
@@ -274,6 +293,11 @@ def register_group_handlers(bot):
 
     @bot.message_handler(commands=['delete_group'])
     def delete_group(message):
+        # Check if this is a private chat
+        if not is_group_chat(message):
+            bot.reply_to(message, "This command can only be used in group chats.")
+            return
+            
         msg = bot.reply_to(message, 'Deleting this group will cause you to lose all recorded expenses!\n\nPlease reply this with "coconut" to confirm.')
         bot.register_next_step_handler(msg, process_delete_group)
         
@@ -304,6 +328,11 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['toggle_reminders'])
     def toggle_reminders(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             group = Group.fetch_from_db_by_chat(chat_id)
             

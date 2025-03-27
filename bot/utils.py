@@ -1,6 +1,10 @@
 from classes import Group, User, Expense
 import re
 
+def is_group_chat(message):
+    """Check if the message is from a group chat"""
+    return message.chat.type in ['group', 'supergroup']
+
 def simplify_debts(balances):
         """Simplify debts by finding who owes what to whom."""
         creditors = []
