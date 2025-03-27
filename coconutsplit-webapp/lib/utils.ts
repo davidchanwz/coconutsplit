@@ -83,7 +83,6 @@ export function getTelegramUserId(): string | undefined {
  */
 export async function sendNotificationToBot(data: any): Promise<boolean> {
   try {
-    console.log('🚀 Sending notification to bot API:', process.env.NEXT_PUBLIC_BOT_API_URL);
 
     // Make sure we're using POST instead of OPTIONS
     const response = await fetch(`${process.env.NEXT_PUBLIC_BOT_API_URL}/api/notify`, {
@@ -98,7 +97,6 @@ export async function sendNotificationToBot(data: any): Promise<boolean> {
       credentials: 'omit'
     });
 
-    console.log('📡 API Response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
