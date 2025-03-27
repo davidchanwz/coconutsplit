@@ -113,9 +113,21 @@ def register_group_handlers(bot):
             if existing_group:
                 bot.reply_to(message, f"A group already exists in this chat: '{existing_group.group_name}'. Please delete the current group before creating a new one.")
             else:
-                # Proceed with group creation if no group exists
-                msg = bot.reply_to(message, "Please reply this with the name of the group:")
-                bot.register_next_step_handler(msg, process_group_name)
+                # Check if the user provided a group name directly with the command
+                # Get the text after "/create_group" command
+                command_text = message.text.split()
+                
+                # If there's text after the command, use it as group name
+                if len(command_text) > 1:
+                    # Join all text after the command to form the group name
+                    group_name = ' '.join(command_text[1:])
+                    # Create a message-like object with the group name for compatibility with process_group_name
+                    message.text = group_name
+                    process_group_name(message)
+                else:
+                    # If no group name was provided, ask for it
+                    msg = bot.reply_to(message, "Please reply this with the name of the group:")
+                    bot.register_next_step_handler(msg, process_group_name)
 
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
