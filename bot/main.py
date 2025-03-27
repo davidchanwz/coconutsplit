@@ -67,7 +67,7 @@ commands = [
 register_group_handlers(bot)
 register_expense_handlers(bot)
 # register_receipt_handlers(bot)
-register_receipt_handlers_nlp(bot)
+# register_receipt_handlers_nlp(bot)
 
 
 # --- FastAPI route to receive webhook updates --- #
