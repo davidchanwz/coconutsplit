@@ -260,8 +260,8 @@ async def handle_notification(
 
         elif action == "delete_settlement":
             # Handle settlement deletion notification
-            from_user = data.get('from')
-            to_user = data.get('to')
+            from_user = data.get('from_user')
+            to_user = data.get('to_user')
             amount = data.get('amount')
             
             # Send a message to the group about the deleted settlement
