@@ -78,14 +78,14 @@ def register_group_handlers(bot):
         "📚 *General Commands:*\n"
         # "/start - Start the bot\n"
         "/split - Main command to run after setting up the group\n"
-        "/help - View the list of all available commands\n\n"
-        "/toggle_reminders - Receive daily reminders for debt payments\n"
+        "/help - View the list of all available commands\n"
+        "/toggle_reminders - Receive daily reminders for debt payments\n\n"
 
 
         "👥 *Group Management Commands:*\n"
         "/create_group - Create a new group\n"
         "/delete_group - Delete the existing group\n"
-        "/join_group - Join the existing group\n"
+        "/join_group - Join the existing group\n\n"
         
         
         # "/view_users - View all users in the group\n\n"
