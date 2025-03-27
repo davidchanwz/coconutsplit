@@ -198,9 +198,13 @@ def register_group_handlers(bot):
                 member_list = "\n".join([f"- {member.username}" for member in members]) if members else "No members yet"
                 
                 # Send message with join button
-                bot.send_message(message.chat.id, 
+                sent_message = bot.send_message(message.chat.id, 
                                 f"Group: '{group.group_name}'\n\nMembers:\n{member_list}\n\nClick below to join this group:", 
                                 reply_markup=join_button)
+                
+                # Store the message ID in the group data and save to database
+                group.message_id = sent_message.message_id
+                group.save_to_db()  # Save the updated group with message ID
             else:
                 bot.send_message(message.chat.id, "No group associated with this chat. Use /create_group to create one first.")
         
