@@ -120,7 +120,7 @@ def register_group_handlers(bot):
                 # If there's text after the command, use it as group name
                 if len(command_text) > 1:
                     # Join all text after the command to form the group name
-                    group_name = ' '.join(command_text[1:])
+                    group_name = ' '.join(command_text[2:])
                     # Create a message-like object with the group name for compatibility with process_group_name
                     message.text = group_name
                     process_group_name(message)
