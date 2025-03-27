@@ -250,7 +250,7 @@ def get_display_debts_string_with_at(debts, group):
     for debtor_id, creditor_id, amount in debts:
         debtor = group_members_dict[debtor_id]
         creditor = group_members_dict[creditor_id]
-        debt_messages.append(f"@{debtor.username}, please pay @{creditor.username} ${amount:.2f}")
+        debt_messages.append(f"@{debtor.username} owes @{creditor.username} ${amount:.2f}")
 
     return "\n".join(debt_messages)
 
