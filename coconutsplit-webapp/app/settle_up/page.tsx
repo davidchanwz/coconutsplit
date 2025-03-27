@@ -27,8 +27,16 @@ export default function SettleUp() {
     loading,
     error: groupError,
     currentUser,
-    simplifiedDebts: debts,
+    simplifiedDebts: allDebts,
   } = useGroupData(groupId);
+
+  // Filter debts to only show ones involving the current user
+  const userDebts = currentUser
+    ? allDebts.filter(debt =>
+      debt.from.uuid === currentUser.uuid ||
+      debt.to.uuid === currentUser.uuid
+    )
+    : [];
 
   useEffect(() => {
     try {
@@ -56,7 +64,7 @@ export default function SettleUp() {
     setLocalError(null);
 
     try {
-      const debtsToSettle = debts.filter(
+      const debtsToSettle = userDebts.filter(
         (debt, index) => selectedDebts[`debt-${index}`]
       );
 
@@ -113,7 +121,7 @@ export default function SettleUp() {
       )}
 
       <DebtList
-        debts={debts}
+        debts={userDebts}
         selectedDebts={selectedDebts}
         currentUser={currentUser}
         onToggleDebt={toggleDebtSelection}
@@ -130,16 +138,15 @@ export default function SettleUp() {
           onClick={handleSettleUp}
           disabled={
             isSubmitting ||
-            debts.length === 0 ||
+            userDebts.length === 0 ||
             Object.values(selectedDebts).filter(Boolean).length === 0
           }
-          className={`px-4 py-3 rounded-md text-white text-center flex-1 ${
-            isSubmitting ||
-            debts.length === 0 ||
-            Object.values(selectedDebts).filter(Boolean).length === 0
+          className={`px-4 py-3 rounded-md text-white text-center flex-1 ${isSubmitting ||
+              userDebts.length === 0 ||
+              Object.values(selectedDebts).filter(Boolean).length === 0
               ? "bg-green-500 opacity-50 cursor-not-allowed"
               : "bg-green-600 hover:bg-green-700"
-          }`}
+            }`}
         >
           {isSubmitting ? "Settling..." : "Settle up"}
         </button>
