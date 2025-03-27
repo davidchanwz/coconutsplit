@@ -1,7 +1,7 @@
 # bot/expensehandlers.py
 from classes import Group, User, Expense, Settlement
 from collections import defaultdict
-from utils import simplify_debts, calculate_user_balances, process_add_expense, get_display_debts_string, get_display_debts_string_with_at
+from utils import simplify_debts, calculate_user_balances, process_add_expense, get_display_debts_string, get_display_debts_string_with_at, is_group_chat
 
 import re
 import json
@@ -27,6 +27,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['split'])
     def launch_coconut_split_app(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             user_id = message.from_user.id
             # Fetch the user and group from the database
@@ -68,6 +73,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['add_expense'])
     def add_expense_start(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             user_id = message.from_user.id
             # Fetch the user and group from the database
@@ -109,6 +119,7 @@ def register_expense_handlers(bot):
     @bot.message_handler(content_types=['web_app_data'])
     def handle_web_app_data(message):
         try:
+            
             chat_id = message.chat.id
             user_id = message.from_user.id
             
@@ -195,6 +206,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['delete_latest_expense'])
     def delete_latest_expense(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             group = Group.fetch_from_db_by_chat(chat_id)
 
@@ -222,6 +238,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['add_expense_on_behalf'])
     def add_expense_on_behalf(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             group = Group.fetch_from_db_by_chat(chat_id)
 
@@ -321,6 +342,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['show_expenses'])
     def show_expenses(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
 
             # Fetch the group by chat ID
@@ -382,6 +408,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['show_debts'])
     def show_debts(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             # Fetch the group by chat ID
             group = Group.fetch_from_db_by_chat(chat_id)
@@ -415,6 +446,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['settle_debt'])
     def settle_debt_start(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             user_id = message.from_user.id
             user = User.fetch_from_db_by_user_id(user_id)
@@ -505,6 +541,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['show_settlements'])
     def show_settlements(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             # Fetch the group by chat ID
             group = Group.fetch_from_db_by_chat(chat_id)
@@ -550,6 +591,11 @@ def register_expense_handlers(bot):
     @bot.message_handler(commands=['delete_latest_settlement'])
     def delete_latest_settlements(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             group = Group.fetch_from_db_by_chat(chat_id)
 

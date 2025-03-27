@@ -14,9 +14,7 @@ export class SupabaseService {
    * @throws Error if throwErrors is true and an error occurs
    */
   static async getGroupDetails(groupId: string, throwErrors: boolean = false): Promise<Group | null> {
-    try {
-      console.log('Fetching group details for:', groupId);
-      
+    try {      
       const { data, error } = await supabase
         .from('groups')
         .select('*')
@@ -375,9 +373,7 @@ export class SupabaseService {
    * @returns Chat ID or null if not found
    */
   static async getGroupChatId(groupId: string): Promise<number | null> {
-    try {
-      console.log('📊 Fetching chat ID for group:', groupId);
-      
+    try {      
       const { data, error } = await supabase
         .from('groups')
         .select('chat_id')
@@ -385,19 +381,15 @@ export class SupabaseService {
         .single();
         
       if (error) {
-        console.error('❌ Error fetching group chat ID:', error);
         return null;
       }
       
       if (!data || !data.chat_id) {
-        console.error('⚠️ No chat_id found for group:', groupId);
         return null;
       }
       
-      console.log('✅ Successfully retrieved chat_id:', data.chat_id);
       return data.chat_id;
     } catch (error) {
-      console.error('❌ Exception in getGroupChatId:', error);
       return null;
     }
   }

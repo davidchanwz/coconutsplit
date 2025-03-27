@@ -5,6 +5,7 @@ import requests
 from classes import Group, User, Expense, Settlement
 import uuid
 import logging
+from utils import is_group_chat
 
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
@@ -77,13 +78,16 @@ def register_group_handlers(bot):
         "📚 *General Commands:*\n"
         # "/start - Start the bot\n"
         "/split - Main command to run after setting up the group\n"
-        "/help - View the list of all available commands\n\n"
+        "/help - View the list of all available commands\n"
+        "/toggle_reminders - Receive daily reminders for debt payments\n\n"
+
 
         "👥 *Group Management Commands:*\n"
         "/create_group - Create a new group\n"
         "/delete_group - Delete the existing group\n"
-        "/join_group - Join the existing group\n"
-        "/toggle_reminders - Receive daily reminders for debt payments\n"
+        "/join_group - Join the existing group\n\n"
+        
+        
         # "/view_users - View all users in the group\n\n"
 
         # "💸 *Expense Management Commands:*\n"
@@ -105,6 +109,11 @@ def register_group_handlers(bot):
     def ask_group_name(message):
         try:
             """Step 1: Ask the user for the group name."""
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             
             # Check if a group already exists for this chat
@@ -113,9 +122,21 @@ def register_group_handlers(bot):
             if existing_group:
                 bot.reply_to(message, f"A group already exists in this chat: '{existing_group.group_name}'. Please delete the current group before creating a new one.")
             else:
-                # Proceed with group creation if no group exists
-                msg = bot.reply_to(message, "Please reply this with the name of the group:")
-                bot.register_next_step_handler(msg, process_group_name)
+                # Check if the user provided a group name directly with the command
+                # Get the text after "/create_group" command
+                command_text = message.text.split()
+                
+                # If there's text after the command, use it as group name
+                if len(command_text) > 1:
+                    # Join all text after the command to form the group name
+                    group_name = ' '.join(command_text[1:])
+                    # Create a message-like object with the group name for compatibility with process_group_name
+                    message.text = group_name
+                    process_group_name(message)
+                else:
+                    # If no group name was provided, ask for it
+                    msg = bot.reply_to(message, "Please reply this with the name of the group:")
+                    bot.register_next_step_handler(msg, process_group_name)
 
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
@@ -159,6 +180,11 @@ def register_group_handlers(bot):
     def view_users(message):
         try:
             """List all users in the group associated with the current chat."""
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             
             # Fetch the group associated with the chat
@@ -183,6 +209,11 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['join_group'])
     def join_group(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             
             # Fetch the group associated with the chat
@@ -198,9 +229,13 @@ def register_group_handlers(bot):
                 member_list = "\n".join([f"- {member.username}" for member in members]) if members else "No members yet"
                 
                 # Send message with join button
-                bot.send_message(message.chat.id, 
+                sent_message = bot.send_message(message.chat.id, 
                                 f"Group: '{group.group_name}'\n\nMembers:\n{member_list}\n\nClick below to join this group:", 
                                 reply_markup=join_button)
+                
+                # Store the message ID in the group data and save to database
+                group.message_id = sent_message.message_id
+                group.save_to_db()  # Save the updated group with message ID
             else:
                 bot.send_message(message.chat.id, "No group associated with this chat. Use /create_group to create one first.")
         
@@ -258,6 +293,11 @@ def register_group_handlers(bot):
 
     @bot.message_handler(commands=['delete_group'])
     def delete_group(message):
+        # Check if this is a private chat
+        if not is_group_chat(message):
+            bot.reply_to(message, "This command can only be used in group chats.")
+            return
+            
         msg = bot.reply_to(message, 'Deleting this group will cause you to lose all recorded expenses!\n\nPlease reply this with "coconut" to confirm.')
         bot.register_next_step_handler(msg, process_delete_group)
         
@@ -288,6 +328,11 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['toggle_reminders'])
     def toggle_reminders(message):
         try:
+            # Check if this is a private chat
+            if not is_group_chat(message):
+                bot.reply_to(message, "This command can only be used in group chats.")
+                return
+                
             chat_id = message.chat.id
             group = Group.fetch_from_db_by_chat(chat_id)
             

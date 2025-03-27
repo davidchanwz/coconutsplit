@@ -8,6 +8,7 @@ import { ExpenseHistory } from "@/components/ExpenseHistory";
 import { useGroupData } from "@/hooks/useGroupData";
 import { createTimelineItems } from "@/lib/timeline";
 import { ExpenseSplit, TimelineItem } from "@/lib/types";
+import { init, backButton } from '@telegram-apps/sdk-react';
 import Link from "next/link";
 
 export default function Home() {
@@ -31,8 +32,17 @@ export default function Home() {
     groupName,
     simplifiedDebts,
     isDeleting,
-    setIsDeleting
+    setIsDeleting,
   } = useGroupData(groupId);
+
+  useEffect(() => {
+    try {
+      init();
+      backButton.mount();
+    } catch (error) {
+      console.error("Failed to initialize Telegram SDK:", error);
+    }
+  }, []);
 
   useEffect(() => {
     setTimelineItems(createTimelineItems(expenses, settlements));
@@ -40,28 +50,28 @@ export default function Home() {
 
   const handleDeleteSettlement = async (settlementId: string) => {
     if (!groupId || isDeleting) return;
-  
+
     try {
       setIsDeleting(settlementId);
-  
+
       // Find the settlement that's being deleted to include in notification
       const settlementToDelete = settlements.find(
         (settlement) => settlement.settlement_id === settlementId
       );
-  
+
       await SupabaseService.deleteSettlement(settlementId, groupId);
-  
+
       // Update the settlements list after deletion
       setSettlements((prev) =>
         prev.filter((settlement) => settlement.settlement_id !== settlementId)
       );
-  
+
       // Send notification to the bot about the deleted settlement
       if (settlementToDelete) {
         try {
           // Get the chat ID from the group ID
           const chatId = await SupabaseService.getGroupChatId(groupId);
-  
+
           if (chatId) {
             // Find the involved users' usernames
             const fromUser = members.find(
@@ -70,7 +80,7 @@ export default function Home() {
             const toUser = members.find(
               (m) => m.uuid === settlementToDelete.to_user
             );
-  
+
             // Send notification to the bot server API
             const notificationData = {
               chat_id: chatId,
@@ -79,10 +89,10 @@ export default function Home() {
               from_user: fromUser?.username || "Unknown",
               to_user: toUser?.username || "Unknown",
             };
-  
+
             const apiUrl = process.env.NEXT_PUBLIC_BOT_API_URL || "";
             const apiKey = process.env.NEXT_PUBLIC_BOT_API_KEY || "";
-  
+
             // Make direct API call with POST method
             await fetch(`${apiUrl}/api/notify`, {
               method: "POST",
@@ -177,27 +187,30 @@ export default function Home() {
 
   const handleAccordionChange = async (value: string, expenseId: string) => {
     // Only load splits when accordion is opened and we don't have the data yet
-    if (value && (!expenseSplits[expenseId] || !expenseSplits[expenseId].splits.length)) {
+    if (
+      value &&
+      (!expenseSplits[expenseId] || !expenseSplits[expenseId].splits.length)
+    ) {
       try {
         // Mark as loading
-        setExpenseSplits(prev => ({
+        setExpenseSplits((prev) => ({
           ...prev,
-          [expenseId]: { splits: [], loading: true }
+          [expenseId]: { splits: [], loading: true },
         }));
 
         // Fetch the expense splits
         const splits = await SupabaseService.getExpenseSplits(expenseId);
 
         // Store the fetched splits
-        setExpenseSplits(prev => ({
+        setExpenseSplits((prev) => ({
           ...prev,
-          [expenseId]: { splits, loading: false }
+          [expenseId]: { splits, loading: false },
         }));
       } catch (err) {
         console.error("Failed to load expense splits:", err);
-        setExpenseSplits(prev => ({
+        setExpenseSplits((prev) => ({
           ...prev,
-          [expenseId]: { splits: [], loading: false }
+          [expenseId]: { splits: [], loading: false },
         }));
       }
     }
@@ -222,7 +235,9 @@ export default function Home() {
   return (
     <main className="container mx-auto px-2 sm:px-4 py-4 sm:py-8 bg-gray-900 min-h-screen">
       <div className="mb-4 sm:mb-8 pl-4">
-        <h1 className="text-xl sm:text-2xl font-bold text-white">Group: {groupName}</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">
+          Group: {groupName}
+        </h1>
         {currentUser && (
           <div className="text-gray-300 mt-1 sm:mt-2 text-sm sm:text-base">
             Hello, {currentUser.username}

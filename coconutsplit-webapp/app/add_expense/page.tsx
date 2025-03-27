@@ -1,19 +1,24 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ExpenseForm } from "../../components/ExpenseForm";
 import { SplitSection } from "../../components/SplitSection";
 import { LoadingError } from "../../components/LoadingError";
-import { parseQueryParams, formatNumber, calculateSplitTotal } from "../../lib/utils";
+import {
+  parseQueryParams,
+  formatNumber,
+  calculateSplitTotal,
+} from "../../lib/utils";
 import { SupabaseService } from "../../lib/supabase";
-import { init, backButton } from "@telegram-apps/sdk";
+import { backButton } from '@telegram-apps/sdk-react';
 import Link from "next/link";
 import { useExpense } from "../../hooks/useExpense";
 import { ExpenseSplitNoExpenseID } from "../../lib/types";
+import { SelectParticipantsSection } from "../../components/SelectParticipantsSection";
 
 export default function AddExpense() {
   const params = parseQueryParams();
-  const groupId = params.group_id || '';
+  const groupId = params.group_id || "";
 
   const {
     description,
@@ -35,48 +40,56 @@ export default function AddExpense() {
     handleSplitModeChange,
   } = useExpense(groupId);
 
-  useEffect(() => {
-    const initTelegramBackButton = async () => {
-      try {
-        init();
-        backButton.mount();
-        if (backButton.show.isAvailable()) {
-          backButton.show();
-          backButton.onClick(() => {
-            window.location.href = `/?group_id=${groupId}`;
-          });
-        }
-        return () => {
-          backButton.hide();
-          backButton.unmount();
-        };
-      } catch (error) {
-        console.error("Failed to initialize Telegram SDK:", error);
-      }
-    };
+  // Add state for selected participants
+  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
+    []
+  );
 
-    const cleanup = initTelegramBackButton();
-    return () => {
-      if (cleanup) {
-        cleanup.then((cleanupFn) => {
-          if (cleanupFn) cleanupFn();
+  // Initialize selected participants to all members when members load
+  useEffect(() => {
+    if (members.length > 0) {
+      setSelectedParticipants(members.map((member) => member.uuid));
+    }
+  }, [members]);
+
+  useEffect(() => {
+    try {
+      if (backButton.show.isAvailable()) {
+        backButton.show();
+        backButton.onClick(() => {
+          window.location.href = `/?group_id=${groupId}`;
+          backButton.hide();
         });
       }
-    };
+    } catch (error) {
+      console.error("Failed to initialize Telegram SDK:", error);
+    }
   }, [groupId]);
 
   useEffect(() => {
-    if (members.length > 0 && amount && splitMode === 'equal') {
+    if (members.length > 0 && amount && splitMode === "equal") {
       const amountValue = parseFloat(amount);
       if (!isNaN(amountValue)) {
-        const equalShare = (amountValue / members.length).toFixed(2);
+        // Only split among selected participants
+        const participantsCount = selectedParticipants.length || 1; // Avoid division by zero
+        const equalShare = (amountValue / participantsCount).toFixed(2);
         // Handle rounding issues by giving the remainder to the last member
-        const lastMemberExtra = (amountValue - (parseFloat(equalShare) * members.length)).toFixed(2);
+        const lastMemberExtra = (
+          amountValue -
+          parseFloat(equalShare) * participantsCount
+        ).toFixed(2);
 
         const newSplits = members.reduce((acc, member, index) => {
-          if (index === members.length - 1) {
-            // Add any remainder to the last member's share
-            acc[member.uuid] = (parseFloat(equalShare) + parseFloat(lastMemberExtra)).toFixed(2);
+          if (!selectedParticipants.includes(member.uuid)) {
+            acc[member.uuid] = "0.00";
+          } else if (
+            selectedParticipants.indexOf(member.uuid) ===
+            selectedParticipants.length - 1
+          ) {
+            // Add any remainder to the last selected member's share
+            acc[member.uuid] = (
+              parseFloat(equalShare) + parseFloat(lastMemberExtra)
+            ).toFixed(2);
           } else {
             acc[member.uuid] = equalShare;
           }
@@ -86,7 +99,7 @@ export default function AddExpense() {
         setSplits(newSplits);
       }
     }
-  }, [members, amount, splitMode]);
+  }, [members, amount, splitMode, selectedParticipants]);
 
   const handleSplitChange = (userId: string, value: string) => {
     setSplits((prev) => ({
@@ -115,7 +128,9 @@ export default function AddExpense() {
     const splitsTotal = calculateSplitTotal(splits);
     if (Math.abs(splitsTotal - amountValue) > 0.01) {
       setError(
-        `Split total (${formatNumber(splitsTotal)}) doesn't match expense amount (${formatNumber(amountValue)})`
+        `Split total (${formatNumber(
+          splitsTotal
+        )}) doesn't match expense amount (${formatNumber(amountValue)})`
       );
       return;
     }
@@ -198,6 +213,7 @@ export default function AddExpense() {
       }
 
       // Redirect regardless of notification success
+      backButton.hide();
       window.location.href = `/?group_id=${groupId}`;
     } catch (err: any) {
       console.error("Error in handleSubmit:", err);
@@ -235,6 +251,12 @@ export default function AddExpense() {
           currentUser={currentUser}
         />
 
+        <SelectParticipantsSection
+          members={members}
+          selectedParticipants={selectedParticipants}
+          setSelectedParticipants={setSelectedParticipants}
+        />
+
         <SplitSection
           members={members}
           splits={splits}
@@ -254,11 +276,20 @@ export default function AddExpense() {
           </Link>
           <button
             type="submit"
-            disabled={submitting || Math.abs(calculateSplitTotal(splits) - parseFloat(amount || "0")) > 0.01}
-            className={`px-4 py-3 rounded-md text-white text-center flex-1 ${submitting || Math.abs(calculateSplitTotal(splits) - parseFloat(amount || "0")) > 0.01
-              ? "bg-blue-500 opacity-50 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-              }`}
+            disabled={
+              submitting ||
+              Math.abs(
+                calculateSplitTotal(splits) - parseFloat(amount || "0")
+              ) > 0.01
+            }
+            className={`px-4 py-3 rounded-md text-white text-center flex-1 ${
+              submitting ||
+              Math.abs(
+                calculateSplitTotal(splits) - parseFloat(amount || "0")
+              ) > 0.01
+                ? "bg-blue-500 opacity-50 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
             {submitting ? "Adding..." : "Add Expense"}
           </button>
