@@ -107,9 +107,7 @@ async def send_daily_reminder(req: Request):
             try:
                 reminder_message = (
                     f"🌴 Daily Debt Reminder 🌴\n\n"
-                    f"Here are the current outstanding debts:\n\n"
                     f"{debt_string}\n\n"
-                    f"Use /settle_debt to settle up!"
                 )
                 bot.send_message(chat_id, reminder_message)
                 sent_count += 1
@@ -256,6 +254,22 @@ async def handle_notification(
                 f"*Description:* {description}\n"
                 f"*Amount:* ${amount}\n"
                 f"*Paid by:* @{payer}"
+            )
+            
+            bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+
+        elif action == "delete_settlement":
+            # Handle settlement deletion notification
+            from_user = data.get('from')
+            to_user = data.get('to')
+            amount = data.get('amount')
+            
+            # Send a message to the group about the deleted settlement
+            notification_text = (
+                f"🗑️ *Settlement Deleted*\n"
+                f"*From:* @{from_user}\n"
+                f"*To:* @{to_user}\n"
+                f"*Amount:* ${amount}"
             )
             
             bot.send_message(chat_id, notification_text, parse_mode='Markdown')
