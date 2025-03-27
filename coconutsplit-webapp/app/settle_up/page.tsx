@@ -18,7 +18,13 @@ export default function SettleUp() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const { loading, error: groupError, currentUser, simplifiedDebts: debts } = useGroupData(groupId);
+  const { loading, error: groupError, currentUser, simplifiedDebts: allDebts } = useGroupData(groupId);
+
+  // Filter debts to only show ones involving the current user
+  const debts = allDebts.filter(
+    debt => currentUser && (debt.from.uuid === currentUser.uuid || debt.to.uuid === currentUser.uuid)
+  );
+
   useTelegramBackButton(`/?group_id=${groupId}`);
 
   const toggleDebtSelection = (debtId: string) => {
