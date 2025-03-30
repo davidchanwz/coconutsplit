@@ -340,7 +340,7 @@ def register_group_handlers(bot):
             if group:
                 group.toggle_reminders()
                 if group.reminders:
-                    bot.send_message(chat_id, "Reminders have been enabled for this group.")
+                    bot.send_message(chat_id, "Reminders have been enabled for this group. (12pm SGT Daily)")
                 else:
                     bot.send_message(chat_id, "Reminders have been disabled for this group.")
             else:
