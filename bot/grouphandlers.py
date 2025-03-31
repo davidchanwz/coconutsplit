@@ -254,6 +254,9 @@ def register_group_handlers(bot):
                 user.save_to_db()  # Save the user to the database if not already present
 
             group = Group.fetch_from_db_by_chat(chat_id)
+            
+            if not user.username == call.from_user.username:
+                user.update_username(call.from_user.username)
 
             # Add the user to the group in the database
             if group:
