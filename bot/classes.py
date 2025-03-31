@@ -26,6 +26,11 @@ class User:
             "created_at": self.created_at.isoformat(timespec="microseconds"), # Seralise datetime
         }
         return supa.table('users').insert(user_data).execute()
+    
+    def update_username(self, new_username: str):
+        """Update the username of the user."""
+        self.username = new_username
+        supa.table('users').update({"username": new_username}).eq("uuid", self.uuid).execute()
 
     @staticmethod
     def fetch_from_db_by_user_id(user_id: int):
