@@ -176,35 +176,35 @@ def register_group_handlers(bot):
         except Exception as e:
             bot.send_message(message.chat.id, f"{e}")
 
-    @bot.message_handler(commands=['view_users'])
-    def view_users(message):
-        try:
-            """List all users in the group associated with the current chat."""
-            # Check if this is a private chat
-            if not is_group_chat(message):
-                bot.reply_to(message, "This command can only be used in group chats.")
-                return
+    # @bot.message_handler(commands=['view_users'])
+    # def view_users(message):
+    #     try:
+    #         """List all users in the group associated with the current chat."""
+    #         # Check if this is a private chat
+    #         if not is_group_chat(message):
+    #             bot.reply_to(message, "This command can only be used in group chats.")
+    #             return
                 
-            chat_id = message.chat.id
+    #         chat_id = message.chat.id
             
-            # Fetch the group associated with the chat
-            group = Group.fetch_from_db_by_chat(chat_id)
+    #         # Fetch the group associated with the chat
+    #         group = Group.fetch_from_db_by_chat(chat_id)
 
-            if group:
-                # Fetch all members of the group from the database
-                members = group.fetch_all_members()
+    #         if group:
+    #             # Fetch all members of the group from the database
+    #             members = group.fetch_all_members()
 
-                if members:
-                    # Create a list of member usernames or display names
-                    member_list = "\n".join([f"- {member.username}" for member in members])
-                    bot.reply_to(message, f"Members in '{group.group_name}':\n{member_list}")
-                else:
-                    bot.reply_to(message, f"No members found in '{group.group_name}'.")
-            else:
-                bot.reply_to(message, "No group exists in this chat.")
+    #             if members:
+    #                 # Create a list of member usernames or display names
+    #                 member_list = "\n".join([f"- {member.username}" for member in members])
+    #                 bot.reply_to(message, f"Members in '{group.group_name}':\n{member_list}")
+    #             else:
+    #                 bot.reply_to(message, f"No members found in '{group.group_name}'.")
+    #         else:
+    #             bot.reply_to(message, "No group exists in this chat.")
         
-        except Exception as e:
-            bot.send_message(chat_id, f"{e}")
+    #     except Exception as e:
+    #         bot.send_message(chat_id, f"{e}")
     
     @bot.message_handler(commands=['join_group'])
     def join_group(message):
