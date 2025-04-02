@@ -308,9 +308,12 @@ def register_group_handlers(bot):
         group = Group.fetch_from_db_by_chat(chat_id)
 
         if group:
-            # Create an inline button for confirming group deletion
+            # Create inline buttons for confirming or canceling group deletion
             markup = InlineKeyboardMarkup()
-            markup.add(InlineKeyboardButton("Delete Group", callback_data=f"delete_group:{group.group_id}"))
+            markup.add(
+                InlineKeyboardButton("Delete Group", callback_data=f"delete_group:{group.group_id}"),
+                InlineKeyboardButton("Cancel", callback_data="cancel_delete_group")
+            )
 
             bot.send_message(
                 chat_id,
@@ -320,12 +323,21 @@ def register_group_handlers(bot):
         else:
             bot.reply_to(message, "No group exists in this chat to delete.")
 
-    @bot.callback_query_handler(func=lambda call: call.data.startswith("delete_group:"))
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("delete_group:") or call.data == "cancel_delete_group")
     def handle_delete_group_callback(call):
-        """Handle the callback query for deleting the group."""
+        """Handle the callback query for deleting or canceling the group deletion."""
         chat_id = call.message.chat.id
 
-        # Fetch the group associated with the group_id
+        if call.data == "cancel_delete_group":
+            # Handle the cancel action
+            bot.edit_message_text(
+                chat_id=chat_id,
+                message_id=call.message.message_id,
+                text="Group deletion was cancelled.",
+            )
+            return
+
+        # Handle the delete action
         group = Group.fetch_from_db_by_chat(chat_id)
 
         if group:
