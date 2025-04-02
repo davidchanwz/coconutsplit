@@ -296,37 +296,56 @@ def register_group_handlers(bot):
 
     @bot.message_handler(commands=['delete_group'])
     def delete_group(message):
+        """Send a confirmation button for deleting the group."""
         # Check if this is a private chat
         if not is_group_chat(message):
             bot.reply_to(message, "This command can only be used in group chats.")
             return
-            
-        msg = bot.reply_to(message, 'Deleting this group will cause you to lose all recorded expenses!\n\nPlease reply this with "coconut" to confirm.')
-        bot.register_next_step_handler(msg, process_delete_group)
-        
 
-    def process_delete_group(message):
-        try:
-            """Delete the group associated with the current chat."""
+        chat_id = message.chat.id
 
-            if not message.text or not message.text.lower() == "coconut":
-                bot.send_message(message.chat.id, "Group was not deleted.")
-                return
+        # Fetch the group associated with the chat
+        group = Group.fetch_from_db_by_chat(chat_id)
 
-            chat_id = message.chat.id
+        if group:
+            # Create an inline button for confirming group deletion
+            markup = InlineKeyboardMarkup()
+            markup.add(InlineKeyboardButton("Delete Group", callback_data=f"delete_group:{group.group_id}"))
 
-            # Fetch the group associated with the chat
-            group = Group.fetch_from_db_by_chat(chat_id)
+            bot.send_message(
+                chat_id,
+                f"Deleting this group will cause you to lose all recorded expenses!\n\nAre you sure you want to delete the group '{group.group_name}'?",
+                reply_markup=markup,
+            )
+        else:
+            bot.reply_to(message, "No group exists in this chat to delete.")
 
-            if group:
+    @bot.callback_query_handler(func=lambda call: call.data.startswith("delete_group:"))
+    def handle_delete_group_callback(call):
+        """Handle the callback query for deleting the group."""
+        group_id = call.data.split(":")[1]
+        chat_id = call.message.chat.id
+
+        # Fetch the group associated with the group_id
+        group = Group.fetch_from_db_by_chat(chat_id)
+
+        if group and group.group_id == group_id:
+            try:
                 # Delete the group from the database
                 group.delete_from_db()
-                bot.reply_to(message, f"The group '{group.group_name}' has been deleted.")
-            else:
-                bot.reply_to(message, "No group exists in this chat to delete.")
-        
-        except Exception as e:
-            bot.send_message(chat_id, f"{e}")
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=call.message.message_id,
+                    text=f"The group '{group.group_name}' has been successfully deleted.",
+                )
+            except Exception as e:
+                bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=call.message.message_id,
+                    text=f"Failed to delete the group: {str(e)}",
+                )
+        else:
+            bot.answer_callback_query(call.id, "Group not found or already deleted.")
 
     @bot.message_handler(commands=['toggle_reminders'])
     def toggle_reminders(message):
