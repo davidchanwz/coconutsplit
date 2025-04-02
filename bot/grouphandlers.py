@@ -323,13 +323,12 @@ def register_group_handlers(bot):
     @bot.callback_query_handler(func=lambda call: call.data.startswith("delete_group:"))
     def handle_delete_group_callback(call):
         """Handle the callback query for deleting the group."""
-        group_id = call.data.split(":")[1]
         chat_id = call.message.chat.id
 
         # Fetch the group associated with the group_id
         group = Group.fetch_from_db_by_chat(chat_id)
 
-        if group and group.group_id == group_id:
+        if group:
             try:
                 # Delete the group from the database
                 group.delete_from_db()
