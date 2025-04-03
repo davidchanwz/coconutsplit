@@ -42,8 +42,9 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             # Create Mini App URL with chat_id if no group exists, otherwise use group_id
-            param = group.group_id if group else str(uuid.uuid4())
-            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={param}"
+            uuid_param = group.group_id if group else str(uuid.uuid4())
+            start_param = f"{uuid_param}_{chat_id}"  # Combine UUID and chat_id
+            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={start_param}"
             
             keyboard = InlineKeyboardMarkup()
             web_app_button = InlineKeyboardButton(

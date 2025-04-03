@@ -26,15 +26,17 @@ export function parseQueryParams(): QueryParams {
   }
 
   try {
-    const lp = retrieveLaunchParams().tgWebAppStartParam || "";
-    if (!lp) return {};
+    const param = retrieveLaunchParams().tgWebAppStartParam || "";
+    if (!param) return {};
 
-    // Now we only need the group_id from the launch params
-    const group_id = lp;
+    // Split the parameter into uuid and chat_id
+    const [uuid, chat_id] = param.split('_');
 
     parseQueryParamsCache = {
-      group_id: group_id || undefined,
+      group_id: uuid,
+      chat_id: chat_id,
     };
+
 
     return parseQueryParamsCache;
   } catch (error) {

@@ -9,6 +9,7 @@ export default function CreateGroup() {
   const router = useRouter();
   const params = parseQueryParams();
   const tempId = params.temp_id; // Get the temp_id from URL params
+  const chatId = params.chat_id; // Get the chat_id from URL params
   const [groupName, setGroupName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,8 +22,7 @@ export default function CreateGroup() {
     try {
       const telegramUserId = getTelegramUserId();
       const username = getTelegramUsername();
-      const chatId = getTelegramChatId();
-      if (!telegramUserId || !chatId || !username) {
+      if (!telegramUserId || !username) {
         throw new Error("Missing required information");
       }
 
@@ -31,6 +31,10 @@ export default function CreateGroup() {
         user_id: telegramUserId,
         username: username
       });
+
+      if (!chatId) {
+        throw new Error("Chat ID is required");
+      }
 
       // Create the group
       const group = await SupabaseService.createGroup({
