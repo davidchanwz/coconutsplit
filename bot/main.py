@@ -206,7 +206,7 @@ async def handle_notification(
             # Send message with join button
             message = bot.send_message(
                 chat_id,
-                f"Group '{data['group_name']}' has been created!\n\nMembers:\n-{data['created_by']}\n\nClick below to join the group.",
+                f"Group '{data['group_name']}' has been created!\n\nMembers:\n- {data['created_by']}\n\nClick below to join the group.",
                 reply_markup=keyboard
             )
             
