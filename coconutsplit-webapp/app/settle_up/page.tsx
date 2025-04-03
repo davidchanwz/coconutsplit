@@ -17,6 +17,7 @@ import { useGroupData } from "../../hooks/useGroupData";
 export default function SettleUp() {
   const params = parseQueryParams();
   const groupId = params.group_id;
+  const chatId = params.chat_id; // Add this line
   const [selectedDebts, setSelectedDebts] = useState<{
     [key: string]: boolean;
   }>({});
@@ -28,7 +29,7 @@ export default function SettleUp() {
     error: groupError,
     currentUser,
     simplifiedDebts: allDebts,
-  } = useGroupData(groupId);
+  } = useGroupData(groupId, chatId); 
 
   // Filter debts to only show ones involving the current user
   const userDebts = currentUser
