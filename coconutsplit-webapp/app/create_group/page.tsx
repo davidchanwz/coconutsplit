@@ -43,7 +43,7 @@ export default function CreateGroup() {
 
     try {
       const notificationData = {
-        type: 'group_created',
+        action: 'group_created',
         chat_id: parseInt(chatId),
         group_id: group.group_id,
         group_name: groupName,
