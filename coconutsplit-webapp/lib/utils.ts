@@ -7,7 +7,6 @@ import { twMerge } from 'tailwind-merge';
 export interface QueryParams {
   group_id?: string;
   chat_id?: string;
-  temp_id?: string; // Add this line
 
 }
 
@@ -25,21 +24,6 @@ export function parseQueryParams(): QueryParams {
 
   try {
     const param = retrieveLaunchParams().tgWebAppStartParam || "";
-    const urlParams = new URLSearchParams(window.location.search);
-    const tempId = urlParams.get('temp_id');
-
-    // If we have a temp_id in URL params, use that
-    if (tempId) {
-      parseQueryParamsCache = {
-        temp_id: tempId
-      };
-      return parseQueryParamsCache;
-    }
-
-    // If we have no start parameter, return empty object
-    if (!param) {
-      return {};
-    }
 
     // Split the parameter into uuid and chat_id
     const [uuid, chatId] = param.split('_');
