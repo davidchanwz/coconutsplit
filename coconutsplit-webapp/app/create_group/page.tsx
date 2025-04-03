@@ -69,7 +69,8 @@ export default function CreateGroup() {
     }
 
       // Redirect back to main page with new group ID
-      router.push(`${window.location.pathname}?new_group_id=${group.group_id}`);
+    //   router.push(`${window.location.pathname}?new_group_id=${group.group_id}`);
+      window.location.href = `/`;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create group");
     } finally {

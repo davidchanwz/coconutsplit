@@ -214,7 +214,7 @@ export default function AddExpense() {
 
       // Redirect regardless of notification success
       backButton.hide();
-      window.location.href = `/?group_id=${groupId}`;
+      window.location.href = `/`;
     } catch (err: any) {
       console.error("Error in handleSubmit:", err);
       setError(err.message || "Failed to add expense");

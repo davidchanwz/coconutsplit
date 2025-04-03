@@ -91,7 +91,7 @@ export default function SettleUp() {
         await sendNotificationToBot(notificationData).catch(console.warn);
       }
       backButton.hide();
-      window.location.href = `/?group_id=${groupId}`;
+      window.location.href = `/`;
     } catch (err) {
       console.error("Error in handleSettleUp:", err);
       setLocalError("Failed to settle debts");
