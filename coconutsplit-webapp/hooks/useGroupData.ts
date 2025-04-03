@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 
 
 export function useGroupData(groupId: string | undefined, chatId: string | undefined) {
-    const router = useRouter();
 
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -21,7 +20,7 @@ export function useGroupData(groupId: string | undefined, chatId: string | undef
 
     useEffect(() => {
         if (!groupId && chatId) {
-            router.push(`/create_group`);
+            window.location.href = `/create_group`;
             return;
         }
 
