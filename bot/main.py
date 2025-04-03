@@ -39,7 +39,7 @@ app.add_middleware(
 # Define a list of BotCommand objects
 commands = [
     types.BotCommand("split", "Opens CoconutSplit!"),
-    types.BotCommand("start", "Start the bot"),
+    # types.BotCommand("start", "Start the bot"),
     types.BotCommand("help", "Get help"),
     types.BotCommand("create_group", "Create a new group"),
     types.BotCommand("delete_group", "Delete the existing group"),
