@@ -267,7 +267,7 @@ def register_group_handlers(bot):
                     # Update the original message with the new member
                     members = group.fetch_all_members()
                     member_list = "\n".join([f"- {member.username}" for member in members])
-                    updated_text = f"Group '{group.group_name}' has been created!\n\nMembers:\n{member_list}"
+                    updated_text = f"Group '{group.group_name}'\n\nMembers:\n{member_list}"
                     
                     # Create new inline keyboard
                     join_button = types.InlineKeyboardMarkup()
