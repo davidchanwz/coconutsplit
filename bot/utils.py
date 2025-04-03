@@ -276,6 +276,6 @@ def process_reminders():
     
     return chat_id_to_display_debts_string
 
-def escape_markdown(text: str) -> str:
+def remove_underscore_markdown(text: str) -> str:
     """Escape Markdown special characters in a string."""
     return text.replace("_", "\\_")
