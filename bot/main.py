@@ -1,6 +1,7 @@
 # bot/main.py
 
 import telebot
+from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from fastapi import FastAPI, Request, Response, status, Body, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware  # Add CORS middleware
