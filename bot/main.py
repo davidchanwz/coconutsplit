@@ -10,14 +10,13 @@ import os
 import uvicorn
 from grouphandlers import register_group_handlers  # Import the handler registration function
 from expensehandlers import register_expense_handlers # Import the handler registration function
-from expensehandlers import split_message_storage
 from receipthandlers import register_receipt_handlers  # Import the handler registration function
 from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
 from utils import process_reminders
 from pydantic import BaseModel
 from typing import List
 from utils import remove_underscore_markdown
-from classes import Group
+from classes import Group, GroupPurgatory
 
 load_dotenv()
 
@@ -197,7 +196,7 @@ async def handle_notification(
         
         if action == 'group_created':
             # Check if there's a stored message to update
-            original_message_id = split_message_storage.get(chat_id)
+            original_message_id = GroupPurgatory.fetch_message(chat_id)
             if original_message_id:
                 # Create new keyboard with updated group ID
                 new_keyboard = InlineKeyboardMarkup()
@@ -214,7 +213,7 @@ async def handle_notification(
                         reply_markup=new_keyboard
                     )
                     # Remove from storage after successful update
-                    del split_message_storage[chat_id]
+                    GroupPurgatory.delete_message(chat_id)
                 except Exception as edit_error:
                     print(f"Failed to update original message: {edit_error}")
 

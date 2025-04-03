@@ -610,3 +610,35 @@ class Settlement:
                     created_at=datetime.fromisoformat(settlement['created_at']) if settlement['created_at'] else None
                 ))
         return settlements
+    
+class GroupPurgatory:
+    @staticmethod
+    def store_message(chat_id: int, message_id: int):
+        """Store message ID in purgatory"""
+        try:
+            supa.table('group_purgatory').insert({
+                'chat_id': str(chat_id),
+                'message_id': str(message_id)
+            }).execute()
+        except Exception as e:
+            print(f"Error storing message in purgatory: {e}")
+
+    @staticmethod
+    def fetch_message(chat_id: int) -> str | None:
+        """Fetch message ID from purgatory"""
+        try:
+            response = supa.table('group_purgatory').select('message_id').eq('chat_id', str(chat_id)).single().execute()
+            if response.data:
+                return response.data['message_id']
+            return None
+        except Exception as e:
+            print(f"Error fetching from purgatory: {e}")
+            return None
+
+    @staticmethod
+    def delete_message(chat_id: int):
+        """Delete message from purgatory"""
+        try:
+            supa.table('group_purgatory').delete().eq('chat_id', str(chat_id)).execute()
+        except Exception as e:
+            print(f"Error deleting from purgatory: {e}")
