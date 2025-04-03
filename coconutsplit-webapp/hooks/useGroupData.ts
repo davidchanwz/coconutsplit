@@ -21,7 +21,7 @@ export function useGroupData(groupId: string | undefined, chatId: string | undef
 
     useEffect(() => {
         if (!groupId && chatId) {
-            router.push(`/create-group`);
+            router.push(`/create_group`);
             return;
         }
 
