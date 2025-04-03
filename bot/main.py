@@ -13,7 +13,8 @@ from receipthandlers import register_receipt_handlers  # Import the handler regi
 from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
 from utils import process_reminders
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
+from utils import escape_markdown
 
 load_dotenv()
 
@@ -272,7 +273,7 @@ async def handle_notification(
                 f"*Amount:* ${amount}"
             )
             
-            bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+            bot.send_message(chat_id, escape_markdown(notification_text), parse_mode='Markdown')
             
         else:
             raise HTTPException(status_code=400, detail="Unknown action type")
