@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { parseQueryParams, getTelegramUserId } from '@/lib/utils';
+import { parseQueryParams, getTelegramUserId, getTelegramUsername } from '@/lib/utils';
 import { SupabaseService } from '@/lib/supabase';
 
 export default function CreateGroup() {
@@ -20,14 +20,15 @@ export default function CreateGroup() {
 
     try {
       const telegramUserId = getTelegramUserId();
-      if (!telegramUserId || !chatId) {
+      const username = getTelegramUsername();
+      if (!telegramUserId || !chatId || !username) {
         throw new Error("Missing required information");
       }
 
       // First ensure user exists/is created
       const userData = await SupabaseService.createOrUpdateUser({
         user_id: telegramUserId,
-        username: 'User' // You might want to get this from Telegram Web App data
+        username: username
       });
 
       // Create the group
@@ -70,7 +71,7 @@ export default function CreateGroup() {
 
       // Redirect back to main page with new group ID
     //   router.push(`${window.location.pathname}?new_group_id=${group.group_id}`);
-      window.location.href = `/`;
+      window.location.href = `/?new_group_id=${group.group_id}`;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create group");
     } finally {

@@ -72,6 +72,33 @@ export function buildQueryString(params: QueryParams): string {
  * Gets the Telegram user ID from the launch parameters
  * Returns undefined if running in SSR or if user ID is not available
  */
+
+export function getTelegramUsername(): string | undefined {
+  // Early return during SSR
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  try {
+    const launchParams = retrieveLaunchParams();
+
+    // Get username from tgWebAppData.user.username
+    if (launchParams.tgWebAppData?.user?.username) {
+      return launchParams.tgWebAppData.user.username;
+    }
+
+    // Fallback to first_name if username doesn't exist
+    if (launchParams.tgWebAppData?.user?.first_name) {
+      return launchParams.tgWebAppData.user.first_name;
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("Error getting Telegram username:", error);
+    return undefined;
+  }
+}
+
 export function getTelegramUserId(): string | undefined {
   // Early return during SSR
   if (typeof window === 'undefined') {
