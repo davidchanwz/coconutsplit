@@ -16,7 +16,7 @@ from utils import process_reminders
 from pydantic import BaseModel
 from typing import List
 from utils import remove_underscore_markdown
-from classes import Group, GroupPurgatory
+from classes import Group
 
 load_dotenv()
 
@@ -195,27 +195,6 @@ async def handle_notification(
             raise HTTPException(status_code=400, detail="Missing chat_id field")
         
         if action == 'group_created':
-            # Check if there's a stored message to update
-            original_message_id = GroupPurgatory.fetch_message(chat_id)
-            if original_message_id:
-                # Create new keyboard with updated group ID
-                new_keyboard = InlineKeyboardMarkup()
-                new_keyboard.add(InlineKeyboardButton(
-                    text="Open CoconutSplit",
-                    url=f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={data['group_id']}"
-                ))
-                
-                # Update the original message's keyboard
-                try:
-                    bot.edit_message_reply_markup(
-                        chat_id=chat_id,
-                        message_id=original_message_id,
-                        reply_markup=new_keyboard
-                    )
-                    # Remove from storage after successful update
-                    GroupPurgatory.delete_message(chat_id)
-                except Exception as edit_error:
-                    print(f"Failed to update original message: {edit_error}")
 
             # Create an inline button for joining the group
             keyboard = InlineKeyboardMarkup()
@@ -227,7 +206,7 @@ async def handle_notification(
             # Send message with join button
             message = bot.send_message(
                 chat_id,
-                f"Group '{data['group_name']}' has been created!\n\nMembers:\n@{data['created_by']}\n\nClick below to join the group.",
+                f"Group '{data['group_name']}' has been created!\n\nMembers:\n-{data['created_by']}\n\nClick below to join the group.",
                 reply_markup=keyboard
             )
             

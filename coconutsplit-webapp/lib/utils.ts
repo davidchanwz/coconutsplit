@@ -7,7 +7,8 @@ import { twMerge } from 'tailwind-merge';
 export interface QueryParams {
   group_id?: string;
   chat_id?: string;
-  new_group_id?: string;
+  temp_id?: string; // Add this line
+
 }
 
 // Create a safe version that won't execute during SSR
@@ -25,27 +26,14 @@ export function parseQueryParams(): QueryParams {
   }
 
   try {
-    const param = retrieveLaunchParams().tgWebAppStartParam || "";
-    const urlParams = new URLSearchParams(window.location.search);
-    const newGroupId = urlParams.get('new_group_id');
+    const lp = retrieveLaunchParams().tgWebAppStartParam || "";
+    if (!lp) return {};
 
-    if (!param && !newGroupId) return {};
+    // Now we only need the group_id from the launch params
+    const group_id = lp;
 
-    // First check for new_group_id from URL
-    if (newGroupId) {
-      parseQueryParamsCache = {
-        group_id: newGroupId,
-        chat_id: undefined
-      };
-      return parseQueryParamsCache;
-    }
-    // Check if the param is a chat_id (starts with - and contains only numbers)
-    const isChatId = /^-\d+$/.test(param);
-
-    // Then fall back to checking tgWebAppStartParam
     parseQueryParamsCache = {
-      group_id: isChatId ? undefined : param,
-      chat_id: isChatId ? param : undefined
+      group_id: group_id || undefined,
     };
 
     return parseQueryParamsCache;
@@ -54,6 +42,7 @@ export function parseQueryParams(): QueryParams {
     return {};
   }
 }
+
 
 export function buildQueryString(params: QueryParams): string {
   // Skip execution during SSR
@@ -116,6 +105,32 @@ export function getTelegramUserId(): string | undefined {
     return undefined;
   } catch (error) {
     console.error("Error getting Telegram user ID:", error);
+    return undefined;
+  }
+}
+
+
+/**
+ * Gets the Telegram chat ID from the launch parameters
+ * Returns undefined if running in SSR or if chat ID is not available
+ */
+export function getTelegramChatId(): string | undefined {
+  // Early return during SSR
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  try {
+    const launchParams = retrieveLaunchParams();
+
+    // Get chat instance from tgWebAppData
+    if (launchParams.tgWebAppData?.chat?.id) {
+      return launchParams.tgWebAppData.chat.id.toString();
+    }
+
+    return undefined;
+  } catch (error) {
+    console.error("Error getting Telegram chat ID:", error);
     return undefined;
   }
 }

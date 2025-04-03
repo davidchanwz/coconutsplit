@@ -55,10 +55,10 @@ export class SupabaseService {
     if (error) throw error;
     return data;
   }
-
   static async createGroup(groupData: {
+    group_id?: string;    // Make group_id optional
     group_name: string;
-    created_by: string;  // User UUID
+    created_by: string;   // User UUID
     chat_id: number;
     reminders?: boolean;
     message_id?: string;
@@ -74,10 +74,11 @@ export class SupabaseService {
       throw new Error('A group already exists for this chat');
     }
 
-    // Create new group
+    // Create new group with optional group_id
     const { data: group, error: groupError } = await supabase
       .from('groups')
       .insert([{
+        ...(groupData.group_id ? { group_id: groupData.group_id } : {}), // Only include if provided
         group_name: groupData.group_name,
         created_by: groupData.created_by,
         chat_id: groupData.chat_id,

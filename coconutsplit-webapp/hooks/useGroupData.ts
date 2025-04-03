@@ -6,7 +6,7 @@ import { Expense, Settlement, SimplifiedDebt, User } from '../lib/types';
 import { useRouter } from 'next/navigation';
 
 
-export function useGroupData(groupId: string | undefined, chatId: string | undefined) {
+export function useGroupData(groupId: string | undefined) {
 
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [settlements, setSettlements] = useState<Settlement[]>([]);
@@ -19,11 +19,6 @@ export function useGroupData(groupId: string | undefined, chatId: string | undef
      const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!groupId && chatId) {
-            window.location.href = `/create_group`;
-            return;
-        }
-
         if (!groupId) return;
 
         const fetchData = async () => {
@@ -34,6 +29,15 @@ export function useGroupData(groupId: string | undefined, chatId: string | undef
                 if (!telegramUserId) {
                     throw new Error("Unable to identify user from Telegram");
                 }
+                
+                // First check if UUID matches a group
+                const groupData = await SupabaseService.getGroupDetails(groupId);
+                
+                if (!groupData) {
+                    // If no group exists with this UUID, redirect to create group
+                    window.location.href = `/create_group?temp_id=${groupId}`;
+                    return;
+                }
 
                 const userData = await SupabaseService.getUserByTelegramId(telegramUserId);
                 if (!userData) {
@@ -41,10 +45,9 @@ export function useGroupData(groupId: string | undefined, chatId: string | undef
                 }
                 setCurrentUser(userData);
 
-                const [expensesData, membersData, groupData, rawDebtsData, settlementsData] = await Promise.all([
+                const [expensesData, membersData, rawDebtsData, settlementsData] = await Promise.all([
                     SupabaseService.getExpenses(groupId),
                     SupabaseService.getGroupMembers(groupId),
-                    SupabaseService.getGroupDetails(groupId),
                     SupabaseService.getGroupDebts(groupId),
                     SupabaseService.getSettlements(groupId)
                 ]);
@@ -69,7 +72,7 @@ export function useGroupData(groupId: string | undefined, chatId: string | undef
         };
 
         fetchData();
-    }, [groupId, chatId, isDeleting]);
+    }, [groupId, isDeleting]);
 
     return {
         expenses,

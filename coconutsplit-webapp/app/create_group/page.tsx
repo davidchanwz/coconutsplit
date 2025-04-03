@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { parseQueryParams, getTelegramUserId, getTelegramUsername } from '@/lib/utils';
+import { parseQueryParams, getTelegramUserId, getTelegramUsername, getTelegramChatId } from '@/lib/utils';
 import { SupabaseService } from '@/lib/supabase';
 
 export default function CreateGroup() {
   const router = useRouter();
   const params = parseQueryParams();
-  const chatId = params.chat_id;
+  const tempId = params.temp_id; // Get the temp_id from URL params
   const [groupName, setGroupName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -21,6 +21,7 @@ export default function CreateGroup() {
     try {
       const telegramUserId = getTelegramUserId();
       const username = getTelegramUsername();
+      const chatId = getTelegramChatId();
       if (!telegramUserId || !chatId || !username) {
         throw new Error("Missing required information");
       }
@@ -33,6 +34,7 @@ export default function CreateGroup() {
 
       // Create the group
       const group = await SupabaseService.createGroup({
+        group_id: tempId, // Use the temp_id as the group_id
         group_name: groupName,
         created_by: userData.uuid,
         chat_id: parseInt(chatId),
@@ -70,8 +72,7 @@ export default function CreateGroup() {
     }
 
       // Redirect back to main page with new group ID
-    //   router.push(`${window.location.pathname}?new_group_id=${group.group_id}`);
-      window.location.href = `/?new_group_id=${group.group_id}`;
+      window.location.href = `/`;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create group");
     } finally {
@@ -79,13 +80,6 @@ export default function CreateGroup() {
     }
   };
 
-  if (!chatId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-red-400">No chat ID provided</div>
-      </div>
-    );
-  }
 
   return (
     <main className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">

@@ -3,6 +3,7 @@ from classes import Group, User, Expense, Settlement, GroupPurgatory
 from collections import defaultdict
 from utils import simplify_debts, calculate_user_balances, process_add_expense, get_display_debts_string, get_display_debts_string_with_at, is_group_chat
 from typing import Dict
+import uuid  
 
 import re
 import json
@@ -41,7 +42,7 @@ def register_expense_handlers(bot):
             group = Group.fetch_from_db_by_chat(chat_id)
 
             # Create Mini App URL with chat_id if no group exists, otherwise use group_id
-            param = group.group_id if group else chat_id
+            param = group.group_id if group else str(uuid.uuid4())
             mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={param}"
             
             keyboard = InlineKeyboardMarkup()
@@ -56,10 +57,6 @@ def register_expense_handlers(bot):
                 "Click the button below to open Coconut Split:",
                 reply_markup=keyboard
             )
-
-            if not group:
-                GroupPurgatory.store_message(chat_id, sent_message.message_id)
-            
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
 

@@ -34,7 +34,7 @@ export default function Home() {
     simplifiedDebts,
     isDeleting,
     setIsDeleting,
-  } = useGroupData(groupId, chatId);
+  } = useGroupData(groupId);
 
   useEffect(() => {
     try {
