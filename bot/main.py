@@ -13,7 +13,8 @@ from receipthandlers import register_receipt_handlers  # Import the handler regi
 from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
 from utils import process_reminders
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
+from utils import remove_underscore_markdown
 
 load_dotenv()
 
@@ -215,7 +216,7 @@ async def handle_notification(
             )
             
             try:
-                bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+                bot.send_message(chat_id, remove_underscore_markdown(notification_text), parse_mode='Markdown')
             except Exception as send_err:
                 return {"status": "error", "message": f"Failed to send message: {str(send_err)}"}
             
@@ -240,7 +241,7 @@ async def handle_notification(
                 f"The following debts have been settled:{settlements_text}"
             )
             
-            bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+            bot.send_message(chat_id, remove_underscore_markdown(notification_text), parse_mode='Markdown')
             
         elif action == 'delete_expense':
             # Handle expense deletion notification
@@ -256,7 +257,7 @@ async def handle_notification(
                 f"*Paid by:* @{payer}"
             )
             
-            bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+            bot.send_message(chat_id, remove_underscore_markdown(notification_text), parse_mode='Markdown')
 
         elif action == "delete_settlement":
             # Handle settlement deletion notification
@@ -272,7 +273,7 @@ async def handle_notification(
                 f"*Amount:* ${amount}"
             )
             
-            bot.send_message(chat_id, notification_text, parse_mode='Markdown')
+            bot.send_message(chat_id, remove_underscore_markdown(notification_text), parse_mode='Markdown')
             
         else:
             raise HTTPException(status_code=400, detail="Unknown action type")
