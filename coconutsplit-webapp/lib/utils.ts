@@ -15,28 +15,39 @@ export interface QueryParams {
 let parseQueryParamsCache: QueryParams | null = null;
 
 export function parseQueryParams(): QueryParams {
-  // Early return with empty object during SSR
   if (typeof window === 'undefined') {
     return {};
   }
 
-  // Return cached result if available to prevent multiple executions
   if (parseQueryParamsCache) {
     return parseQueryParamsCache;
   }
 
   try {
     const param = retrieveLaunchParams().tgWebAppStartParam || "";
-    if (!param) return {};
+    const urlParams = new URLSearchParams(window.location.search);
+    const tempId = urlParams.get('temp_id');
+
+    // If we have a temp_id in URL params, use that
+    if (tempId) {
+      parseQueryParamsCache = {
+        temp_id: tempId
+      };
+      return parseQueryParamsCache;
+    }
+
+    // If we have no start parameter, return empty object
+    if (!param) {
+      return {};
+    }
 
     // Split the parameter into uuid and chat_id
-    const [uuid, chat_id] = param.split('_');
+    const [uuid, chatId] = param.split('_');
 
     parseQueryParamsCache = {
       group_id: uuid,
-      chat_id: chat_id,
+      chat_id: chatId
     };
-
 
     return parseQueryParamsCache;
   } catch (error) {

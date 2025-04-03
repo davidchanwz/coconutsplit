@@ -22,7 +22,7 @@ export default function CreateGroup() {
     try {
       const telegramUserId = getTelegramUserId();
       const username = getTelegramUsername();
-      if (!telegramUserId || !username) {
+      if (!telegramUserId || !username || !tempId) {
         throw new Error("Missing required information");
       }
 
