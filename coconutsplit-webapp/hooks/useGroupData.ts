@@ -3,8 +3,12 @@ import { SupabaseService } from '../lib/supabase';
 import { getTelegramUserId } from '../lib/utils';
 import { calculateUserBalances, simplifyDebtsWithMembers } from '../lib/financial-utils';
 import { Expense, Settlement, SimplifiedDebt, User } from '../lib/types';
+import { useRouter } from 'next/navigation';
 
-export function useGroupData(groupId: string | undefined) {
+
+export function useGroupData(groupId: string | undefined, chatId: string | undefined) {
+    const router = useRouter();
+
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [settlements, setSettlements] = useState<Settlement[]>([]);
     const [members, setMembers] = useState<User[]>([]);
@@ -16,6 +20,11 @@ export function useGroupData(groupId: string | undefined) {
      const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
     useEffect(() => {
+        if (!groupId && chatId) {
+            router.push(`/create-group`);
+            return;
+        }
+
         if (!groupId) return;
 
         const fetchData = async () => {
@@ -61,7 +70,7 @@ export function useGroupData(groupId: string | undefined) {
         };
 
         fetchData();
-    }, [groupId, isDeleting]);
+    }, [groupId, chatId, isDeleting]);
 
     return {
         expenses,

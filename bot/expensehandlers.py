@@ -38,20 +38,10 @@ def register_expense_handlers(bot):
             user = User.fetch_from_db_by_user_id(user_id)
             group = Group.fetch_from_db_by_chat(chat_id)
 
-            if group is None:
-                bot.send_message(chat_id, "No group associated with this chat. Please use /create_group to create a new group.")
-                return
+            # Create Mini App URL with chat_id if no group exists, otherwise use group_id
+            param = group.group_id if group else chat_id
+            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={param}"
             
-            group_members_dict = Group.fetch_group_members_dict(group)
-
-            if not user or not group_members_dict.get(user.uuid):
-                bot.reply_to(message, "You are not in the group! Please enter /join_group first.")
-                return
-            
-            # Create Mini App URL with only group_id parameter
-            mini_app_url = f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={group.group_id}"
-            
-            # Create inline keyboard with Mini App button
             keyboard = InlineKeyboardMarkup()
             web_app_button = InlineKeyboardButton(
                 text="Open CoconutSplit",
@@ -59,7 +49,6 @@ def register_expense_handlers(bot):
             )
             keyboard.add(web_app_button)
             
-            # Send message with Mini App button
             bot.send_message(
                 chat_id,
                 "Click the button below to open Coconut Split:",
@@ -68,6 +57,7 @@ def register_expense_handlers(bot):
             
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
+
             
     # Handler for web_app_data from Mini Apps
     @bot.message_handler(content_types=['web_app_data'])

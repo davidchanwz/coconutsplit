@@ -13,25 +13,114 @@ export class SupabaseService {
    * @returns Group details or null if not found
    * @throws Error if throwErrors is true and an error occurs
    */
+
+  static async createOrUpdateUser(userData: {
+    user_id: string;  // Telegram user ID
+    username: string;
+    currency?: string;
+  }): Promise<User> {
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('user_id', userData.user_id)
+      .single();
+
+    if (existingUser) {
+      // Update username if it changed
+      if (existingUser.username !== userData.username) {
+        const { data, error } = await supabase
+          .from('users')
+          .update({ username: userData.username })
+          .eq('uuid', existingUser.uuid)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+      return existingUser;
+    }
+
+    // Create new user
+    const { data, error } = await supabase
+      .from('users')
+      .insert([{
+        user_id: userData.user_id,
+        username: userData.username,
+        currency: userData.currency || 'SGD'
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  static async createGroup(groupData: {
+    group_name: string;
+    created_by: string;  // User UUID
+    chat_id: number;
+    reminders?: boolean;
+    message_id?: string;
+  }): Promise<Group> {
+    // Check if group already exists for this chat
+    const { data: existingGroup } = await supabase
+      .from('groups')
+      .select('*')
+      .eq('chat_id', groupData.chat_id)
+      .single();
+
+    if (existingGroup) {
+      throw new Error('A group already exists for this chat');
+    }
+
+    // Create new group
+    const { data: group, error: groupError } = await supabase
+      .from('groups')
+      .insert([{
+        group_name: groupData.group_name,
+        created_by: groupData.created_by,
+        chat_id: groupData.chat_id,
+        reminders: groupData.reminders || false,
+        message_id: groupData.message_id
+      }])
+      .select()
+      .single();
+
+    if (groupError) throw groupError;
+
+    // Add creator as first member
+    const { error: memberError } = await supabase
+      .from('group_members')
+      .insert([{
+        group_id: group.group_id,
+        user_uuid: groupData.created_by
+      }]);
+
+    if (memberError) throw memberError;
+
+    return group;
+  }
+
   static async getGroupDetails(groupId: string, throwErrors: boolean = false): Promise<Group | null> {
-    try {      
+    try {
       const { data, error } = await supabase
         .from('groups')
         .select('*')
         .eq('group_id', groupId)
         .single();
-        
+
       if (error) {
         console.error('Error fetching group details:', error);
         if (throwErrors) throw error;
         return null;
       }
-      
+
       if (!data) {
         console.error('No group found with ID:', groupId);
         return null;
       }
-      
+
       return data as Group;
     } catch (error) {
       console.error('Exception in getGroupDetails:', error);
@@ -84,17 +173,17 @@ export class SupabaseService {
 
   static async addExpense(expense: Omit<Expense, 'expense_id' | 'created_at'>, splits: Omit<ExpenseSplit, 'expense_id'>[]): Promise<void> {
     // Validate expense amount
-    if (expense.amount >= 10**8) {
-      throw new Error(`Expense amount must be less than ${10**8}.`);
+    if (expense.amount >= 10 ** 8) {
+      throw new Error(`Expense amount must be less than ${10 ** 8}.`);
     }
-    
+
     // Validate that all split amounts are valid
     for (const split of splits) {
-      if (split.amount >= 10**8) {
-        throw new Error(`Split amount must be less than ${10**8}.`);
+      if (split.amount >= 10 ** 8) {
+        throw new Error(`Split amount must be less than ${10 ** 8}.`);
       }
     }
-    
+
     // Ensure splits total equals expense amount
     const splitsTotal = splits.reduce((sum, split) => sum + split.amount, 0);
     if (Math.abs(splitsTotal - expense.amount) > 0.01) {
@@ -108,7 +197,7 @@ export class SupabaseService {
       .single();
 
     if (expenseError) throw expenseError;
-    
+
     // Filter out splits where the payer is also the one being charged
     const validSplits = splits.filter(split => split.user_id !== expense.paid_by);
     const splitsWithExpenseId = validSplits.map(split => ({
@@ -130,7 +219,7 @@ export class SupabaseService {
     for (const split of splits) {
       // Skip creating debt records if the payer is also the one being charged
       if (split.user_id === expense.paid_by) continue;
-      
+
       // User owes the payer
       debtUpdates.push({
         group_id: expense.group_id,
@@ -138,7 +227,7 @@ export class SupabaseService {
         opp_user_id: expense.paid_by,
         increment_value: split.amount
       });
-      
+
       // Reverse entry: payer is owed by the user
       debtUpdates.push({
         group_id: expense.group_id,
@@ -152,7 +241,7 @@ export class SupabaseService {
     if (debtUpdates.length > 0) {
       const { error: debtsError } = await supabase
         .rpc("bulk_update_debts", { debt_updates: debtUpdates });
-      
+
       if (debtsError) throw debtsError;
     }
   }
@@ -165,32 +254,32 @@ export class SupabaseService {
       .eq('expense_id', expenseId)
       .eq('group_id', groupId)
       .single();
-    
+
     if (fetchExpenseError) throw fetchExpenseError;
     if (!expense) throw new Error('Expense not found');
-    
+
     // Get the splits for this expense
     const { data: splits, error: fetchSplitsError } = await supabase
       .from('expense_splits')
       .select('*')
       .eq('expense_id', expenseId);
-    
+
     if (fetchSplitsError) throw fetchSplitsError;
-    
+
     // Delete the expense (this will cascade to delete the expense_splits due to foreign key constraints)
     const { error: deleteError } = await supabase
       .from('expenses')
       .delete()
       .eq('expense_id', expenseId);
-    
+
     if (deleteError) throw deleteError;
-    
+
     // Update the debt records by negating the original debt amounts
     const debtUpdates: DebtUpdate[] = [];
     for (const split of splits) {
       // Skip if there was a split where user is paying themselves
       if (split.user_id === expense.paid_by) continue;
-      
+
       // Reverse the debt: negate the original increment_value
       debtUpdates.push({
         group_id: groupId,
@@ -198,7 +287,7 @@ export class SupabaseService {
         opp_user_id: expense.paid_by,
         increment_value: -split.amount // Negative amount to reverse the debt
       });
-      
+
       // Reverse the opposing entry
       debtUpdates.push({
         group_id: groupId,
@@ -207,12 +296,12 @@ export class SupabaseService {
         increment_value: split.amount // Positive amount to reverse the negative debt
       });
     }
-    
+
     // Only update if there are debt records to update
     if (debtUpdates.length > 0) {
       const { error: debtsError } = await supabase
         .rpc("bulk_update_debts", { debt_updates: debtUpdates });
-      
+
       if (debtsError) throw debtsError;
     }
   }
@@ -234,7 +323,7 @@ export class SupabaseService {
       .from('settlements')
       .delete()
       .eq('settlement_id', settlementId);
-    
+
     if (deleteError) throw deleteError;
 
     // Update the debts
@@ -255,7 +344,7 @@ export class SupabaseService {
           }
         ]
       });
-    
+
     if (debtsError) throw debtsError;
   }
 
@@ -281,7 +370,7 @@ export class SupabaseService {
       console.error("Error fetching user by Telegram ID:", error);
       return null;
     }
-    
+
     return data;
   }
 
@@ -292,22 +381,22 @@ export class SupabaseService {
       .select('user_id, opp_user_id, amount_owed')
       .eq('group_id', groupId)
       .gt('amount_owed', 0); // Only get positive debts (amount_owed > 0)
-    
+
     if (debtsError) throw debtsError;
     if (!debts || debts.length === 0) return [];
-    
+
     // Get all members of this group for user details
     const { data: membersData, error: membersError } = await supabase
       .from('group_members')
       .select('user:users(*)')
       .eq('group_id', groupId);
-    
+
     if (membersError) throw membersError;
-    
+
     const members = membersData.map(item => item.user as unknown as User);
     const userMap = new Map<string, User>();
     members.forEach(member => userMap.set(member.uuid, member));
-    
+
     // Convert to simplified debts format
     const simplifiedDebts: SimplifiedDebt[] = debts
       .filter(debt => userMap.has(debt.user_id) && userMap.has(debt.opp_user_id))
@@ -316,14 +405,14 @@ export class SupabaseService {
         to: userMap.get(debt.opp_user_id)!,
         amount: debt.amount_owed
       }));
-    
+
     return simplifiedDebts;
   }
 
   static async settleDebts(groupId: string, debts: SimplifiedDebt[]): Promise<void> {
     const debtUpdates: DebtUpdate[] = [];
     const settlements = [];
-    
+
     for (const debt of debts) {
       // Create settlement record
       settlements.push({
@@ -332,7 +421,7 @@ export class SupabaseService {
         to_user: debt.to.uuid,
         amount: debt.amount
       });
-      
+
       // Update debt records
       debtUpdates.push({
         group_id: groupId,
@@ -340,7 +429,7 @@ export class SupabaseService {
         opp_user_id: debt.to.uuid,
         increment_value: -debt.amount // Negative to reduce the debt
       });
-      
+
       debtUpdates.push({
         group_id: groupId,
         user_id: debt.to.uuid,
@@ -348,21 +437,21 @@ export class SupabaseService {
         increment_value: debt.amount // Positive to reduce the negative debt
       });
     }
-    
+
     // Create settlement records
     if (settlements.length > 0) {
       const { error: settlementsError } = await supabase
         .from('settlements')
         .insert(settlements);
-      
+
       if (settlementsError) throw settlementsError;
     }
-    
+
     // Update debt records
     if (debtUpdates.length > 0) {
       const { error: debtsError } = await supabase
         .rpc("bulk_update_debts", { debt_updates: debtUpdates });
-      
+
       if (debtsError) throw debtsError;
     }
   }
@@ -373,21 +462,21 @@ export class SupabaseService {
    * @returns Chat ID or null if not found
    */
   static async getGroupChatId(groupId: string): Promise<number | null> {
-    try {      
+    try {
       const { data, error } = await supabase
         .from('groups')
         .select('chat_id')
         .eq('group_id', groupId)
         .single();
-        
+
       if (error) {
         return null;
       }
-      
+
       if (!data || !data.chat_id) {
         return null;
       }
-      
+
       return data.chat_id;
     } catch (error) {
       return null;

@@ -6,6 +6,8 @@ import { twMerge } from 'tailwind-merge';
 
 export interface QueryParams {
   group_id?: string;
+  chat_id?: string;
+  new_group_id?: string;
 }
 
 // Create a safe version that won't execute during SSR
@@ -23,14 +25,27 @@ export function parseQueryParams(): QueryParams {
   }
 
   try {
-    const lp = retrieveLaunchParams().tgWebAppStartParam || "";
-    if (!lp) return {};
+    const param = retrieveLaunchParams().tgWebAppStartParam || "";
+    const urlParams = new URLSearchParams(window.location.search);
+    const newGroupId = urlParams.get('new_group_id');
 
-    // Now we only need the group_id from the launch params
-    const group_id = lp;
+    if (!param && !newGroupId) return {};
 
+    // First check for new_group_id from URL
+    if (newGroupId) {
+      parseQueryParamsCache = {
+        group_id: newGroupId,
+        chat_id: undefined
+      };
+      return parseQueryParamsCache;
+    }
+    // Check if the param is a chat_id (starts with - and contains only numbers)
+    const isChatId = /^-\d+$/.test(param);
+
+    // Then fall back to checking tgWebAppStartParam
     parseQueryParamsCache = {
-      group_id: group_id || undefined,
+      group_id: isChatId ? undefined : param,
+      chat_id: isChatId ? param : undefined
     };
 
     return parseQueryParamsCache;

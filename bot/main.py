@@ -1,7 +1,7 @@
 # bot/main.py
 
 import telebot
-from telebot import types
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from fastapi import FastAPI, Request, Response, status, Body, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware  # Add CORS middleware
 from dotenv import load_dotenv
@@ -15,6 +15,7 @@ from utils import process_reminders
 from pydantic import BaseModel
 from typing import List
 from utils import remove_underscore_markdown
+from classes import Group
 
 load_dotenv()
 
@@ -191,6 +192,29 @@ async def handle_notification(
         
         if not chat_id:
             raise HTTPException(status_code=400, detail="Missing chat_id field")
+        
+        if action == 'group_created':
+            # Create an inline button for joining the group
+            keyboard = InlineKeyboardMarkup()
+            keyboard.add(InlineKeyboardButton(
+                text="Join Group",
+                callback_data=f"join_{data['group_id']}"
+            ))
+            
+            # Send message with join button
+            message = bot.send_message(
+                chat_id,
+                f"Group '{data['group_name']}' has been created!\nClick below to join the group.",
+                reply_markup=keyboard
+            )
+            
+            # Update group with message_id
+            group = Group.fetch_from_db_by_chat(chat_id)
+            if group:
+                group.message_id = message.message_id
+                group.save_to_db()
+            
+            return {"status": "success"}
         
         if action == 'add_expense':
             # Handle expense notification
