@@ -10,6 +10,7 @@ import os
 import uvicorn
 from grouphandlers import register_group_handlers  # Import the handler registration function
 from expensehandlers import register_expense_handlers # Import the handler registration function
+from expensehandlers import split_message_storage
 from receipthandlers import register_receipt_handlers  # Import the handler registration function
 from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
 from utils import process_reminders
@@ -195,6 +196,28 @@ async def handle_notification(
             raise HTTPException(status_code=400, detail="Missing chat_id field")
         
         if action == 'group_created':
+            # Check if there's a stored message to update
+            original_message_id = split_message_storage.get(chat_id)
+            if original_message_id:
+                # Create new keyboard with updated group ID
+                new_keyboard = InlineKeyboardMarkup()
+                new_keyboard.add(InlineKeyboardButton(
+                    text="Open CoconutSplit",
+                    url=f"https://t.me/{bot.get_me().username}/CoconutSplit?startapp={data['group_id']}"
+                ))
+                
+                # Update the original message's keyboard
+                try:
+                    bot.edit_message_reply_markup(
+                        chat_id=chat_id,
+                        message_id=original_message_id,
+                        reply_markup=new_keyboard
+                    )
+                    # Remove from storage after successful update
+                    del split_message_storage[chat_id]
+                except Exception as edit_error:
+                    print(f"Failed to update original message: {edit_error}")
+
             # Create an inline button for joining the group
             keyboard = InlineKeyboardMarkup()
             keyboard.add(InlineKeyboardButton(

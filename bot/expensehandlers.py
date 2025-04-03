@@ -2,6 +2,7 @@
 from classes import Group, User, Expense, Settlement
 from collections import defaultdict
 from utils import simplify_debts, calculate_user_balances, process_add_expense, get_display_debts_string, get_display_debts_string_with_at, is_group_chat
+from typing import Dict
 
 import re
 import json
@@ -19,7 +20,8 @@ import os
 dotenv.load_dotenv()
 MINIAPP_UNIQUE_IDENTIFIER = os.getenv("MINIAPP_UNIQUE_IDENTIFIER")
 
-
+# Temporary storage for message IDs
+split_message_storage: Dict[int, int] = {}  # chat_id -> message_id
 
 def register_expense_handlers(bot):
     """Register all command handlers for the bot."""
@@ -49,11 +51,14 @@ def register_expense_handlers(bot):
             )
             keyboard.add(web_app_button)
             
-            bot.send_message(
+            sent_message = bot.send_message(
                 chat_id,
                 "Click the button below to open Coconut Split:",
                 reply_markup=keyboard
             )
+
+            if not group:
+                split_message_storage[chat_id] = sent_message.message_id
             
         except Exception as e:
             bot.send_message(chat_id, f"{e}")
