@@ -173,81 +173,77 @@ export default function AddExpense() {
   };
 
   return (
-    <main className="container mx-auto px-4 py-8 bg-gray-900 min-h-screen">
+    <main className="container mx-auto bg-gray-900 min-h-screen">
       <LoadingError
         loading={loading}
         error={error}
         submitting={submitting}
         groupId={groupId}
       />
+      <div className="px-4 py-8 h-full">
 
-      <h1 className="text-2xl font-bold mb-6 text-white">Add Expense</h1>
+        <h1 className="text-2xl font-bold mb-6 text-white">Add Expense</h1>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-900 border border-red-700 text-red-200 rounded">
-          {error}
-        </div>
-      )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <ExpenseForm
+            description={description}
+            setDescription={setDescription}
+            amount={amount}
+            setAmount={setAmount}
+            paidBy={paidBy}
+            setPaidBy={setPaidBy}
+            members={members}
+            currentUser={currentUser}
+          />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <ExpenseForm
-          description={description}
-          setDescription={setDescription}
-          amount={amount}
-          setAmount={setAmount}
-          paidBy={paidBy}
-          setPaidBy={setPaidBy}
-          members={members}
-          currentUser={currentUser}
-        />
+          <SelectParticipantsSection
+            members={members}
+            selectedParticipants={selectedParticipants}
+            setSelectedParticipants={setSelectedParticipants}
+          />
 
-        <SelectParticipantsSection
-          members={members}
-          selectedParticipants={selectedParticipants}
-          setSelectedParticipants={setSelectedParticipants}
-        />
+          <SplitSection
+            members={members}
+            splits={splits}
+            splitMode={splitMode}
+            setSplitMode={handleSplitModeChange}
+            handleSplitChange={handleSplitChange}
+            splitsTotal={calculateSplitTotal(splits)}
+            amountValue={parseFloat(amount || "0")}
+          />
 
-        <SplitSection
-          members={members}
-          splits={splits}
-          splitMode={splitMode}
-          setSplitMode={handleSplitModeChange}
-          handleSplitChange={handleSplitChange}
-          splitsTotal={calculateSplitTotal(splits)}
-          amountValue={parseFloat(amount || "0")}
-        />
-
-        <div className="flex justify-between gap-4 pt-4">
-          <button
-            onClick={() => {
-              backButton.hide();
-              window.location.href = '/';
-            }}
-            type="button"
-            className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors text-center flex-1"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={
-              submitting ||
-              Math.abs(
-                calculateSplitTotal(splits) - parseFloat(amount || "0")
-              ) > 0.01
-            }
-            className={`px-4 py-3 rounded-md text-white text-center flex-1 ${submitting ||
-              Math.abs(
-                calculateSplitTotal(splits) - parseFloat(amount || "0")
-              ) > 0.01
-              ? "bg-blue-500 opacity-50 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
-              }`}
-          >
-            {submitting ? "Adding..." : "Add Expense"}
-          </button>
-        </div>
-      </form>
+          <div className="flex justify-between gap-4 pt-4">
+            <button
+              onClick={() => {
+                backButton.hide();
+                window.location.href = '/';
+              }}
+              type="button"
+              className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors text-center flex-1"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={
+                submitting ||
+                Math.abs(
+                  calculateSplitTotal(splits) - parseFloat(amount || "0")
+                ) > 0.01
+              }
+              className={`px-4 py-3 rounded-md text-white text-center flex-1 ${submitting ||
+                Math.abs(
+                  calculateSplitTotal(splits) - parseFloat(amount || "0")
+                ) > 0.01
+                ? "bg-blue-500 opacity-50 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+                }`}
+            >
+              {submitting ? "Adding..." : "Add Expense"}
+            </button>
+          </div>
+        </form>
+      </div>
     </main>
   );
 }
