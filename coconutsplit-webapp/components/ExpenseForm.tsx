@@ -164,13 +164,13 @@ export function ExpenseForm({
               htmlFor="conversionRate"
               className="block text-sm font-medium text-gray-300 mb-1"
             >
-              Conversion Rate (1 {groupCurrency} ={" "}
+              Conversion Rate (1 {groupCurrency.toUpperCase()} ={" "}
               {exchangeRate !== null
                 ? exchangeRate.toFixed(4)
                 : loadingRate
                 ? "Loading..."
                 : "Rate unavailable"}{" "}
-              {currentCurrency})
+              {currentCurrency.toUpperCase()})
             </label>
             <div className="flex items-center gap-2">
               <input

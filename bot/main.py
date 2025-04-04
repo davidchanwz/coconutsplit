@@ -13,6 +13,7 @@ from utils import process_reminders, remove_underscore_markdown
 from pydantic import BaseModel
 from typing import List
 from classes import Group
+from loguru import logger
 
 load_dotenv()
 
@@ -219,6 +220,7 @@ async def handle_notification(
             try:
                 bot.send_message(chat_id, remove_underscore_markdown(notification_text), parse_mode='Markdown')
             except Exception as send_err:
+                logger.error(f"Error processing notification: {str(send_err)}")
                 return {"status": "error", "message": f"Failed to send message: {str(send_err)}"}
             
         elif action == 'add_expense_with_currency_conversion':
@@ -253,6 +255,7 @@ async def handle_notification(
             try:
                 bot.send_message(chat_id, remove_underscore_markdown(notification_text), parse_mode='Markdown')
             except Exception as send_err:
+                logger.error(f"Error processing notification: {str(send_err)}")
                 return {"status": "error", "message": f"Failed to send message: {str(send_err)}"}
             
         elif action == 'settle_up':
@@ -316,6 +319,7 @@ async def handle_notification(
         return {"status": "success"}
         
     except Exception as e:
+        logger.error(f"Error processing notification: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing notification: {str(e)}")
 
 if __name__ == '__main__':
