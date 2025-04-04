@@ -99,7 +99,7 @@ export default function CreateGroup() {
             id="groupName"
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
-            className="mt-1 block w-full rounded-md bg-gray-800 border-gray-700 text-white"
+            className="mt-1 block w-full p-2 rounded-md bg-gray-800 border-gray-700 text-white"
             placeholder="Enter group name"
             required
           />
