@@ -29,7 +29,8 @@ def simplify_debts(balances):
             amount = min(credit_amount, debt_amount)
 
             # Record this transaction
-            simplified_debts.append((debtor_id, creditor_id, amount))
+            if amount >= 0.01:
+                simplified_debts.append((debtor_id, creditor_id, amount))
 
             # Adjust the remaining balances
             credit_amount -= amount

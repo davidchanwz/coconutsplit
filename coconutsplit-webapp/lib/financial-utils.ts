@@ -75,7 +75,7 @@ export const simplifyDebtsWithMembers = (
     const fromUser = userMap.get(debtorId);
     const toUser = userMap.get(creditorId);
 
-    if (amount > 0 && fromUser && toUser) {
+    if (amount >= 0.01 && fromUser && toUser) {
       // Record this transaction if we have both users
       simplified.push({
         from: fromUser,
