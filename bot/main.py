@@ -227,9 +227,9 @@ async def handle_notification(
             # Handle expense with currency conversion notification
             description = data.get('description')
             original_amount = data.get('originalAmount')
-            original_currency = data.get('originalCurrency').toUpper()
+            original_currency = data.get('originalCurrency').upper()
             converted_amount = data.get('convertedAmount')
-            target_currency = data.get('targetCurrency').toUpper()
+            target_currency = data.get('targetCurrency').upper()
             exchange_rate = data.get('exchangeRate')
             payer = data.get('payer')
             splits = data.get('splits', [])
