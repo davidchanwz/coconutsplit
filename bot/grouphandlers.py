@@ -281,6 +281,7 @@ def register_group_handlers(bot):
         """Send detailed error messages to the HQ chat."""
         hq_chat_id = os.getenv("HQ_CHAT_ID")
         if not hq_chat_id:
+            print("HQ_CHAT_ID not set in environment variables.")
             return
     
         details = f"🚨 Error Report\n\nFunction: {function_name}\n"
