@@ -1,12 +1,11 @@
 import Link from 'next/link';
 import { LoadingErrorProps } from '../lib/types';
+import { LoadingSpinner } from './LoadingSpinner';
 
 export function LoadingError({ loading, error, submitting, groupId }: LoadingErrorProps) {
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400"></div>
-            </div>
+            <LoadingSpinner />
         );
     }
 

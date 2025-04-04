@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function Home() {
   const params = parseQueryParams();
@@ -224,11 +225,7 @@ export default function Home() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-400"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (error) {
