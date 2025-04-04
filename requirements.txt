@@ -30,7 +30,6 @@ propcache==0.2.1
 pydantic==2.10.3
 pydantic_core==2.27.1
 pyTelegramBotAPI==4.22.1
-pytesseract==0.3.13
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
 realtime==2.0.6
@@ -40,7 +39,6 @@ sniffio==1.3.1
 storage3==0.9.0
 supabase==2.10.0
 supafunc==0.7.0
-tesseract==0.1.3
 typing_extensions==4.12.2
 urllib3==2.2.2
 websockets==13.1

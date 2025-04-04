@@ -3,19 +3,15 @@
 import telebot
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from fastapi import FastAPI, Request, Response, status, Body, HTTPException, Depends
+from fastapi import FastAPI, Request, Response, status, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware  # Add CORS middleware
 from dotenv import load_dotenv
 import os
 import uvicorn
 from grouphandlers import register_group_handlers  # Import the handler registration function
-from expensehandlers import register_expense_handlers # Import the handler registration function
-from receipthandlers import register_receipt_handlers  # Import the handler registration function
-from receipthandlersnlp import register_receipt_handlers_nlp  # Import the handler registration function
-from utils import process_reminders
+from utils import process_reminders, remove_underscore_markdown
 from pydantic import BaseModel
 from typing import List
-from utils import remove_underscore_markdown
 from classes import Group
 
 load_dotenv()
@@ -42,36 +38,15 @@ app.add_middleware(
 # Define a list of BotCommand objects
 commands = [
     types.BotCommand("split", "Opens CoconutSplit!"),
-    # types.BotCommand("start", "Start the bot"),
     types.BotCommand("help", "Get help"),
-    types.BotCommand("create_group", "Create a new group"),
     types.BotCommand("delete_group", "Delete the existing group"),
     types.BotCommand("join_group", "Join the existing group"),
-    # # types.BotCommand("leave_group", "Leave the group you are in"),
-    # types.BotCommand("view_users", "View all users in the group"),
-    # types.BotCommand("add_expense", "Add an expense paid by you"),
-    # types.BotCommand("add_expense_on_behalf", "Add an expense paid by someone else"),
-    # types.BotCommand("delete_latest_expense", "Delete the latest expense"),
-    # types.BotCommand("show_expenses", "Show all expenses"),
-    # types.BotCommand("show_debts", "Show all debts"),
-    # # types.BotCommand("upload_receipt", "Upload receipt for parsing"),
-    # types.BotCommand("upload_receipt", "Upload receipt for parsing using nlp"),
-    # types.BotCommand("settle_debt", "Settle a debt"),
-    # types.BotCommand("delete_latest_settlement", "Delete the latest settlement"),
-    # types.BotCommand("show_settlements", "Show all settlements in the group"),
     types.BotCommand("toggle_reminders", "Toggle daily reminders for debt payments"),
-
-
-# Add more commands as needed
 ]
 
 
 # Register the handlers from handlers.py
 register_group_handlers(bot)
-register_expense_handlers(bot)
-# register_receipt_handlers(bot)
-# register_receipt_handlers_nlp(bot)
-
 
 # --- FastAPI route to receive webhook updates --- #
 
