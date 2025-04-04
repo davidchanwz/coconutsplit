@@ -225,9 +225,9 @@ async def handle_notification(
             # Handle expense with currency conversion notification
             description = data.get('description')
             original_amount = data.get('originalAmount')
-            original_currency = data.get('originalCurrency')
+            original_currency = data.get('originalCurrency').toUpper()
             converted_amount = data.get('convertedAmount')
-            target_currency = data.get('targetCurrency')
+            target_currency = data.get('targetCurrency').toUpper()
             exchange_rate = data.get('exchangeRate')
             payer = data.get('payer')
             splits = data.get('splits', [])
@@ -242,7 +242,7 @@ async def handle_notification(
             
             # Send a message to the group with the expense details and currency conversion
             notification_text = (
-                f"💰 *New Expense Added (with Currency Conversion)*\n"
+                f"💰 *New Expense Added*\n"
                 f"*Description:* {description}\n"
                 f"*Amount:* {original_currency} {original_amount} → {target_currency} {converted_amount}\n"
                 f"*Exchange Rate:* 1 {original_currency} = {exchange_rate} {target_currency}\n"
