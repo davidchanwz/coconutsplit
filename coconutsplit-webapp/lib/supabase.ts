@@ -62,6 +62,7 @@ export class SupabaseService {
     chat_id: number;
     reminders?: boolean;
     message_id?: string;
+    ccy?: string;         // Add currency field
   }): Promise<Group> {
     // Check if group already exists for this chat
     const { data: existingGroup } = await supabase
@@ -83,7 +84,8 @@ export class SupabaseService {
         created_by: groupData.created_by,
         chat_id: groupData.chat_id,
         reminders: groupData.reminders || false,
-        message_id: groupData.message_id
+        message_id: groupData.message_id,
+        ccy: groupData.ccy || 'SGD'  // Add currency field with default value
       }])
       .select()
       .single();

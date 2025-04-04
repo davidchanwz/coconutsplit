@@ -221,6 +221,40 @@ async def handle_notification(
             except Exception as send_err:
                 return {"status": "error", "message": f"Failed to send message: {str(send_err)}"}
             
+        elif action == 'add_expense_with_currency_conversion':
+            # Handle expense with currency conversion notification
+            description = data.get('description')
+            original_amount = data.get('originalAmount')
+            original_currency = data.get('originalCurrency')
+            converted_amount = data.get('convertedAmount')
+            target_currency = data.get('targetCurrency')
+            exchange_rate = data.get('exchangeRate')
+            payer = data.get('payer')
+            splits = data.get('splits', [])
+            
+            # Format the splits for display
+            splits_text = ""
+            for split in splits:
+                username = split.get('username')
+                original_split = split.get('originalAmount')
+                converted_split = split.get('convertedAmount')
+                splits_text += f"\n- @{username}: {original_currency} {original_split} → {target_currency} {converted_split}"
+            
+            # Send a message to the group with the expense details and currency conversion
+            notification_text = (
+                f"💰 *New Expense Added (with Currency Conversion)*\n"
+                f"*Description:* {description}\n"
+                f"*Amount:* {original_currency} {original_amount} → {target_currency} {converted_amount}\n"
+                f"*Exchange Rate:* 1 {original_currency} = {exchange_rate} {target_currency}\n"
+                f"*Paid by:* @{payer}\n"
+                f"*Split with:*{splits_text}"
+            )
+            
+            try:
+                bot.send_message(chat_id, remove_underscore_markdown(notification_text), parse_mode='Markdown')
+            except Exception as send_err:
+                return {"status": "error", "message": f"Failed to send message: {str(send_err)}"}
+            
         elif action == 'settle_up':
             # Handle settlement notification
             settlements = data.get('settlements', [])

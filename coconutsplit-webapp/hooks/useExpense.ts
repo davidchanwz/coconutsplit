@@ -15,6 +15,9 @@ export function useExpense(groupId: string) {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
+    const [groupCurrency, setGroupCurrency] = useState<string>('SGD'); // Default group currency
+    const [currentCurrency, setCurrentCurrency] = useState<string>('SGD'); // Current expense currency
+    const [exchangeRate, setExchangeRate] = useState<number>(1); // Default exchange rate is 1 (no conversion)
 
     useEffect(() => {
         async function fetchData() {
@@ -36,6 +39,13 @@ export function useExpense(groupId: string) {
                 }
                 setCurrentUser(userData);
                 setPaidBy(userData.uuid);
+
+                // Fetch the group data to get currency
+                const groupData = await SupabaseService.getGroupDetails(groupId);
+                if (groupData && groupData.ccy) {
+                    setGroupCurrency(groupData.ccy);
+                    setCurrentCurrency(groupData.ccy); // Initialize current currency with group currency
+                }
 
                 const membersData = await SupabaseService.getGroupMembers(groupId);
                 const isMember = membersData.some(member => member.uuid === userData.uuid);
@@ -121,6 +131,11 @@ export function useExpense(groupId: string) {
         }));
     };
 
+    const handleCurrencyChange = (currency: string) => {
+        setCurrentCurrency(currency);
+        console.log("Currency changed to:", currency);
+    };
+
     return {
         description,
         setDescription,
@@ -143,5 +158,10 @@ export function useExpense(groupId: string) {
         selectedParticipants,
         setSelectedParticipants,
         handleSplitChange,
+        groupCurrency,
+        currentCurrency,
+        handleCurrencyChange,
+        exchangeRate,
+        setExchangeRate,
     };
 }

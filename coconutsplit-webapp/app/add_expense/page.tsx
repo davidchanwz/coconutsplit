@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ExpenseForm } from "../../components/ExpenseForm";
 import { SplitSection } from "../../components/SplitSection";
 import { LoadingError } from "../../components/LoadingError";
@@ -8,14 +8,13 @@ import {
   parseQueryParams,
   formatNumber,
   calculateSplitTotal,
-  calculateEqualSplits,
 } from "../../lib/utils";
 import { SupabaseService } from "../../lib/supabase";
 import { backButton } from '@telegram-apps/sdk-react';
-import Link from "next/link";
 import { useExpense } from "../../hooks/useExpense";
 import { ExpenseSplitNoExpenseID } from "../../lib/types";
 import { SelectParticipantsSection } from "../../components/SelectParticipantsSection";
+import { convertCurrency } from "../../lib/financial-utils";
 
 export default function AddExpense() {
   const params = parseQueryParams();
@@ -42,6 +41,11 @@ export default function AddExpense() {
     selectedParticipants,
     setSelectedParticipants,
     handleSplitChange,
+    groupCurrency,
+    currentCurrency,
+    handleCurrencyChange,
+    exchangeRate,
+    setExchangeRate,
   } = useExpense(groupId);
 
   useEffect(() => {
@@ -89,22 +93,35 @@ export default function AddExpense() {
     setError(null);
 
     try {
+      // Check if currency conversion is needed
+      const needsCurrencyConversion = currentCurrency !== groupCurrency && exchangeRate !== null;
+      
       // Create expense object
       const expense = {
         group_id: groupId,
         paid_by: paidBy,
-        amount: amountValue,
+        amount: needsCurrencyConversion && exchangeRate ? 
+          convertCurrency(amountValue, exchangeRate) : 
+          amountValue,
         description,
       };
 
       // Create expense splits
       const expenseSplits: ExpenseSplitNoExpenseID[] = [];
+      
       for (const [userId, amountStr] of Object.entries(splits)) {
         const splitAmount = parseFloat(amountStr || "0");
         if (!isNaN(splitAmount) && splitAmount > 0) {
+          // Convert the amount if currencies are different
+          let convertedAmount = splitAmount;
+          if (needsCurrencyConversion && exchangeRate) {
+            // Use the convertCurrency function for consistent conversion
+            convertedAmount = convertCurrency(splitAmount, exchangeRate);
+          }
+          
           expenseSplits.push({
             user_id: userId,
-            amount: splitAmount,
+            amount: convertedAmount,
           });
         }
       }
@@ -120,27 +137,60 @@ export default function AddExpense() {
 
       if (chatId) {
         // Send notification to the bot server API
-        const notificationData = {
-          chat_id: chatId,
-          action: "add_expense",
-          description: description,
-          amount: amountValue.toFixed(2),
-          payer: payer?.username || "Unknown",
-          splits: Object.entries(splits)
-            .filter(([_, value]) => parseFloat(value) > 0)
-            .map(([userId, value]) => {
-              const user = members.find((m) => m.uuid === userId);
-              return {
-                username: user?.username || "Unknown",
-                amount: parseFloat(value).toFixed(2),
-              };
-            }),
-        };
-
         const apiUrl = process.env.NEXT_PUBLIC_BOT_API_URL || "";
         const apiKey = process.env.NEXT_PUBLIC_BOT_API_KEY || "";
 
         try {
+          // Create the appropriate notification data based on whether currency conversion is needed
+          let finalNotificationData;
+          
+          if (needsCurrencyConversion && exchangeRate) {
+            const convertedAmount = convertCurrency(amountValue, exchangeRate);
+            
+            finalNotificationData = {
+              chat_id: chatId,
+              action: "add_expense_with_currency_conversion",
+              description: description,
+              originalAmount: amountValue.toFixed(2),
+              originalCurrency: currentCurrency,
+              convertedAmount: convertedAmount.toFixed(2),
+              targetCurrency: groupCurrency,
+              exchangeRate: exchangeRate.toFixed(4),
+              payer: payer?.username || "Unknown",
+              splits: Object.entries(splits)
+                .filter(([_, value]) => parseFloat(value) > 0)
+                .map(([userId, value]) => {
+                  const user = members.find((m) => m.uuid === userId);
+                  const splitAmount = parseFloat(value);
+                  const convertedSplitAmount = convertCurrency(splitAmount, exchangeRate);
+                  
+                  return {
+                    username: user?.username || "Unknown",
+                    originalAmount: splitAmount.toFixed(2),
+                    convertedAmount: convertedSplitAmount.toFixed(2),
+                  };
+                }),
+            };
+          } else {
+            // Use the original notification data for non-conversion case
+            finalNotificationData = {
+              chat_id: chatId,
+              action: "add_expense",
+              description: description,
+              amount: amountValue.toFixed(2),
+              payer: payer?.username || "Unknown",
+              splits: Object.entries(splits)
+                .filter(([_, value]) => parseFloat(value) > 0)
+                .map(([userId, value]) => {
+                  const user = members.find((m) => m.uuid === userId);
+                  return {
+                    username: user?.username || "Unknown",
+                    amount: parseFloat(value).toFixed(2),
+                  };
+                }),
+            };
+          }
+
           // Make direct API call with POST method
           const response = await fetch(`${apiUrl}/api/notify`, {
             method: "POST",
@@ -148,7 +198,7 @@ export default function AddExpense() {
               "Content-Type": "application/json",
               "X-API-Key": apiKey,
             },
-            body: JSON.stringify(notificationData),
+            body: JSON.stringify(finalNotificationData),
             mode: "cors",
             credentials: "omit",
           });
@@ -194,6 +244,11 @@ export default function AddExpense() {
             setPaidBy={setPaidBy}
             members={members}
             currentUser={currentUser}
+            groupCurrency={groupCurrency}
+            currentCurrency={currentCurrency}
+            onCurrencyChange={handleCurrencyChange}
+            exchangeRate={exchangeRate}
+            setExchangeRate={setExchangeRate}
           />
 
           <SelectParticipantsSection
@@ -210,6 +265,7 @@ export default function AddExpense() {
             handleSplitChange={handleSplitChange}
             splitsTotal={calculateSplitTotal(splits)}
             amountValue={parseFloat(amount || "0")}
+            currency={currentCurrency}
           />
 
           <div className="flex justify-between gap-4 pt-4">

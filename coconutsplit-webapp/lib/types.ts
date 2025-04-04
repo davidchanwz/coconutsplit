@@ -14,6 +14,7 @@ export interface Group {
   group_id: string;
   group_name: string;
   created_at: string;
+  ccy: string;
 }
 
 export interface User {
@@ -125,6 +126,7 @@ export interface SplitSectionProps {
   handleSplitChange: (userId: string, value: string) => void;
   splitsTotal: number;
   amountValue: number;
+  currency: string;
 }
 
 export interface DateSeparatorProps {
