@@ -260,6 +260,7 @@ def get_display_debts_string_with_at(debts, group):
         creditor = group_members_dict[creditor_id]
         debt_messages.append(f"@{debtor.username} owes @{creditor.username} ${amount:.2f}")
 
+    debt_messages.reverse()
     return "\n".join(debt_messages)
 
 def process_reminders():
