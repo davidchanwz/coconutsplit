@@ -8,7 +8,11 @@ interface OutstandingDebtsProps {
 
 export function OutstandingDebts({ debts }: OutstandingDebtsProps) {
   if (debts.length === 0) {
-    return null;
+    return (
+    <div className="p-4 bg-gray-800 border border-gray-700 rounded-md text-gray-300">
+      There are no outstanding debts.
+    </div>
+    );
   }
 
   return (
