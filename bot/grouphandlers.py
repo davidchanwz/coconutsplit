@@ -294,7 +294,6 @@ def register_group_handlers(bot):
                 details += f"Chat ID: {chat_id}\n"
             details += f"Error: {error_message}"
             print(details)
-            print("Message details that caused the error:" + message)
             
             bot.send_message(hq_chat_id, details)
         except Exception as e:
