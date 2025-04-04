@@ -15,7 +15,6 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['split'])
     def launch_coconut_split_app(message):
         try:
-            raise Exception("This is a test error")
             # Check if this is a private chat
             if not is_group_chat(message):
                 bot.reply_to(message, "This command can only be used in group chats.")
@@ -49,7 +48,6 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['start'])
     def send_welcome(message):
         try:
-            raise Exception("This is a test error")
             welcome_message = (
             "🌴 Welcome to CoconutSplit! 🌴\n\n"
             "CoconutSplit helps you easily split expenses with your friends and track debts within a group. Please enter /help for the list of available commands!"
@@ -63,7 +61,6 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['help'])
     def send_help(message):
         try:
-            raise Exception("This is a test error")
             help_message = (
             "📚 *General Commands:*\n"
             "/split - Main command to run after setting up the group\n"
@@ -127,7 +124,6 @@ def register_group_handlers(bot):
     def handle_join_group(call):
         """Handle users clicking the 'Join Group' button."""
         try:
-            raise Exception("This is a test error")
             chat_id = call.message.chat.id  # Get the chat_id from the message
             user = User.fetch_from_db_by_user_id(call.from_user.id)
 
@@ -213,7 +209,6 @@ def register_group_handlers(bot):
     def handle_delete_group_callback(call):
         """Handle the callback query for deleting or canceling the group deletion."""
         try:
-            raise Exception("This is a test error")
             chat_id = call.message.chat.id
 
             if call.data == "cancel_delete_group":
@@ -253,7 +248,6 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['toggle_reminders'])
     def toggle_reminders(message):
         try:
-            raise Exception("This is a test error")
             # Check if this is a private chat
             if not is_group_chat(message):
                 bot.reply_to(message, "This command can only be used in group chats.")
@@ -280,13 +274,10 @@ def register_group_handlers(bot):
     def send_error_to_hq(error_message: str, function_name: str, group: Group = None, chat_id: int = None, message=None):
         """Send detailed error messages to the HQ chat."""
         try:
-            print("IN SEND ERROR TO HQ")
             hq_chat_id = os.getenv("HQ_CHAT_ID")
             if not hq_chat_id:
                 print("HQ_CHAT_ID not set in environment variables.")
                 return
-
-            print("HQ_CHAT_ID found in environment variables.")
             details = f"🚨 Error Report\n\nFunction: {function_name}\n"
             if group:
                 details += f"Group Name: {group.group_name}\nGroup ID: {group.group_id}\n"
