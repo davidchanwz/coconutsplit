@@ -14,7 +14,6 @@ import Link from "next/link";
 export default function Home() {
   const params = parseQueryParams();
   const groupId = params.group_id;
-  const chatId = params.chat_id;
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>([]);
   const [expenseSplits, setExpenseSplits] = useState<{

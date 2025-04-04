@@ -35,7 +35,7 @@ export function useGroupData(groupId: string | undefined) {
                 
                 if (!groupData) {
                     // If no group exists with this UUID, redirect to create group
-                    window.location.href = `/create_group?temp_id=${groupId}`;
+                    window.location.href = `/create_group`;
                     return;
                 }
 

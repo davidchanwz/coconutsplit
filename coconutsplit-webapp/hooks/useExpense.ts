@@ -14,6 +14,7 @@ export function useExpense(groupId: string) {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [selectedParticipants, setSelectedParticipants] = useState<string[]>([]);
 
     useEffect(() => {
         async function fetchData() {
@@ -64,6 +65,34 @@ export function useExpense(groupId: string) {
         fetchData();
     }, [groupId]);
 
+    useEffect(() => {
+        if (members.length > 0) {
+            setSelectedParticipants(members.map((member) => member.uuid));
+        }
+    }, [members]);
+
+    useEffect(() => {
+        if (members.length > 0 && amount && splitMode === "equal") {
+            const amountValue = parseFloat(amount);
+            if (!isNaN(amountValue)) {
+                const participantsCount = selectedParticipants.length || 1;
+                const equalSplits = calculateEqualSplits(amountValue, participantsCount);
+
+                const newSplits = members.reduce((acc, member) => {
+                    if (!selectedParticipants.includes(member.uuid)) {
+                        acc[member.uuid] = "0.00";
+                    } else {
+                        const splitIndex = selectedParticipants.indexOf(member.uuid);
+                        acc[member.uuid] = equalSplits[splitIndex].toFixed(2);
+                    }
+                    return acc;
+                }, {} as Record<string, string>);
+
+                setSplits(newSplits);
+            }
+        }
+    }, [members, amount, splitMode, selectedParticipants]);
+
     const handleSplitModeChange = (mode: "equal" | "custom") => {
         setSplitMode(mode);
         if (mode === "equal" && amount && members.length > 0) {
@@ -85,6 +114,13 @@ export function useExpense(groupId: string) {
         }
     };
 
+    const handleSplitChange = (userId: string, value: string) => {
+        setSplits((prev) => ({
+            ...prev,
+            [userId]: value,
+        }));
+    };
+
     return {
         description,
         setDescription,
@@ -104,5 +140,8 @@ export function useExpense(groupId: string) {
         error,
         setError,
         handleSplitModeChange,
+        selectedParticipants,
+        setSelectedParticipants,
+        handleSplitChange,
     };
 }

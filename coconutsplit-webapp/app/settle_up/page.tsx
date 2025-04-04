@@ -28,7 +28,7 @@ export default function SettleUp() {
     error: groupError,
     currentUser,
     simplifiedDebts: allDebts,
-  } = useGroupData(groupId); 
+  } = useGroupData(groupId);
 
   // Filter debts to only show ones involving the current user
   const userDebts = currentUser
@@ -128,12 +128,16 @@ export default function SettleUp() {
       />
 
       <div className="flex justify-between gap-4">
-        <Link
-          href={`/?group_id=${groupId}`}
+        <button
+          onClick={() => {
+            backButton.hide();
+            window.location.href = groupId ? `/?group_id=${groupId}` : "/";
+          }}
+          type="button"
           className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors text-center flex-1"
         >
           Cancel
-        </Link>
+        </button>
         <button
           onClick={handleSettleUp}
           disabled={
@@ -142,10 +146,10 @@ export default function SettleUp() {
             Object.values(selectedDebts).filter(Boolean).length === 0
           }
           className={`px-4 py-3 rounded-md text-white text-center flex-1 ${isSubmitting ||
-              userDebts.length === 0 ||
-              Object.values(selectedDebts).filter(Boolean).length === 0
-              ? "bg-green-500 opacity-50 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700"
+            userDebts.length === 0 ||
+            Object.values(selectedDebts).filter(Boolean).length === 0
+            ? "bg-green-500 opacity-50 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
             }`}
         >
           {isSubmitting ? "Settling..." : "Settle up"}

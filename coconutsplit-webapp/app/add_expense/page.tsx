@@ -8,6 +8,7 @@ import {
   parseQueryParams,
   formatNumber,
   calculateSplitTotal,
+  calculateEqualSplits,
 } from "../../lib/utils";
 import { SupabaseService } from "../../lib/supabase";
 import { backButton } from '@telegram-apps/sdk-react';
@@ -38,19 +39,10 @@ export default function AddExpense() {
     setError,
     setSubmitting,
     handleSplitModeChange,
+    selectedParticipants,
+    setSelectedParticipants,
+    handleSplitChange,
   } = useExpense(groupId);
-
-  // Add state for selected participants
-  const [selectedParticipants, setSelectedParticipants] = useState<string[]>(
-    []
-  );
-
-  // Initialize selected participants to all members when members load
-  useEffect(() => {
-    if (members.length > 0) {
-      setSelectedParticipants(members.map((member) => member.uuid));
-    }
-  }, [members]);
 
   useEffect(() => {
     try {
@@ -65,48 +57,6 @@ export default function AddExpense() {
       console.error("Failed to initialize Telegram SDK:", error);
     }
   }, [groupId]);
-
-  useEffect(() => {
-    if (members.length > 0 && amount && splitMode === "equal") {
-      const amountValue = parseFloat(amount);
-      if (!isNaN(amountValue)) {
-        // Only split among selected participants
-        const participantsCount = selectedParticipants.length || 1; // Avoid division by zero
-        const equalShare = (amountValue / participantsCount).toFixed(2);
-        // Handle rounding issues by giving the remainder to the last member
-        const lastMemberExtra = (
-          amountValue -
-          parseFloat(equalShare) * participantsCount
-        ).toFixed(2);
-
-        const newSplits = members.reduce((acc, member, index) => {
-          if (!selectedParticipants.includes(member.uuid)) {
-            acc[member.uuid] = "0.00";
-          } else if (
-            selectedParticipants.indexOf(member.uuid) ===
-            selectedParticipants.length - 1
-          ) {
-            // Add any remainder to the last selected member's share
-            acc[member.uuid] = (
-              parseFloat(equalShare) + parseFloat(lastMemberExtra)
-            ).toFixed(2);
-          } else {
-            acc[member.uuid] = equalShare;
-          }
-          return acc;
-        }, {} as Record<string, string>);
-
-        setSplits(newSplits);
-      }
-    }
-  }, [members, amount, splitMode, selectedParticipants]);
-
-  const handleSplitChange = (userId: string, value: string) => {
-    setSplits((prev) => ({
-      ...prev,
-      [userId]: value,
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -268,12 +218,16 @@ export default function AddExpense() {
         />
 
         <div className="flex justify-between gap-4 pt-4">
-          <Link
-            href={groupId ? `/?group_id=${groupId}` : "/"}
+          <button
+            onClick={() => {
+              backButton.hide();
+              window.location.href = '/';
+            }}
+            type="button"
             className="px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors text-center flex-1"
           >
             Cancel
-          </Link>
+          </button>
           <button
             type="submit"
             disabled={
@@ -282,14 +236,13 @@ export default function AddExpense() {
                 calculateSplitTotal(splits) - parseFloat(amount || "0")
               ) > 0.01
             }
-            className={`px-4 py-3 rounded-md text-white text-center flex-1 ${
-              submitting ||
+            className={`px-4 py-3 rounded-md text-white text-center flex-1 ${submitting ||
               Math.abs(
                 calculateSplitTotal(splits) - parseFloat(amount || "0")
               ) > 0.01
-                ? "bg-blue-500 opacity-50 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700"
-            }`}
+              ? "bg-blue-500 opacity-50 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+              }`}
           >
             {submitting ? "Adding..." : "Add Expense"}
           </button>
