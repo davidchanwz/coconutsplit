@@ -238,12 +238,32 @@ export class SupabaseService {
       });
     }
 
+    console.log('Attempting to update debts with:', {
+      debtUpdatesCount: debtUpdates.length,
+      debtUpdates: debtUpdates
+    });
+
     // Use the bulk_update_debts RPC function to update debts
     if (debtUpdates.length > 0) {
-      const { error: debtsError } = await supabase
-        .rpc("bulk_update_debts", { debt_updates: debtUpdates });
+      try {
+        const { data, error: debtsError } = await supabase
+          .rpc("bulk_update_debts", { debt_updates: debtUpdates });
 
-      if (debtsError) throw debtsError;
+        if (debtsError) {
+          console.error('Debt update error:', {
+            code: debtsError.code,
+            message: debtsError.message,
+            details: debtsError.details,
+            hint: debtsError.hint
+          });
+          throw debtsError;
+        }
+
+        console.log('Debt update successful:', { response: data });
+      } catch (e) {
+        console.error('Exception during debt update:', e);
+        throw e;
+      }
     }
   }
 
