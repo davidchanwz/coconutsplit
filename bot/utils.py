@@ -1,5 +1,5 @@
 from classes import Group
-\
+
 def is_group_chat(message):
     """Check if the message is from a group chat"""
     return message.chat.type in ['group', 'supergroup']
@@ -69,19 +69,6 @@ def calculate_user_balances(debts):
                 balances[opp_user_id] += amount_owed  # The opposite user is owed money
 
         return balances
-
-def get_display_debts_string(debts, group):
-    """Format and display simplified debts in the group."""
-    debt_messages = []
-
-    group_members_dict = Group.fetch_group_members_dict(group)
-
-    for debtor_id, creditor_id, amount in debts:
-        debtor = group_members_dict[debtor_id]
-        creditor = group_members_dict[creditor_id]
-        debt_messages.append(f"{debtor.username} owes {creditor.username} ${amount:.2f}")
-
-    return "\n".join(debt_messages)
 
 def get_display_debts_string_with_at(debts, group):
     """Format and display simplified debts in the group."""
