@@ -290,9 +290,7 @@ def register_group_handlers(bot):
         if chat_id:
             details += f"Chat ID: {chat_id}\n"
         details += f"Error: {error_message}"
-        if message:
-            details += f"\nCommand Message: {message}"
-        
+        print("Message details that caused the error:" + message)
         try:
             bot.send_message(hq_chat_id, details)
         except Exception as e:
