@@ -279,19 +279,23 @@ def register_group_handlers(bot):
             
     def send_error_to_hq(error_message: str, function_name: str, group: Group = None, chat_id: int = None, message=None):
         """Send detailed error messages to the HQ chat."""
-        hq_chat_id = os.getenv("HQ_CHAT_ID")
-        if not hq_chat_id:
-            print("HQ_CHAT_ID not set in environment variables.")
-            return
-    
-        details = f"🚨 Error Report\n\nFunction: {function_name}\n"
-        if group:
-            details += f"Group Name: {group.group_name}\nGroup ID: {group.group_id}\n"
-        if chat_id:
-            details += f"Chat ID: {chat_id}\n"
-        details += f"Error: {error_message}"
-        print("Message details that caused the error:" + message)
         try:
+            print("IN SEND ERROR TO HQ")
+            hq_chat_id = os.getenv("HQ_CHAT_ID")
+            if not hq_chat_id:
+                print("HQ_CHAT_ID not set in environment variables.")
+                return
+
+            print("HQ_CHAT_ID found in environment variables.")
+            details = f"🚨 Error Report\n\nFunction: {function_name}\n"
+            if group:
+                details += f"Group Name: {group.group_name}\nGroup ID: {group.group_id}\n"
+            if chat_id:
+                details += f"Chat ID: {chat_id}\n"
+            details += f"Error: {error_message}"
+            print(details)
+            print("Message details that caused the error:" + message)
+            
             bot.send_message(hq_chat_id, details)
         except Exception as e:
             print(f"Failed to send error to HQ: {e}")
