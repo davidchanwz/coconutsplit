@@ -17,6 +17,10 @@ def simplify_debts(balances):
             elif balance < 0:
                 debtors.append((user_id, -balance))  # Users who owe money
 
+        # Sort creditors and debtors by their balances
+        creditors.sort(key=lambda x: x[1], reverse=True)  # Sort by amount owed, descending
+        debtors.sort(key=lambda x: x[1], reverse=True)  # Sort by amount owed, descending
+
         simplified_debts = []
         while creditors and debtors:
             creditor_id, credit_amount = creditors.pop()
