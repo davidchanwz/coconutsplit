@@ -10,6 +10,13 @@ import { createTimelineItems } from "@/lib/timeline";
 import { ExpenseSplit, TimelineItem } from "@/lib/types";
 import { init, backButton } from '@telegram-apps/sdk-react';
 import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function Home() {
   const params = parseQueryParams();
@@ -250,6 +257,40 @@ export default function Home() {
           {error}
         </div>
       )}
+
+      <div className="flex items-center gap-2 mb-4">
+
+        <h2 className="text-lg sm:text-xl font-semibold text-white pl-4">Outstanding Debts</h2>
+
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className="rounded-full w-6 h-6 bg-gray-700 text-gray-300 hover:bg-gray-600 flex items-center justify-center text-sm">
+              ?
+            </button>
+          </DialogTrigger>
+          <DialogContent className="bg-gray-800 text-gray-200">
+            <DialogHeader>
+              <DialogTitle className="text-gray-100">How Simplified Debts Work</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p>
+                Our system simplifies group debts to minimise the number of transactions needed to settle up.
+              </p>
+              <p>
+                Instead of tracking individual transactions between each pair of people, we:
+              </p>
+              <ol className="list-decimal list-inside space-y-2">
+                <li>Calculate the net balance for each person</li>
+                <li>Identify who owes money (negative balance) and who should receive money (positive balance)</li>
+                <li>Create the minimum number of transactions to settle all debts</li>
+              </ol>
+              <p>
+                This means you might end up paying someone you didn't directly share expenses with, but the total amount you pay or receive will always be correct.
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* Use the OutstandingDebts component */}
       <OutstandingDebts debts={simplifiedDebts} />
