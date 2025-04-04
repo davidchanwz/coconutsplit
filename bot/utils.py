@@ -1,6 +1,5 @@
-from classes import Group, User, Expense
-import re
-
+from classes import Group
+\
 def is_group_chat(message):
     """Check if the message is from a group chat"""
     return message.chat.type in ['group', 'supergroup']
