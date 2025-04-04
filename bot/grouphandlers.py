@@ -5,6 +5,9 @@ import uuid
 from utils import is_group_chat
 import os
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def register_group_handlers(bot):
     """Register all command handlers for the bot."""
@@ -85,7 +88,6 @@ def register_group_handlers(bot):
     @bot.message_handler(commands=['join_group'])
     def join_group(message):
         try:
-            raise Exception("This is a test error")
             # Check if this is a private chat
             if not is_group_chat(message):
                 bot.reply_to(message, "This command can only be used in group chats.")
@@ -177,7 +179,6 @@ def register_group_handlers(bot):
             """Send a confirmation button for deleting the group."""
             
             # Check if this is a private chat
-            raise Exception("This is a test error")
             if not is_group_chat(message):
                 bot.reply_to(message, "This command can only be used in group chats.")
                 return
